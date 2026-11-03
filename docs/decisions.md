@@ -178,7 +178,7 @@ Not supported, for lack of a live sample: group posts (`/groups/{id}/posts/{id}`
 - **Post iframe** (`plugins/post.php`, as pasted by the maintainer from a post's Embed dialog): renders through the SDK (§5.4). `show_text` and `width` carry over as `showText` and `width`, which the SDK also reads. `height` is dropped, because it only fits the iframe's width.
 - **Video iframe** (`plugins/video.php`): kept as an iframe. Every query parameter except `href` stays an option under its own name, and `size` comes from the `width` and `height` attributes. No real video iframe code has been collected yet; the test derives one from the post iframe.
 - **SDK snippets** (`fb-post`, `fb-video`): options come from the documented attributes `data-width`, `data-show-text`, `data-lazy`, `data-allowfullscreen`, `data-autoplay` and `data-show-captions`. The fixtures are Meta's own documented snippets ([Embedded Posts](https://developers.facebook.com/docs/plugins/embedded-posts), [Embedded Videos](https://developers.facebook.com/docs/plugins/embedded-video-player)).
-- **Locale:** the SDK script URL `connect.facebook.net/{locale}/sdk.js` carries the locale; the parser exposes it as `options.locale`. The `version` in the script URL is not extracted: it is the Graph API version, which is a script loader decision for Milestone 3.
+- **Locale:** the SDK script URL `connect.facebook.net/{locale}/sdk.js` carries the locale; the parser exposes it as `options.locale`. The `version` in the script URL is not extracted: it is the Graph API version, which the script loader sets (D26).
 - **Fallback content:** whitelisted as `div`, `blockquote[cite]`, `a[href]` and `p`. The `class` attribute is kept only when it is exactly `fb-xfbml-parse-ignore`, the marker that tells the SDK not to parse that content.
 - **Not accepted:** the inline SDK loader script (`(function(d, s, id){…}(document, 'script', 'facebook-jssdk'))`) that older snippets and the WordPress example use. It is an inline script, so the input is rejected under D14.
 
@@ -193,11 +193,47 @@ From the maintainer's pasted embed code (photo post with caption), 2026-11-03:
 - `captioned` is `true` when `data-instgrm-captioned` is present, which is the only check `embed.js` makes. `version` comes from `data-instgrm-version`.
 - Fallback content keeps `div`, `a[href]` and `p`: the placeholder structure, "View this post on Instagram" and the "A post shared by …" link. The SVG and all inline styles are dropped. Instagram's embed code does not contain the caption text itself.
 
+## Script loader (Milestone 3, 2026-11-03)
+
+### D24. X script
+
+`https://platform.x.com/widgets.js` redirects to `https://platform.twitter.com/widgets.js` (both serve the same file), so the loader adds the twitter.com URL and recognises a host tag on either host. Ready means `twttr.widgets.load` is a function, then `twttr.ready(callback)` has fired. `widgets.js` builds `twttr.ready` from its own load promise and flushes the `twttr._e` queue of the official snippet. On load, `widgets.js` scans the whole page once by itself (`window.twttr.widgets.load()`).
+
+### D25. Instagram and Threads share one global (V1 evidence)
+
+Both `embed.js` files define the same module, `PolarisEmbedSDKContext`. It creates `window.instgrm = { Embeds: {} }` if missing and registers each SDK by name in `instgrm.Embeds.registeredEmbedSDKs`: Instagram as `"instagram"`, Threads as `"threads"`. Each registration chains its processor onto `instgrm.Embeds.process`, so one `process()` call processes both platforms' blockquotes. Ready therefore means `registeredEmbedSDKs.<name> === true`, not merely `instgrm.Embeds.process` existing: Instagram's script alone must not count as Threads being ready.
+
+For V1, this means Threads' manual initialisation is `instgrm.Embeds.process()`, the same call as Instagram. That comes from reading the script; Milestone 5 confirms it on rendered posts, including after client navigation.
+
+### D26. Facebook SDK
+
+Probed in the browser on 2026-11-03 against a live public post:
+
+- `FB.XFBML.parse(element)` parses the plugins inside `element`, not `element` itself. Parsing the `fb-post` div directly renders nothing and reports nothing. The renderer must parse a wrapper (Milestone 5).
+- Without `FB.init` and a valid `version`, `parse` throws `init not called with valid version`; `FB.init({ xfbml: false })` throws `invalid version specified`. A version is therefore required. The brief leaves it open.
+- Social plugins render with old and new Graph API versions: `v3.2` (from Meta's docs snippet), `v26.0` and `v27.0` all rendered the post (iframe 725px tall). A nonexistent `v99.0` produced a 0px iframe.
+- `sdk.js#xfbml=0&version=v26.0` initialises the SDK without scanning the page, the same as `FB.init({ xfbml: false, version: 'v26.0' })`, and still calls `fbAsyncInit`. The loader uses the hash form, so it never calls `FB.init` itself or replaces a host's own init.
+- `FB` exists at the script's `load` event, before init has finished, and the SDK has no public "initialised" flag. Readiness is therefore `fbAsyncInit`: the loader chains it, calling a handler the host set up first.
+- The SDK adds a second script, `connect.facebook.net/{locale}/bundle/sdk.js/`, and creates `<div id="fb-root">` if the page has none.
+
+The loader uses `FACEBOOK_SDK_VERSION = 'v26.0'`, the version Meta's Embedded Posts documentation uses in its `FB.init` example. One SDK serves the whole page, so the first locale requested wins. An invalid locale is rejected before anything loads.
+
+### D27. Loader policy
+
+- **One per page:** at most one script per platform, and concurrent callers share one promise. A later caller gets the settled promise, so client navigation never reloads a script.
+- **Host scripts:** if the global is already present, nothing is added. If a host tag is present but still loading, the loader waits for its global instead of adding a second tag.
+- **Retries (§6.2):** a script the browser reports as failed (`error` event) is removed and retried after 1 s and then 2 s; three attempts in all. A script that does not load within 15 s is not retried, because it may still arrive and run twice. A global that does not appear within 15 s of loading is a failure too.
+- **Failures are not cached:** an embed mounted later starts again.
+- **Cleanup:** scripts are never removed, since other embeds and the host may need them. Per-embed cleanup belongs to the components (Milestone 5).
+- **Server:** the module touches no browser API until called. Called on the server, it rejects.
+
+Verified in the browser with the built loader on the real scripts. All four platforms became ready within 12 ms of each other, duplicate calls shared one tag, and a second round added no tags; four repeat runs gave the same result. On the very first run, Instagram and Threads did not initialise within 15 s, and the loader rejected as designed. The cause was not identified, and it did not happen again in the five later runs.
+
 ## Open VERIFY items
 
 | ID  | Item                                            | Milestone | Status                                           |
 | --- | ----------------------------------------------- | --------- | ------------------------------------------------ |
-| V1  | Threads manual initialisation (§3)              | 5         | open                                             |
+| V1  | Threads manual initialisation (§3)              | 5         | script evidence (D25); browser check open        |
 | V2  | TikTok manual initialisation (§3)               | —         | no longer applies (D11)                          |
 | V3  | Facebook post URL shapes the SDK accepts (§4.2) | 2         | resolved (D21)                                   |
 | V4  | Default `maxWidth` per platform (§6)            | 4, 5      | Threads 658 (D17), Instagram 540 (D23) confirmed |

@@ -12,9 +12,21 @@ export default defineConfig({
       },
       {
         test: {
-          name: 'components',
+          name: 'dom',
           environment: 'happy-dom',
-          include: ['test/components/**/*.test.tsx'],
+          include: [
+            'test/loader/**/*.test.ts',
+            'test/components/**/*.test.tsx',
+          ],
+          // Tests drive script load events themselves; nothing is fetched.
+          environmentOptions: {
+            happyDOM: {
+              settings: {
+                disableJavaScriptFileLoading: true,
+                handleDisabledFileLoadingAsSuccess: true,
+              },
+            },
+          },
         },
       },
     ],
