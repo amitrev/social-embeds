@@ -2,6 +2,11 @@
 
 export type { EmbedSource, FrameProps, SharedProps } from './components/shared';
 export {
+  SocialEmbed,
+  type SocialEmbedProps,
+  type SocialEmbedSource,
+} from './components/social-embed';
+export {
   FacebookEmbed,
   type FacebookEmbedProps,
   type FacebookOptions,

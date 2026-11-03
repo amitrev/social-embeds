@@ -320,6 +320,17 @@ Browser check on 2026-11-03 with the built package and React, in a page that was
 
 Confirming X and that Instagram post in a visible window is left to the Milestone 7 playground.
 
+## Dispatcher (Milestone 6, 2026-11-03)
+
+### D36. `<SocialEmbed>`
+
+- **Input:** `html` or `url`, as a discriminated union (`{ html; url?: never } | { url; html?: never }`). Passing both, or neither, is a type error, and the tests assert that with `@ts-expect-error`.
+- **Routing:** `html` goes through `parseEmbed` and `url` through `matchUrl`; the result goes to the platform component as `embed`. Nothing downstream knows which input was used (§4).
+- **`fallback` (§6.4):** when `parseEmbed` returns `null`, `fallback` gets the original string unchanged. `onError` is then not called, because the host has taken the input over. Without `fallback`, nothing is rendered and `onError` reports `social-embeds: unrecognised embed code`.
+- **Unsupported URLs** never reach `fallback`, which is defined for embed code: nothing is rendered and `onError` names the URL.
+- **Props:** the dispatcher takes the shared props only. `height` reaches only YouTube, TikTok and Facebook, the platforms that can render as an iframe; the other platforms size themselves. Platform options come from the embed code; hosts who want option props use the platform component. Div attributes that share a name with a platform option (`lang`, `color`, `rel`) are not accepted by the dispatcher, because each platform reads that name its own way.
+- **Server rendering:** the server HTML of `<SocialEmbed html>` contains the platform blockquote with its whitelisted fallback content, such as the post text and status link, and no script (tested with `renderToString`).
+
 ## Open VERIFY items
 
 | ID  | Item                                            | Milestone | Status                                          |
