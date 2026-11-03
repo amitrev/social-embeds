@@ -56,9 +56,11 @@ The npm trusted-publisher configuration is bound to the workflow filename and th
 - that a failed exchange cannot fall back silently;
 - whether a trusted publisher can be configured before the first publish.
 
+Resolved in Milestone 8 (D42).
+
 ### D9. `CODE_OF_CONDUCT.md` in Milestone 8
 
-§9 lists it, but no milestone did.
+§9 lists it, but no milestone did. Added in Milestone 8: Contributor Covenant 3.0, the current version, with the maintainer's address (amitrev@gmail.com) as the reporting contact. Prettier ignores the file so the text stays as published.
 
 ## Platform behaviour
 
@@ -364,6 +366,8 @@ Instagram's and Threads' `embed.js` both start with `(window.FB && !window.FB.__
 
 The SDK's own stub carries `__buffer` while the SDK loads, and neither script reads `FB` anywhere else. So, with the maintainer's approval, the loader marks a loaded SDK with `__buffer = true` just before adding Instagram's or Threads' script. It removes the mark when the script has run (its `load` event), when it fails, or when it times out. A stub that already has `__buffer` is left alone. Verified in Chrome: with the SDK loaded first, Instagram, Threads and a later `FB.XFBML.parse` all render, and the mark is gone afterwards.
 
+This probably also explains the unexplained first run in D27, where all four scripts loaded at once and Instagram and Threads never initialised.
+
 Not covered: a host page that adds the SDK and then Instagram's script itself. That script has already done nothing by the time an embed mounts, and the loader reports that Instagram did not initialise.
 
 ### D39. Platform class added on render
@@ -375,6 +379,22 @@ With the maintainer's approval, the X, Instagram and Threads components now writ
 ### D40. TikTok default width
 
 At the default `maxWidth` of 605, the 9:16 player measured 605×1076, taller than a laptop screen. TikTok's own embed code, from oEmbed and from the share dialog, is 325×578. With the maintainer's approval, the default is now 325 (D30).
+
+## Release (Milestone 8, 2026-11-03)
+
+### D41. Changesets did not see the package
+
+`pnpm-workspace.yaml` listed only `playground`, so Changesets, which reads the workspace globs, left out the root package: `changeset status` failed with "Found changeset … for package social-embeds which is not in the workspace". The workspace now lists `.` as well. The lockfile is unchanged, and `pnpm install --frozen-lockfile` still passes.
+
+### D42. Trusted publishing (D8)
+
+- **Workflow:** `release.yml` follows the trusted-publishing workflow from [Changesets' automating guide](https://changesets.dev/guide/automating), with pnpm. It uses the separate `changesets/action` v2 sub-actions (`select-mode`, `version`, `pack`, `publish`), which the action recommends for trusted publishing. v2 targets Changesets v3, the CLI version used here. Only the publish job has `id-token: write`. It runs in the `npm` environment and publishes the tarball that the pack job built and checked.
+- **Who publishes:** in a pnpm workspace, `changeset publish` runs `pnpm publish <tarball> --access public --tag <tag> --no-git-checks --json` (source of `@changesets/cli` 3.0.3). pnpm 12 does the OIDC exchange itself: its binary reads `ACTIONS_ID_TOKEN_REQUEST_URL` and `ACTIONS_ID_TOKEN_REQUEST_TOKEN` and calls npm's `/-/npm/v1/oidc/token/exchange/package/`. No npm CLI version is involved; npm's own requirement (npm 11.5.1, Node 22.14) applies to `npm publish`. Under trusted publishing, pnpm attaches provenance to a public package from a public repository ([pnpm publish](https://pnpm.io/cli/publish)).
+- **No silent fallback:** when the exchange fails, pnpm logs `Skipped OIDC: …` and falls back to configured credentials (pnpm 12.12.1 changelog; the message is in the binary). The release jobs have no npm token, and `setup-node` gets no `registry-url`, so there is nothing to fall back to and the publish fails. The setup steps also turn on npm's "Require two-factor authentication and disallow tokens".
+- **Before the first publish:** not possible. [`npm trust`](https://docs.npmjs.com/cli/v11/commands/npm-trust) states that the package must already exist on the registry, and the website setting lives in the package's settings. `docs/releasing.md` therefore claims the name with a placeholder `0.0.0` that has only a `package.json`. 0.1.0 is then the first release from the workflow, with provenance, and the placeholder is deprecated.
+- **Expiry:** a new trusted publisher must complete a publish within 2 days, or it expires ([npm docs](https://docs.npmjs.com/trusted-publishers), updated 2026-10-06).
+- **First version:** 0.1.0, from a minor changeset (maintainer's choice).
+- **Dry run:** `pnpm publish --dry-run` passes. The packed tarball is 26 KB with nine files: `dist/` (`index.js` starting with `"use client"`, `parser.js` without it, their shared chunk and type declarations), `README.md`, `LICENSE.md` and `package.json`.
 
 ## Open VERIFY items
 
