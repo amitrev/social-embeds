@@ -15,10 +15,14 @@ export function FacebookVideoIframe({
   embed,
   ...frame
 }: Omit<FrameProps, 'onError'> & { embed: ParsedEmbed }) {
+  // The verified URL is the only href; an `href` option must not replace it.
+  const params = Object.entries(embed.options).filter(
+    ([key]) => key !== 'href',
+  );
   return (
     <IframeEmbed
       {...frame}
-      src={`https://www.facebook.com/plugins/video.php${query([['href', embed.url]], Object.entries(embed.options))}`}
+      src={`https://www.facebook.com/plugins/video.php${query([['href', embed.url]], params)}`}
       title="Facebook video player"
       allow={ALLOW}
       scrolling="no"

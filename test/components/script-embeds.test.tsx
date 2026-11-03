@@ -345,4 +345,24 @@ describe('FacebookEmbed', () => {
     );
     expect(load).not.toHaveBeenCalled();
   });
+
+  it('never lets an href option replace the verified video URL', () => {
+    const video = 'https://www.facebook.com/facebook/videos/10153231379946729/';
+    const { container } = render(
+      <FacebookEmbed
+        embed={{
+          platform: 'facebook',
+          kind: 'video',
+          url: video,
+          id: '10153231379946729',
+          variant: 'iframe',
+          options: { href: 'https://www.facebook.com/other/videos/1/', t: 5 },
+        }}
+        lazy={false}
+      />,
+    );
+    expect(container.querySelector('iframe')?.getAttribute('src')).toBe(
+      `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(video)}&t=5`,
+    );
+  });
 });

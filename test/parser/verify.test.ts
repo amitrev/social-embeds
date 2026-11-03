@@ -52,8 +52,24 @@ describe('verifyEmbed', () => {
       'a platform that does not match the URL',
       { ...x, platform: 'threads' as const },
     ],
+    [
+      'a variant the platform does not have',
+      { ...x, variant: 'iframe' as const },
+    ],
+    ['a kind the platform does not have', { ...x, kind: 'video' as const }],
   ])('rejects %s', (_, embed) => {
     expect(verifyEmbed(embed)).toBeNull();
+  });
+
+  it('drops X fallback content that links to another post', () => {
+    const otherPost = (x.fallbackHtml ?? '').replace(
+      'https://x.com/TheEllenShow/status/440322224407314432',
+      'https://x.com/jack/status/20',
+    );
+    expect(otherPost).not.toBe(x.fallbackHtml);
+    expect(verifyEmbed({ ...x, fallbackHtml: otherPost })).not.toHaveProperty(
+      'fallbackHtml',
+    );
   });
 
   it('drops fallback content the whitelist would not produce', () => {
