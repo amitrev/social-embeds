@@ -46,7 +46,7 @@ The default `strict` profile fails any ESM-only package (`node10`: "Resolution f
 
 ### D7. pnpm 12 minimum release age
 
-pnpm 12 gates packages younger than its minimum release age. vitest 5.1.0 (published 2026-11-02) was inside that window at install time, so pnpm added `minimumReleaseAgeExclude` entries for `vitest`, `@vitest/mocker` and `@vitest/spy` 5.1.0 to `pnpm-workspace.yaml`. The gate is 24 hours: vitest 5.1.0 was published at 2026-11-02 16:02 UTC and clears it at 2026-11-03 16:03 UTC. A removal attempt at 15:25 UTC failed with `ERR_PNPM_MINIMUM_RELEASE_AGE_VIOLATION`, so remove the entries at the next commit after that time.
+pnpm 12 gates packages younger than its minimum release age. vitest 5.1.0 (published 2026-11-02) was inside that window at install time, so pnpm added `minimumReleaseAgeExclude` entries for `vitest`, `@vitest/mocker` and `@vitest/spy` 5.1.0 to `pnpm-workspace.yaml`. The gate is 24 hours: vitest 5.1.0 was published at 2026-11-02 16:02 UTC and clears it at 2026-11-03 16:03 UTC. A removal attempt at 15:25 UTC failed with `ERR_PNPM_MINIMUM_RELEASE_AGE_VIOLATION`. The entries were removed in Milestone 4, at 18:43 UTC, when `pnpm install --frozen-lockfile` passed the policy check.
 
 ### D8. Release workflow deferred to Milestone 8
 
@@ -229,12 +229,51 @@ The loader uses `FACEBOOK_SDK_VERSION = 'v26.0'`, the version Meta's Embedded Po
 
 Verified in the browser with the built loader on the real scripts. All four platforms became ready within 12 ms of each other, duplicate calls shared one tag, and a second round added no tags; four repeat runs gave the same result. On the very first run, Instagram and Threads did not initialise within 15 s, and the loader rejected as designed. The cause was not identified, and it did not happen again in the five later runs.
 
+## Group B components (Milestone 4, 2026-11-03)
+
+### D28. Iframes are created on the client
+
+The server renders the sized wrapper and the placeholder; the iframe is added after mount. An iframe in server HTML can finish loading before hydration, and React then never sees its `load` event, which would leave the placeholder up and `onLoad` uncalled. The cost: without JavaScript, a Group B embed shows only its placeholder.
+
+`lazy` (default `true`) uses `IntersectionObserver` with a `200px` vertical margin, so loading starts just before the embed scrolls into view rather than after it appears blank. Without `IntersectionObserver`, or with `lazy={false}`, the iframe is added right after mount.
+
+Group B has no init timeout. The iframe `load` event always fires, even for a player error page, so `onError` reports invalid input only.
+
+### D29. Facebook video iframe content fills the frame
+
+A `plugins/video.php?…&width=560` iframe was rendered at 320, 560 and 900 px wide with a 560:314 box. Each time, the player filled the frame (screenshots, 2026-11-03). The iframe "as given" in an aspect-ratio wrapper is therefore responsive, as §5.4 assumes. The player takes several seconds to paint.
+
+### D30. Aspect ratios and default maximum widths (V4, Group B)
+
+| Platform                | Aspect without input size  | Default `maxWidth` | Evidence                                                                                                 |
+| ----------------------- | -------------------------- | ------------------ | -------------------------------------------------------------------------------------------------------- |
+| YouTube                 | 16:9; 9:16 for Shorts URLs | none               | Player docs give only a minimum: "at least 200px by 200px".                                              |
+| TikTok                  | 9:16 (D11)                 | 605                | Player docs give no size; 605 is the brief's value, from the legacy blockquote's own `max-width: 605px`. |
+| Facebook video (iframe) | 16:9                       | none               | Embedded Videos: `data-width` min 220 px, "no limit on the upper end".                                   |
+
+A Shorts URL is the only input that says a YouTube video is vertical, so it gets 9:16. Embed code always carries `width` and `height`, which win.
+
+### D31. Option props and iframe attributes
+
+- **Option props** mirror each platform's documented player parameters in camelCase: YouTube's [player parameters](https://developers.google.com/youtube/player_parameters) (except the deprecated `modestbranding`) plus `nocookie`, and all 14 TikTok [Embed Player](https://developers.tiktok.com/doc/embed-player) parameters. Booleans become `1`/`0`. Parameters from embed code come first, and props the host passes replace them.
+- **Iframe attributes** (`allow`, `referrerpolicy`, `scrolling`, `allowfullscreen`) are copied from each platform's own embed code in `test/fixtures`. Each iframe also gets a `title` for accessibility, because only YouTube's code has one.
+- **Facebook video:** the iframe path is an internal component for now; `FacebookEmbed` (Milestone 5) routes video embed code to it.
+
+Verified in the browser on 2026-11-03 with the built package and React:
+
+- `onLoad` fired for YouTube (URL and privacy-enhanced embed code), TikTok and Facebook video, and `onError` fired for an invalid URL.
+- The TikTok and Facebook embeds placed below the fold were created only after scrolling.
+- At an 800 px viewport the iframes measured YouTube 720×405, TikTok 605×1076 and Facebook 720×404.
+- At 375 px every wrapper was 359 px wide with its own ratio, and the page did not scroll sideways.
+
+Component tests run in happy-dom, which never loads iframe pages and logs a `DOMException` ("Iframe page loading is disabled") for each one. The log comes from happy-dom's own console and cannot be silenced short of enabling real network loading.
+
 ## Open VERIFY items
 
-| ID  | Item                                            | Milestone | Status                                           |
-| --- | ----------------------------------------------- | --------- | ------------------------------------------------ |
-| V1  | Threads manual initialisation (§3)              | 5         | script evidence (D25); browser check open        |
-| V2  | TikTok manual initialisation (§3)               | —         | no longer applies (D11)                          |
-| V3  | Facebook post URL shapes the SDK accepts (§4.2) | 2         | resolved (D21)                                   |
-| V4  | Default `maxWidth` per platform (§6)            | 4, 5      | Threads 658 (D17), Instagram 540 (D23) confirmed |
-| V5  | Fluid-width attribute per platform (§6.1)       | 5         | Facebook answered (D19)                          |
+| ID  | Item                                            | Milestone | Status                                                                                                |
+| --- | ----------------------------------------------- | --------- | ----------------------------------------------------------------------------------------------------- |
+| V1  | Threads manual initialisation (§3)              | 5         | script evidence (D25); browser check open                                                             |
+| V2  | TikTok manual initialisation (§3)               | —         | no longer applies (D11)                                                                               |
+| V3  | Facebook post URL shapes the SDK accepts (§4.2) | 2         | resolved (D21)                                                                                        |
+| V4  | Default `maxWidth` per platform (§6)            | 4, 5      | Group B settled (D30); Threads 658 (D17) and Instagram 540 (D23) confirmed; X and Facebook posts open |
+| V5  | Fluid-width attribute per platform (§6.1)       | 5         | Facebook answered (D19)                                                                               |
