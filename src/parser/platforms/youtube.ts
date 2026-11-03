@@ -59,6 +59,7 @@ function urlOptions(url: ParsedUrl, nocookie: boolean): Options {
 }
 
 export const youtube: PlatformParser = {
+  platform: 'youtube',
   parse(root) {
     if (root.tag !== 'iframe') return null;
     const src = parseUrl(root.attrs.get('src') ?? '');

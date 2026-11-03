@@ -16,7 +16,7 @@ export default defineConfig({
           environment: 'happy-dom',
           include: [
             'test/loader/**/*.test.ts',
-            'test/components/**/*.test.tsx',
+            'test/components/**/*.test.{ts,tsx}',
           ],
           // Tests drive script load events themselves; nothing is fetched.
           environmentOptions: {

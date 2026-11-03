@@ -37,6 +37,8 @@ function post(url: ParsedUrl | null): Omit<ParsedEmbed, 'options'> | null {
 }
 
 export const instagram: PlatformParser = {
+  platform: 'instagram',
+  fallback: FALLBACK,
   parse(root) {
     if (root.tag !== 'blockquote' || !hasClass(root, 'instagram-media'))
       return null;

@@ -46,6 +46,8 @@ function post(url: ParsedUrl | null): Omit<ParsedEmbed, 'options'> | null {
 }
 
 export const x: PlatformParser = {
+  platform: 'x',
+  fallback: FALLBACK,
   parse(root) {
     if (root.tag !== 'blockquote' || !hasClass(root, 'twitter-tweet'))
       return null;

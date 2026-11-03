@@ -125,6 +125,8 @@ function embed(
 }
 
 export const facebook: PlatformParser = {
+  platform: 'facebook',
+  fallback: FALLBACK,
   parse(root) {
     if (root.tag === 'div') {
       const kind = hasClass(root, 'fb-post')

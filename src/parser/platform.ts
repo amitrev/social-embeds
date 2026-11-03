@@ -1,11 +1,14 @@
-import type { HtmlElement } from './html';
-import type { ParsedEmbed } from './types';
+import type { HtmlElement, Whitelist } from './html';
+import type { ParsedEmbed, Platform } from './types';
 import { pixels, type ParsedUrl } from './url';
 
 export type Options = ParsedEmbed['options'];
 
 /** One supported platform: how to recognise its embed code and its URLs. */
 export type PlatformParser = {
+  platform: Platform;
+  /** Elements and attributes allowed in `fallbackHtml`. */
+  fallback?: Whitelist;
   /** The embed element (blockquote, div or iframe) of the platform's own embed code. */
   parse: (root: HtmlElement) => ParsedEmbed | null;
   /** A `<script src>` that the platform's own embed code ships with. */

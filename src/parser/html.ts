@@ -247,7 +247,7 @@ export function rebuild(
   return html;
 }
 
-function escapeAttribute(value: string): string {
+export function escapeAttribute(value: string): string {
   return value
     .replace(/&/g, '&amp;')
     .replace(/"/g, '&quot;')

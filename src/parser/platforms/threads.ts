@@ -38,6 +38,8 @@ function post(url: ParsedUrl | null): Omit<ParsedEmbed, 'options'> | null {
 }
 
 export const threads: PlatformParser = {
+  platform: 'threads',
+  fallback: FALLBACK,
   parse(root) {
     if (root.tag !== 'blockquote' || !hasClass(root, 'text-post-media'))
       return null;

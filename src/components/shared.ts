@@ -1,5 +1,6 @@
 import type { ComponentProps, ReactNode } from 'react';
 import { matchUrl, type ParsedEmbed, type Platform } from '../parser';
+import { verifyEmbed } from '../parser/verify';
 
 /** A platform component takes a post URL or an already-parsed embed (brief §5.2). */
 export type EmbedSource =
@@ -56,7 +57,13 @@ export function resolveEmbed(
       error: `social-embeds: expected a ${NAMES[platform]} embed, got ${NAMES[embed.platform]}`,
     };
   }
-  return { embed };
+  const verified = verifyEmbed(embed);
+  if (!verified) {
+    return {
+      error: `social-embeds: the ${NAMES[platform]} embed's url and id do not match`,
+    };
+  }
+  return { embed: verified };
 }
 
 /** Serialises query parameters; later entries replace earlier ones with the same name. */

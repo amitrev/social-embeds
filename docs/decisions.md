@@ -268,12 +268,64 @@ Verified in the browser on 2026-11-03 with the built package and React:
 
 Component tests run in happy-dom, which never loads iframe pages and logs a `DOMException` ("Iframe page loading is disabled") for each one. The log comes from happy-dom's own console and cannot be silenced short of enabling real network loading.
 
+## Group A components (Milestone 5, 2026-11-03)
+
+### D32. How each platform renders and signals it
+
+Probed in the browser on 2026-11-03 by inserting the markup after the script had loaded, which is the client-navigation case, then calling the platform's init. Signals were read from the scripts themselves.
+
+| Platform  | Init                              | Rendered when                                                                                                                                                                                                    |
+| --------- | --------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| X         | `twttr.widgets.load(container)`   | `twttr.events` fires `rendered` for an element in the container, or an iframe in it gets a style height. `load()` returns a promise, but it resolves (at 436 ms) before the post has painted, so it is not used. |
+| Instagram | `instgrm.Embeds.process()`        | the iframe gets class `instagram-media-rendered` (embed.js sets it on the iframe's `MOUNTED` message).                                                                                                           |
+| Threads   | `instgrm.Embeds.process()`        | the blockquote is removed from the container (embed.js removes it, by id, once the iframe reports its height).                                                                                                   |
+| Facebook  | `FB.XFBML.parse(container, done)` | the parse callback runs; it fired after the iframe was sized and visible.                                                                                                                                        |
+
+**V1 resolved:** Threads' manual initialisation is `instgrm.Embeds.process()`. A Threads blockquote inserted after `embed.js` had loaded was rendered by `process()`: the iframe appeared, reported a height of 239 px at 1.4 s, and the blockquote was removed. `process()` rescans `.text-post-media` blockquotes on every call. Threads processes at most three embeds at a time and retries pending ones after 5 s and 10 s. It reads `data-theme` values `dark` and `auto`.
+
+Threads finds the blockquote to remove through `id`, so the component keeps the embed code's `id="ig-tp-{code}"`.
+
+If a host-loaded Facebook SDK was never initialised, `parse` throws `init not called with valid version`. The driver then calls `FB.init({ xfbml: false, version: 'v26.0' })` and parses again (D26).
+
+### D33. Fluid width (V5) and default maximum widths (V4)
+
+| Platform       | Fluid width                                                                                                                                                                                                                                                                                                                | Default `maxWidth`                                       |
+| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
+| X              | Built in: the iframe was 550 px in a 700 px box and 360 px in a 360 px box. No attribute needed.                                                                                                                                                                                                                           | 550: publish.x.com oEmbed returns `"width":550`.         |
+| Instagram      | Not built in. embed.js copies the blockquote's inline style onto its iframe and gives the iframe only `min-width: 326px`, so without a width it stays 328 px wide in a 500 px box. The component sets the embed code's own `width:calc(100% - 2px)` on the blockquote; `width:100%` overflows by the iframe's 2 px border. | 540: the embed code's `max-width:540px` (D23).           |
+| Threads        | Built in: embed.js's iframe style has `width:calc(100% - 2px)` (498 px in a 500 px box).                                                                                                                                                                                                                                   | 658: the embed code's `max-width:658px` (D17).           |
+| Facebook post  | Built in when `data-width` is absent (360 px in a 360 px box). A `data-width="500"` post in a 360 px box also rendered 360 px wide, so a width carried over from iframe embed code does no harm.                                                                                                                           | 750: Embedded Posts docs, `data-width` "Max. 750 pixel". |
+| Facebook video | Built in (360×203 in a 360 px box).                                                                                                                                                                                                                                                                                        | none: "no limit on the upper end".                       |
+
+Three documented attributes have no prop, because the brief's shared props use their names: X's `data-width` (`width`), and Facebook's `data-width` and `data-lazy` (`width`, `lazy`). Values for them that come from embed code are still written to the markup.
+
+### D34. Placeholder or fallback content
+
+With `html` input that has fallback content, that content is what the user sees until the platform upgrades it, so no placeholder is rendered. This follows §4.3: url input gets "only a placeholder until the embed loads". Url input, and embed code without fallback content (Facebook iframes and SDK snippets without a blockquote), render the placeholder below the platform markup until the post has rendered.
+
+The default skeleton's `minHeight` per platform: X 250, Instagram 540, Threads 240, Facebook post 300, Facebook video 200. Measured so far: a Threads text post at 242 px and a Facebook video at 16:9. The X, Instagram and Facebook-post values are estimates still to be measured in a visible window (D35).
+
+### D35. Lifecycle and verification
+
+- **Write once:** the platform markup is written once with `dangerouslySetInnerHTML` into a container that React never updates. The component is keyed by its markup, so different markup gets a fresh container. `suppressHydrationWarning` covers a host script that upgrades the markup before hydration.
+- **Retries (§6.2):** load the script (D27), then render up to three times. Each attempt waits 15 s for the render signal, with 1 s and 2 s between attempts, and `onError` reports the last failure. A signal from an earlier attempt still counts, and `onLoad` fires once.
+- **Cleanup:** none of the four platforms offers an API to tear an embed down. Unmounting stops watching (observers, X's event handler, timers), and late signals are ignored. The browser drops the platform's iframe along with the container.
+- **Host-built embeds** are checked before use (`verifyEmbed`). The `url` must be one `matchUrl` recognises with the same platform and id, else `onError`. `fallbackHtml` must be exactly what the platform's whitelist rebuilds, else it is dropped. A TikTok URL with an empty user (`/@/video/{id}`, D11) is now a valid URL for this check.
+
+Browser check on 2026-11-03 with the built package and React, in a page that was not on screen:
+
+- The Facebook post, Facebook video from URL, Instagram from URL and Threads all rendered and fired `onLoad`.
+- Switching pages A → B → A re-rendered every embed on each mount and added no script tags.
+- X and the Instagram post from the maintainer's embed code did not finish rendering: the X iframe stayed 0 px tall, and the Instagram iframe never received `MOUNTED`. Instagram's own unmodified embed code for that post stalled the same way in the same page, so the stall is not caused by the component's markup.
+
+Confirming X and that Instagram post in a visible window is left to the Milestone 7 playground.
+
 ## Open VERIFY items
 
-| ID  | Item                                            | Milestone | Status                                                                                                |
-| --- | ----------------------------------------------- | --------- | ----------------------------------------------------------------------------------------------------- |
-| V1  | Threads manual initialisation (§3)              | 5         | script evidence (D25); browser check open                                                             |
-| V2  | TikTok manual initialisation (§3)               | —         | no longer applies (D11)                                                                               |
-| V3  | Facebook post URL shapes the SDK accepts (§4.2) | 2         | resolved (D21)                                                                                        |
-| V4  | Default `maxWidth` per platform (§6)            | 4, 5      | Group B settled (D30); Threads 658 (D17) and Instagram 540 (D23) confirmed; X and Facebook posts open |
-| V5  | Fluid-width attribute per platform (§6.1)       | 5         | Facebook answered (D19)                                                                               |
+| ID  | Item                                            | Milestone | Status                                          |
+| --- | ----------------------------------------------- | --------- | ----------------------------------------------- |
+| V1  | Threads manual initialisation (§3)              | 5         | resolved: `instgrm.Embeds.process()` (D25, D32) |
+| V2  | TikTok manual initialisation (§3)               | —         | no longer applies (D11)                         |
+| V3  | Facebook post URL shapes the SDK accepts (§4.2) | 2         | resolved (D21)                                  |
+| V4  | Default `maxWidth` per platform (§6)            | 4, 5      | resolved (D30, D33)                             |
+| V5  | Fluid-width attribute per platform (§6.1)       | 5         | resolved (D33)                                  |
