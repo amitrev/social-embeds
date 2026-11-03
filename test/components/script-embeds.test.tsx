@@ -86,13 +86,15 @@ describe('XEmbed', () => {
     expect(wrapper.style.width).toBe('100%');
     expect(wrapper.style.maxWidth).toBe('550px');
     expect(markupOf(container)).toBe(
-      '<blockquote class="twitter-tweet"><a href="https://x.com/jack/status/20"></a></blockquote>',
+      '<blockquote><a href="https://x.com/jack/status/20"></a></blockquote>',
     );
     expect(container.textContent).toBe('loading');
     expect(load).not.toHaveBeenCalled();
 
     await enter();
     expect(load).toHaveBeenCalledWith('x');
+    // The class that widgets.js looks for is added only now (docs/decisions.md D39).
+    expect(markupOf(container)).toMatch(/^<blockquote class="twitter-tweet">/);
     const target = wrapper.firstElementChild;
     expect(twttr.widgets.load).toHaveBeenCalledWith(target);
 
@@ -109,7 +111,7 @@ describe('XEmbed', () => {
       <XEmbed embed={parsed(xOptions)} theme="light" dnt={false} />,
     );
     expect(markupOf(container)).toBe(
-      '<blockquote class="twitter-tweet" data-theme="light" data-cards="hidden" data-align="center" data-lang="es" data-dnt="false" data-width="400">' +
+      '<blockquote data-theme="light" data-cards="hidden" data-align="center" data-lang="es" data-dnt="false" data-width="400">' +
         '<p lang="en" dir="ltr">just setting up my twttr</p>— jack (@jack) ' +
         '<a href="https://x.com/jack/status/20?ref_src=twsrc%5Etfw">21 de marzo de 2006</a></blockquote>',
     );
@@ -198,7 +200,7 @@ describe('XEmbed', () => {
       />,
     );
     expect(markupOf(container)).toBe(
-      '<blockquote class="twitter-tweet"><a href="https://x.com/jack/status/20"></a></blockquote>',
+      '<blockquote><a href="https://x.com/jack/status/20"></a></blockquote>',
     );
   });
 });
@@ -218,11 +220,14 @@ describe('InstagramEmbed', () => {
       '540px',
     );
     expect(markupOf(container)).toBe(
-      '<blockquote class="instagram-media" data-instgrm-permalink="https://www.instagram.com/reel/DfQCqMnhpsG/" style="width:calc(100% - 2px)"></blockquote>',
+      '<blockquote data-instgrm-permalink="https://www.instagram.com/reel/DfQCqMnhpsG/" style="width:calc(100% - 2px)"></blockquote>',
     );
 
     await enter();
     expect(load).toHaveBeenCalledWith('instagram');
+    expect(markupOf(container)).toMatch(
+      /^<blockquote [^>]*class="instagram-media"/,
+    );
     expect(process).toHaveBeenCalled();
     const iframe = document.createElement('iframe');
     iframe.className = 'instagram-media instagram-media-rendered';
@@ -238,7 +243,7 @@ describe('InstagramEmbed', () => {
     const embed = parsed(instagramCode);
     const { container, rerender } = render(<InstagramEmbed embed={embed} />);
     expect(markupOf(container)).toMatch(
-      /^<blockquote class="instagram-media" data-instgrm-permalink="https:\/\/www\.instagram\.com\/p\/Dc85J9XNoGN\/" data-instgrm-version="14" data-instgrm-captioned="" style="width:calc\(100% - 2px\)"><div> <a href=/,
+      /^<blockquote data-instgrm-permalink="https:\/\/www\.instagram\.com\/p\/Dc85J9XNoGN\/" data-instgrm-version="14" data-instgrm-captioned="" style="width:calc\(100% - 2px\)"><div> <a href=/,
     );
     rerender(<InstagramEmbed embed={embed} captioned={false} />);
     expect(markupOf(container)).not.toContain('data-instgrm-captioned');
@@ -254,7 +259,7 @@ describe('ThreadsEmbed', () => {
     );
     const markup = markupOf(container);
     expect(markup).toMatch(
-      /^<blockquote class="text-post-media" data-text-post-permalink="https:\/\/www\.threads\.com\/t\/DfQSavwEs5C" data-text-post-version="0" id="ig-tp-DfQSavwEs5C" data-theme="dark"> <a href=/,
+      /^<blockquote data-text-post-permalink="https:\/\/www\.threads\.com\/t\/DfQSavwEs5C" data-text-post-version="0" id="ig-tp-DfQSavwEs5C" data-theme="dark"> <a href=/,
     );
     expect((container.firstElementChild as HTMLElement).style.maxWidth).toBe(
       '658px',
@@ -262,6 +267,9 @@ describe('ThreadsEmbed', () => {
 
     await enter();
     expect(load).toHaveBeenCalledWith('threads');
+    expect(markupOf(container)).toMatch(
+      /^<blockquote [^>]*class="text-post-media"/,
+    );
     const target = container.firstElementChild?.firstElementChild;
     act(() => {
       target?.prepend(document.createElement('iframe'));

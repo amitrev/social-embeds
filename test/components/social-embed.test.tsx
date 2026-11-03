@@ -20,7 +20,17 @@ function rendered(container: HTMLElement): string {
   if (iframe) return `iframe ${iframe.getAttribute('src') ?? ''}`;
   const root =
     container.firstElementChild?.firstElementChild?.firstElementChild;
-  return `${root?.tagName.toLowerCase() ?? 'nothing'}.${root?.className ?? ''}`;
+  if (!root) return 'nothing';
+  // X, Instagram and Threads blockquotes get their class only when the post renders
+  // (docs/decisions.md D39), so the host of the post's link tells them apart.
+  const link =
+    root.getAttribute('data-href') ??
+    root.getAttribute('data-instgrm-permalink') ??
+    root.getAttribute('data-text-post-permalink') ??
+    root.querySelector('a[href*="/status/"]')?.getAttribute('href') ??
+    '';
+  const name = root.className ? `.${root.className}` : '';
+  return `${root.tagName.toLowerCase()}${name} ${new URL(link).hostname}`;
 }
 
 beforeEach(() => {
@@ -34,10 +44,10 @@ afterEach(() => {
 
 describe('SocialEmbed with embed code', () => {
   it.each([
-    ['X', x, 'blockquote.twitter-tweet'],
-    ['Instagram', instagram, 'blockquote.instagram-media'],
-    ['Threads', threads, 'blockquote.text-post-media'],
-    ['Facebook', fbVideo, 'div.fb-video'],
+    ['X', x, 'blockquote x.com'],
+    ['Instagram', instagram, 'blockquote www.instagram.com'],
+    ['Threads', threads, 'blockquote www.threads.com'],
+    ['Facebook', fbVideo, 'div.fb-video www.facebook.com'],
     [
       'TikTok',
       tiktok,
@@ -83,12 +93,15 @@ describe('SocialEmbed with embed code', () => {
 
 describe('SocialEmbed with a URL', () => {
   it.each([
-    ['https://x.com/jack/status/20', 'blockquote.twitter-tweet'],
-    ['https://www.instagram.com/p/DfPQchkG1tg/', 'blockquote.instagram-media'],
-    ['https://www.threads.com/t/DfQSavwEs5C', 'blockquote.text-post-media'],
+    ['https://x.com/jack/status/20', 'blockquote x.com'],
+    [
+      'https://www.instagram.com/p/DfPQchkG1tg/',
+      'blockquote www.instagram.com',
+    ],
+    ['https://www.threads.com/t/DfQSavwEs5C', 'blockquote www.threads.com'],
     [
       'https://www.facebook.com/facebook/videos/10153231379946729/',
-      'div.fb-video',
+      'div.fb-video www.facebook.com',
     ],
     [
       'https://www.tiktok.com/@scout2015/video/6718335390845095173',

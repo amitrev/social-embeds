@@ -23,11 +23,11 @@ afterEach(() => {
 });
 
 describe('TikTokEmbed', () => {
-  it('renders the Embed Player for a post URL, 9:16 and at most 605px wide', () => {
+  it('renders the Embed Player for a post URL, 9:16 and at most 325px wide', () => {
     const { container } = render(<TikTokEmbed url={URL} lazy={false} />);
     const wrapper = container.firstElementChild as HTMLElement;
     expect(wrapper.style.aspectRatio).toBe('9 / 16');
-    expect(wrapper.style.maxWidth).toBe('605px');
+    expect(wrapper.style.maxWidth).toBe('325px');
     const iframe = container.querySelector('iframe');
     expect(iframe?.getAttribute('src')).toBe(
       'https://www.tiktok.com/player/v1/6718335390845095173',

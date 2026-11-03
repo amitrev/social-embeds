@@ -79,6 +79,34 @@ describe('Instagram and Threads', () => {
     await expect(threads).resolves.toBeUndefined();
   });
 
+  it('marks a loaded Facebook SDK as buffering while embed.js runs (D38)', async () => {
+    const load = await freshLoader();
+    const fb: Page = { XFBML: { parse: () => undefined } };
+    page.FB = fb;
+    const added = captureScripts();
+    const promise = load('instagram');
+    // embed.js skips itself while FB is a loaded SDK without __buffer.
+    expect(fb.__buffer).toBe(true);
+
+    page.instgrm = embeds('instagram');
+    fire(added[0], 'load');
+    await expect(promise).resolves.toBeUndefined();
+    expect('__buffer' in fb).toBe(false);
+  });
+
+  it('leaves the buffer of an SDK that is still loading alone', async () => {
+    const load = await freshLoader();
+    const buffer = { calls: [] };
+    const fb: Page = { __buffer: buffer };
+    page.FB = fb;
+    const added = captureScripts();
+    const promise = load('threads');
+    page.instgrm = embeds('threads');
+    fire(added[0], 'load');
+    await expect(promise).resolves.toBeUndefined();
+    expect(fb.__buffer).toBe(buffer);
+  });
+
   it('reuses the protocol-relative Instagram script of an embed code', async () => {
     const load = await freshLoader();
     addHostScript('//www.instagram.com/embed.js');

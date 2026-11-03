@@ -245,11 +245,11 @@ A `plugins/video.php?…&width=560` iframe was rendered at 320, 560 and 900 px w
 
 ### D30. Aspect ratios and default maximum widths (V4, Group B)
 
-| Platform                | Aspect without input size  | Default `maxWidth` | Evidence                                                                                                 |
-| ----------------------- | -------------------------- | ------------------ | -------------------------------------------------------------------------------------------------------- |
-| YouTube                 | 16:9; 9:16 for Shorts URLs | none               | Player docs give only a minimum: "at least 200px by 200px".                                              |
-| TikTok                  | 9:16 (D11)                 | 605                | Player docs give no size; 605 is the brief's value, from the legacy blockquote's own `max-width: 605px`. |
-| Facebook video (iframe) | 16:9                       | none               | Embedded Videos: `data-width` min 220 px, "no limit on the upper end".                                   |
+| Platform                | Aspect without input size  | Default `maxWidth` | Evidence                                                                                      |
+| ----------------------- | -------------------------- | ------------------ | --------------------------------------------------------------------------------------------- |
+| YouTube                 | 16:9; 9:16 for Shorts URLs | none               | Player docs give only a minimum: "at least 200px by 200px".                                   |
+| TikTok                  | 9:16 (D11)                 | 325                | TikTok's own embed code is 325×578. Was 605, the brief's value; changed in Milestone 7 (D40). |
+| Facebook video (iframe) | 16:9                       | none               | Embedded Videos: `data-width` min 220 px, "no limit on the upper end".                        |
 
 A Shorts URL is the only input that says a YouTube video is vertical, so it gets 9:16. Embed code always carries `width` and `height`, which win.
 
@@ -303,7 +303,12 @@ Three documented attributes have no prop, because the brief's shared props use t
 
 With `html` input that has fallback content, that content is what the user sees until the platform upgrades it, so no placeholder is rendered. This follows §4.3: url input gets "only a placeholder until the embed loads". Url input, and embed code without fallback content (Facebook iframes and SDK snippets without a blockquote), render the placeholder below the platform markup until the post has rendered.
 
-The default skeleton's `minHeight` per platform: X 250, Instagram 540, Threads 240, Facebook post 300, Facebook video 200. Measured so far: a Threads text post at 242 px and a Facebook video at 16:9. The X, Instagram and Facebook-post values are estimates still to be measured in a visible window (D35).
+The default skeleton's `minHeight` per platform: X 250, Instagram 680, Threads 240, Facebook post 300, Facebook video 200. Each is close to the smallest post of that kind, so the skeleton rarely ends taller than the post. Measured in Chrome during Milestone 7 (D37):
+
+- X at 550 px: text post 225, photo posts 528 and 581.
+- Instagram: photo post without caption 883 at 540 px and 676 at 375 px, with caption 1205 at 540 px. Instagram was 540 until then; raised to 680 with the maintainer's approval.
+- Threads text post: 239 (242 in Milestone 5).
+- Facebook post: 725 for a text and photo post at 500 px, the only live sample; Facebook's "no longer available" notice is 202.
 
 ### D35. Lifecycle and verification
 
@@ -318,7 +323,7 @@ Browser check on 2026-11-03 with the built package and React, in a page that was
 - Switching pages A → B → A re-rendered every embed on each mount and added no script tags.
 - X and the Instagram post from the maintainer's embed code did not finish rendering: the X iframe stayed 0 px tall, and the Instagram iframe never received `MOUNTED`. Instagram's own unmodified embed code for that post stalled the same way in the same page, so the stall is not caused by the component's markup.
 
-Confirming X and that Instagram post in a visible window is left to the Milestone 7 playground.
+Both were checked in a visible window in Milestone 7 (D37). X renders. That Instagram post has been removed, so it never renders anywhere.
 
 ## Dispatcher (Milestone 6, 2026-11-03)
 
@@ -330,6 +335,46 @@ Confirming X and that Instagram post in a visible window is left to the Mileston
 - **Unsupported URLs** never reach `fallback`, which is defined for embed code: nothing is rendered and `onError` names the URL.
 - **Props:** the dispatcher takes the shared props only. `height` reaches only YouTube, TikTok and Facebook, the platforms that can render as an iframe; the other platforms size themselves. Platform options come from the embed code; hosts who want option props use the platform component. Div attributes that share a name with a platform option (`lang`, `color`, `rel`) are not accepted by the dispatcher, because each platform reads that name its own way.
 - **Server rendering:** the server HTML of `<SocialEmbed html>` contains the platform blockquote with its whitelisted fallback content, such as the post text and status link, and no script (tested with `renderToString`).
+
+## Playground (Milestone 7, 2026-11-03)
+
+### D37. Playground and browser checks
+
+- **App:** `/playground`, a Next.js 16.4.4 App Router app in the pnpm workspace, private and not published. 16.4.5 was released the same day and was still blocked by pnpm's 24-hour minimum release age. It depends on the package with `workspace:*`, so it uses the built `dist/`; run `pnpm build` at the root first.
+- **Pages:** one page per platform at `/x`, `/instagram`, `/threads`, `/facebook`, `/tiktok` and `/youtube`, each showing:
+  - the embed codes from `test/fixtures` and two derived variants, a Facebook video iframe and a TikTok blockquote, each with the result of parsing it;
+  - post URLs;
+  - one embed parsed on the server with `social-embeds/parser` and passed to the platform component as `embed`;
+  - a client box for your own embed code or URL, which reports `onLoad`, `onError` and `fallback`.
+- **`/many`** has 20 embeds from post URLs. A bar in the layout counts each platform's script on the page and stays mounted during client navigation.
+- **RSC boundary:** every page is a Server Component that renders the package's components directly. `next build` pre-renders all pages, which works only through the `'use client'` directive in `dist/index.js`. The server HTML of every page has fallback content or skeletons, no platform scripts and no iframes.
+- **Lint and CI:** the root ESLint config still ignores `playground/`, and `next build` type-checks it. CI does not build the playground.
+
+Browser check in Chrome 156 on 2026-11-03:
+
+- Every platform renders from embed code, from a URL and from a server-parsed `embed`. That includes X with options: dark theme, Spanish, centred and 400 px wide.
+- Two sample posts have since been removed. Instagram post `Dc85J9XNoGN`, the maintainer's embed code, gets Instagram's notice that the post "may have been removed", so it never renders. Meta's Embedded Posts sample post shows Facebook's "no longer available" notice. The playground labels both.
+- On `/many`, while scrolling down, each embed loads as it comes near, in page order, and each platform's script loads once.
+- Client navigation keeps the same document, adds no script tags, and renders every embed again on each mount.
+- The app's built-in browser pane paints only while it is on screen. When hidden, X's iframe never sends its height and IntersectionObserver never fires. Chrome has neither problem.
+
+### D38. Instagram and Threads after the Facebook SDK
+
+Instagram's and Threads' `embed.js` both start with `(window.FB && !window.FB.__buffer) || (function () { … })()`. When the Facebook SDK has loaded first, they do nothing. This was reproduced without React: a plain page that loads the SDK and then Instagram's script gets no `instgrm` global. Loading Instagram first and the SDK second works. In the playground, `/facebook` followed by `/instagram` left Instagram blank. The same happened on `/many`, where a Facebook video comes before the first Instagram post.
+
+The SDK's own stub carries `__buffer` while the SDK loads, and neither script reads `FB` anywhere else. So, with the maintainer's approval, the loader marks a loaded SDK with `__buffer = true` just before adding Instagram's or Threads' script. It removes the mark when the script has run (its `load` event), when it fails, or when it times out. A stub that already has `__buffer` is left alone. Verified in Chrome: with the SDK loaded first, Instagram, Threads and a later `FB.XFBML.parse` all render, and the mark is gone afterwards.
+
+Not covered: a host page that adds the SDK and then Instagram's script itself. That script has already done nothing by the time an embed mounts, and the loader reports that Instagram did not initialise.
+
+### D39. Platform class added on render
+
+widgets.js scans the whole page for `blockquote.twitter-tweet` when it loads, unless the page has `<meta name="twitter:widgets:autoload" content="off">`. Instagram's and Threads' `embed.js` scan the whole page for `instagram-media` and `text-post-media` when they load and on every `process()` call. Without a change, once a platform's script was on the page, every embed of that platform rendered at once, however far off-screen. `lazy` then delayed only the first script load, and off-screen embeds kept their skeleton under the rendered post until they came near.
+
+With the maintainer's approval, the X, Instagram and Threads components now write their blockquote without its class. The server HTML keeps the blockquote, its attributes and its fallback content. The driver adds the class just before asking the platform to render: before `twttr.widgets.load(container)` or `instgrm.Embeds.process()`. It adds the class only to a blockquote that has none, because Threads swaps its class for `text-post-media-registered` once it takes the blockquote on, and a retry must not add the class back. Host CSS that targets those classes no longer applies to the fallback content before the post renders. This changes D35's write-once rule: the driver now changes the written markup once, by adding the class. Facebook needs no change: the SDK loads with `xfbml=0` and parses only the container it is given.
+
+### D40. TikTok default width
+
+At the default `maxWidth` of 605, the 9:16 player measured 605×1076, taller than a laptop screen. TikTok's own embed code, from oEmbed and from the share dialog, is 325×578. With the maintainer's approval, the default is now 325 (D30).
 
 ## Open VERIFY items
 

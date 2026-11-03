@@ -68,7 +68,8 @@ export function XEmbed(props: XEmbedProps) {
   // Without fallback content, widgets.js finds the post through this link.
   const content =
     embed.fallbackHtml ?? `<a href="${escapeAttribute(embed.url)}"></a>`;
-  const markup = `<blockquote class="twitter-tweet"${dataAttributes(ATTRIBUTES, options)}>${content}</blockquote>`;
+  // No class yet: the driver adds it when the post renders (docs/decisions.md D39).
+  const markup = `<blockquote${dataAttributes(ATTRIBUTES, options)}>${content}</blockquote>`;
 
   return (
     <ScriptEmbed

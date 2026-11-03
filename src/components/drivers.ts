@@ -65,6 +65,18 @@ function watch(
   };
 }
 
+/**
+ * widgets.js and embed.js render every blockquote with their class anywhere in the page, on
+ * load and on each call, so the components write the blockquote without it. The class is
+ * added once, when this embed renders; a platform that has since replaced it with its own
+ * (Threads' `text-post-media-registered`) keeps that (docs/decisions.md D39).
+ */
+function reveal(container: HTMLElement, className: string): void {
+  const blockquote = container.querySelector('blockquote');
+  if (blockquote && !blockquote.hasAttribute('class'))
+    blockquote.classList.add(className);
+}
+
 /** An iframe in `container` that the platform has given a height. */
 function hasSizedIframe(container: HTMLElement): boolean {
   return [...container.querySelectorAll('iframe')].some(
@@ -83,6 +95,7 @@ export const xDriver: Driver = {
     };
     twttr?.events?.bind?.('rendered', onRendered);
     const stop = watch(container, hasSizedIframe, done);
+    reveal(container, 'twitter-tweet');
     twttr?.widgets?.load?.(container);
     return () => {
       twttr?.events?.unbind?.('rendered', onRendered);
@@ -109,6 +122,7 @@ export const instagramDriver: Driver = {
         element.querySelector('iframe.instagram-media-rendered') !== null,
       done,
     );
+    reveal(container, 'instagram-media');
     processEmbeds();
     return stop;
   },
@@ -125,6 +139,7 @@ export const threadsDriver: Driver = {
         element.querySelector('blockquote') === null,
       done,
     );
+    reveal(container, 'text-post-media');
     processEmbeds();
     return stop;
   },

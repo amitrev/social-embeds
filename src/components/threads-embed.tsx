@@ -31,7 +31,8 @@ export function ThreadsEmbed(props: ThreadsEmbedProps) {
 
   const options = withProps(embed.options, { theme });
   // embed.js removes the blockquote by this id once the post has mounted.
-  const markup = `<blockquote class="text-post-media"${attributes({
+  // No class yet: the driver adds it when the post renders (docs/decisions.md D39).
+  const markup = `<blockquote${attributes({
     'data-text-post-permalink': embed.url,
     'data-text-post-version': options.version ?? 0,
     id: `ig-tp-${embed.id}`,

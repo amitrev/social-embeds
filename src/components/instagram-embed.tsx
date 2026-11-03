@@ -13,8 +13,8 @@ export type InstagramEmbedProps = EmbedSource &
   Omit<SharedProps, keyof InstagramOptions> &
   InstagramOptions;
 
-/** A photo post at the narrowest width Instagram allows (docs/decisions.md D34). */
-const MIN_HEIGHT = 540;
+/** A photo post without caption at 375px, the smallest measured (docs/decisions.md D34). */
+const MIN_HEIGHT = 680;
 
 /**
  * embed.js copies the blockquote's inline style onto its iframe and gives the iframe no
@@ -37,7 +37,8 @@ export function InstagramEmbed(props: InstagramEmbedProps) {
   if (!embed) return null;
 
   const options = withProps(embed.options, { captioned });
-  const markup = `<blockquote class="instagram-media"${attributes({
+  // No class yet: the driver adds it when the post renders (docs/decisions.md D39).
+  const markup = `<blockquote${attributes({
     'data-instgrm-permalink': embed.url,
     'data-instgrm-version': options.version,
     'data-instgrm-captioned': options.captioned === true ? true : undefined,

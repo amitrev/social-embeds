@@ -57,6 +57,17 @@ describe('xDriver', () => {
     expect(twttr.handlers.size).toBe(0);
   });
 
+  it('adds the twitter-tweet class just before loading the widgets (D39)', () => {
+    const twttr = fakeTwttr();
+    const blockquote = document.createElement('blockquote');
+    container.append(blockquote);
+    twttr.widgets.load.mockImplementation(() => {
+      expect(blockquote.className).toBe('twitter-tweet');
+    });
+    xDriver.render(container, vi.fn());
+    expect(twttr.widgets.load).toHaveBeenCalled();
+  });
+
   it('also finishes when an iframe in the container gets a height', async () => {
     fakeTwttr();
     const done = vi.fn();
@@ -106,6 +117,22 @@ describe('instagramDriver and threadsDriver', () => {
     await vi.waitFor(() => {
       expect(done).toHaveBeenCalled();
     });
+  });
+
+  it('adds the class once, so a retry does not undo what embed.js registered (D39)', () => {
+    const process = vi.fn();
+    page.instgrm = { Embeds: { process } };
+    const blockquote = document.createElement('blockquote');
+    container.append(blockquote);
+    process.mockImplementationOnce(() => {
+      expect(blockquote.className).toBe('text-post-media');
+      // What embed.js does when it takes the blockquote on.
+      blockquote.className = 'text-post-media-registered';
+    });
+    threadsDriver.render(container, vi.fn());
+    threadsDriver.render(container, vi.fn());
+    expect(process).toHaveBeenCalledTimes(2);
+    expect(blockquote.className).toBe('text-post-media-registered');
   });
 
   it('throws when instgrm.Embeds.process is missing', () => {

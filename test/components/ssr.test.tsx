@@ -16,8 +16,10 @@ describe('server rendering', () => {
 
   it('renders the fallback content of embed code for crawlers (brief §6.3)', () => {
     const html = renderToString(<SocialEmbed html={xLink} />);
-    expect(html).toContain('<blockquote class="twitter-tweet">');
-    expect(html).toContain('Four more years.');
+    // The class is added on the client when the post renders (docs/decisions.md D39).
+    expect(html).toContain(
+      '<blockquote><p lang="en" dir="ltr">Four more years.',
+    );
     expect(html).toContain(
       'href="https://x.com/BarackObama/status/266031293945503744?ref_src=twsrc%5Etfw"',
     );

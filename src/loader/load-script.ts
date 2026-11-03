@@ -19,6 +19,8 @@ export type PlatformScript = {
   readyCallback?: () => Promise<void>;
   /** Once the global is present, waits for the platform's own ready signal. */
   whenPresent?: () => Promise<void>;
+  /** Prepares the page for the script to run; the returned function undoes that. */
+  prepare?: () => () => void;
 };
 
 // Fixed retry policy (brief §6.2): three attempts, waiting 1 s and then 2 s.
@@ -79,7 +81,8 @@ async function add(script: PlatformScript): Promise<void> {
     : poll(script));
 }
 
-function insert(script: PlatformScript): Promise<void> {
+async function insert(script: PlatformScript): Promise<void> {
+  const restore = script.prepare?.();
   const loaded = new Promise<void>((resolve, reject) => {
     const element = document.createElement('script');
     element.src = script.url;
@@ -95,7 +98,12 @@ function insert(script: PlatformScript): Promise<void> {
     });
     document.head.appendChild(element);
   });
-  return timeout(loaded, `${script.url} did not load`);
+  try {
+    await timeout(loaded, `${script.url} did not load`);
+  } finally {
+    // A script runs before its load event, so the page can be put back now.
+    restore?.();
+  }
 }
 
 function poll(script: PlatformScript): Promise<void> {

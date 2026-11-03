@@ -14,7 +14,7 @@ type PlatformGlobals = {
       registeredEmbedSDKs?: Partial<Record<string, boolean>>;
     };
   };
-  FB?: { XFBML?: { parse?: unknown } };
+  FB?: { XFBML?: { parse?: unknown }; __buffer?: unknown };
   fbAsyncInit?: () => void;
 };
 
@@ -59,12 +59,28 @@ const x: PlatformScript = {
     }),
 };
 
+/**
+ * Instagram's and Threads' embed.js do nothing when a loaded Facebook SDK is on the page:
+ * both start with `(window.FB && !window.FB.__buffer) || …`. The SDK's own stub carries
+ * `__buffer` while the SDK loads, so a loaded SDK is marked the same way while the script
+ * runs. Neither script reads `FB` anywhere else (docs/decisions.md D38).
+ */
+function besideFacebookSdk(): () => void {
+  const fb = globals().FB;
+  if (!fb || fb.__buffer) return () => {};
+  fb.__buffer = true;
+  return () => {
+    delete fb.__buffer;
+  };
+}
+
 const instagram: PlatformScript = {
   key: 'instagram',
   url: 'https://www.instagram.com/embed.js',
   isOwn: (src) =>
     /^https?:\/\/www\.instagram\.com\/embed\.js(?:[?#]|$)/.test(src),
   isPresent: embedSdkRegistered('instagram'),
+  prepare: besideFacebookSdk,
 };
 
 const threads: PlatformScript = {
@@ -73,6 +89,7 @@ const threads: PlatformScript = {
   isOwn: (src) =>
     /^https?:\/\/www\.threads\.(?:com|net)\/embed\.js(?:[?#]|$)/.test(src),
   isPresent: embedSdkRegistered('threads'),
+  prepare: besideFacebookSdk,
 };
 
 /**
