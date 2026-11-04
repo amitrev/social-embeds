@@ -1,0 +1,67 @@
+# Weekly updates for the GitHub Actions, which the workflows pin to commit SHAs, and for the
+# development dependencies. The package itself has no runtime dependencies, and its react
+# and react-dom peer ranges are left alone.
+#
+# Every update waits two days after its release: pnpm refuses packages younger than its
+# 24-hour minimum release age, and a short wait keeps freshly compromised releases out.
+
+version: 2
+
+updates:
+  # Dependabot moves the SHA and the version comment on the same line together.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 2
+    groups:
+      actions:
+        patterns: ['*']
+    commit-message:
+      prefix: ci
+      include: scope
+
+  # pnpm, read from pnpm-lock.yaml.
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 2
+    allow:
+      - dependency-type: development
+    versioning-strategy: increase
+    ignore:
+      # typescript-eslint supports TypeScript below 6.1 only (docs/decisions.md D3).
+      - dependency-name: typescript
+        update-types: ['version-update:semver-major']
+    groups:
+      dev-dependencies:
+        patterns: ['*']
+        update-types: [minor, patch]
+    commit-message:
+      prefix: chore
+      include: scope
+
+  # The private Next.js playground: all of its dependencies are development tools.
+  - package-ecosystem: npm
+    directory: /playground
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 2
+    versioning-strategy: increase
+    ignore:
+      - dependency-name: typescript
+        update-types: ['version-update:semver-major']
+      # Kept at the oldest Node.js line the package supports (engines >=22).
+      - dependency-name: '@types/node'
+        update-types: ['version-update:semver-major']
+    groups:
+      playground:
+        patterns: ['*']
+        update-types: [minor, patch]
+    commit-message:
+      prefix: chore
+      include: scope
