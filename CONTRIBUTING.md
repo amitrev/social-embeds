@@ -71,6 +71,7 @@ Pick the bump (patch for fixes, minor for new features, major for breaking chang
 Releases are automated by `.github/workflows/release.yml`:
 
 1. When changesets reach `main`, the workflow opens or updates a "Version Packages" pull request that bumps the version and updates `CHANGELOG.md`.
-2. Merging that pull request publishes the new version to npm through trusted publishing, with provenance, and creates the GitHub release and tag. No npm token is involved.
+2. Merging that pull request stages the new version on npm through trusted publishing, with provenance, and creates its git tag and a draft GitHub release. No npm token is involved.
+3. The maintainer approves the staged version on npm with two-factor authentication, which makes it live, and publishes the draft release.
 
 The maintainer's one-time setup is in [docs/releasing.md](./docs/releasing.md).

@@ -1,8 +1,9 @@
 name: Release
 
-# Changesets' trusted-publishing workflow (changesets.dev/guide/automating), with pnpm.
-# Only the publish job can request an OIDC token, and no npm token exists anywhere: if the
-# token exchange fails, pnpm has no credentials to fall back on and the publish fails.
+# Changesets versions the package; npm staged publishing releases it (docs/releasing.md).
+# Only the stage job can request an OIDC token, and no npm token exists anywhere: if the
+# token exchange fails, npm has no credentials to fall back on and the job fails. A staged
+# version goes live only when a maintainer approves it on npm with two-factor authentication.
 
 on:
   push:
@@ -13,12 +14,19 @@ permissions: {}
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
 
+# Named explicitly so that steps run with `-o pipefail`: a failed `npm stage publish` must
+# fail its step even when piped through `tee`.
+defaults:
+  run:
+    shell: bash
+
 jobs:
   select-mode:
     runs-on: ubuntu-latest
     outputs:
       mode: ${{ steps.select-mode.outputs.mode }}
-      publish-plan-artifact-id: ${{ steps.select-mode.outputs.publish-plan-artifact-id }}
+      version: ${{ steps.version.outputs.version }}
+      staged: ${{ steps.staged.outputs.staged }}
     permissions:
       contents: read
     steps:
@@ -33,6 +41,19 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - id: select-mode
         uses: changesets/action/select-mode@ae32849d5ba541f9ae29e40e22a623bc13562f51 # v2.1.2
+      - id: version
+        run: echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
+      # npm lists a staged version only once it is approved, so the tag that the stage job
+      # pushes is what stops later pushes from staging the same version again.
+      - id: staged
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          if git ls-remote --exit-code --tags origin "refs/tags/v$VERSION" > /dev/null; then
+            echo "staged=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "staged=false" >> "$GITHUB_OUTPUT"
+          fi
 
   # Changesets on main: open or update the "Version Packages" pull request.
   version:
@@ -54,13 +75,12 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - uses: changesets/action/version@ae32849d5ba541f9ae29e40e22a623bc13562f51 # v2.1.2
 
-  # A version that is not on npm yet: check, build and pack it without publish rights.
+  # A version that is neither on npm nor staged: check, build and pack it without publish
+  # rights.
   pack:
-    if: needs.select-mode.outputs.mode == 'publish'
+    if: needs.select-mode.outputs.mode == 'publish' && needs.select-mode.outputs.staged == 'false'
     needs: select-mode
     runs-on: ubuntu-latest
-    outputs:
-      pack-dir-artifact-id: ${{ steps.pack.outputs.pack-dir-artifact-id }}
     permissions:
       contents: read
     steps:
@@ -80,30 +100,62 @@ jobs:
       - run: pnpm check:directives
       - run: pnpm check:publint
       - run: pnpm check:attw
-      - id: pack
-        uses: changesets/action/pack@ae32849d5ba541f9ae29e40e22a623bc13562f51 # v2.1.2
+      - run: pnpm pack --out "$RUNNER_TEMP/social-embeds.tgz"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          publish-plan-artifact-id: ${{ needs.select-mode.outputs.publish-plan-artifact-id }}
+          name: package
+          path: ${{ runner.temp }}/social-embeds.tgz
+          if-no-files-found: error
+          retention-days: 7
 
-  # Publishes the packed tarball with pnpm through npm trusted publishing (OIDC), which
-  # attaches provenance, then creates the git tag and GitHub release.
-  publish:
-    needs: pack
+  # Stages the packed tarball through npm trusted publishing (OIDC), with provenance, then
+  # tags the commit and drafts the GitHub release. npm 11.15.0 or later can stage; Node 24
+  # ships it. Changesets cannot stage yet (changesets/changesets#2025).
+  stage:
+    needs: [select-mode, pack]
     runs-on: ubuntu-latest
     environment: npm
     permissions:
       contents: write
       id-token: write
+    env:
+      VERSION: ${{ needs.select-mode.outputs.version }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 24
           package-manager-cache: false
-      - run: pnpm install --frozen-lockfile
-      - uses: changesets/action/publish@ae32849d5ba541f9ae29e40e22a623bc13562f51 # v2.1.2
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
-          pack-dir-artifact-id: ${{ needs.pack.outputs.pack-dir-artifact-id }}
+          name: package
+          path: ${{ runner.temp }}/package
+      - name: Stage on npm
+        run: |
+          npm --version
+          npm stage publish "$RUNNER_TEMP/package/social-embeds.tgz" --access public --provenance --json | tee "$RUNNER_TEMP/stage.json"
+      - name: Tag and draft the GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api "repos/$GITHUB_REPOSITORY/git/refs" -f ref="refs/tags/v$VERSION" -f sha="$GITHUB_SHA" > /dev/null
+          awk -v v="$VERSION" '$0 == "## " v { found = 1; next } found && /^## / { exit } found' CHANGELOG.md > "$RUNNER_TEMP/notes.md"
+          gh release create "v$VERSION" --repo "$GITHUB_REPOSITORY" --draft --verify-tag --title "v$VERSION" --notes-file "$RUNNER_TEMP/notes.md"
+      - name: Summary
+        run: |
+          {
+            echo "## social-embeds@$VERSION is staged on npm"
+            echo
+            echo "It goes live once a maintainer approves it, with two-factor authentication:"
+            echo
+            echo "- npmjs.com: social-embeds, Staged Packages tab, Approve"
+            echo "- or: \`npm stage approve <stage-id>\`"
+            echo
+            echo "Then publish the draft GitHub release v$VERSION."
+            echo
+            echo '```json'
+            cat "$RUNNER_TEMP/stage.json"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"

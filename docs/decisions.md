@@ -388,13 +388,34 @@ At the default `maxWidth` of 605, the 9:16 player measured 605×1076, taller tha
 
 ### D42. Trusted publishing (D8)
 
-- **Workflow:** `release.yml` follows the trusted-publishing workflow from [Changesets' automating guide](https://changesets.dev/guide/automating), with pnpm. It uses the separate `changesets/action` v2 sub-actions (`select-mode`, `version`, `pack`, `publish`), which the action recommends for trusted publishing. v2 targets Changesets v3, the CLI version used here. Only the publish job has `id-token: write`. It runs in the `npm` environment and publishes the tarball that the pack job built and checked.
+- **Workflow:** `release.yml` follows the trusted-publishing workflow from [Changesets' automating guide](https://changesets.dev/guide/automating), with pnpm. It uses the separate `changesets/action` v2 sub-actions (`select-mode`, `version`, `pack`, `publish`), which the action recommends for trusted publishing. v2 targets Changesets v3, the CLI version used here. Only the publish job has `id-token: write`. It runs in the `npm` environment and publishes the tarball that the pack job built and checked. The pack and publish steps were replaced by staged publishing the next day (D43).
 - **Who publishes:** in a pnpm workspace, `changeset publish` runs `pnpm publish <tarball> --access public --tag <tag> --no-git-checks --json` (source of `@changesets/cli` 3.0.3). pnpm 12 does the OIDC exchange itself: its binary reads `ACTIONS_ID_TOKEN_REQUEST_URL` and `ACTIONS_ID_TOKEN_REQUEST_TOKEN` and calls npm's `/-/npm/v1/oidc/token/exchange/package/`. No npm CLI version is involved; npm's own requirement (npm 11.5.1, Node 22.14) applies to `npm publish`. Under trusted publishing, pnpm attaches provenance to a public package from a public repository ([pnpm publish](https://pnpm.io/cli/publish)).
 - **No silent fallback:** when the exchange fails, pnpm logs `Skipped OIDC: …` and falls back to configured credentials (pnpm 12.12.1 changelog; the message is in the binary). The release jobs have no npm token, and `setup-node` gets no `registry-url`, so there is nothing to fall back to and the publish fails. The setup steps also turn on npm's "Require two-factor authentication and disallow tokens".
 - **Before the first publish:** not possible. [`npm trust`](https://docs.npmjs.com/cli/v11/commands/npm-trust) states that the package must already exist on the registry, and the website setting lives in the package's settings. `docs/releasing.md` therefore claims the name with a placeholder `0.0.0` that has only a `package.json`. 0.1.0 is then the first release from the workflow, with provenance, and the placeholder is deprecated.
 - **Expiry:** a new trusted publisher must complete a publish within 2 days, or it expires ([npm docs](https://docs.npmjs.com/trusted-publishers), updated 2026-10-06).
+- **Allowed actions:** a trusted publisher created after 2026-09-03 allows only `npm stage publish` unless `npm publish` is ticked as well. The first release run failed on 2026-11-04 with `403 … {"error":"OIDC permission denied for this action"}` from a connection without it: the exchange had worked, the publish was refused, and nothing was published. npmjs.com marks ticking `npm publish` as "Not recommended", so the maintainer chose staged publishing instead (D43).
 - **First version:** 0.1.0, from a minor changeset (maintainer's choice).
 - **Dry run:** `pnpm publish --dry-run` passes. The packed tarball is 26 KB with nine files: `dist/` (`index.js` starting with `"use client"`, `parser.js` without it, their shared chunk and type declarations), `README.md`, `LICENSE.md` and `package.json`.
+
+### D43. Staged publishing
+
+Maintainer decision, 2026-11-04: keep the trusted publisher at npm's default (stage only) and release through [staged publishing](https://docs.npmjs.com/staged-publishing). CI can only stage a version; it goes live when a maintainer approves it on npmjs.com or with `npm stage approve`, which always asks for two-factor authentication. Even a compromised workflow cannot release on its own.
+
+Evidence:
+
+- npm: a trusted publisher always allows `npm stage publish`; tokens from trusted publishing "cannot be used to approve from the stage queue"; and "Provenance is generated for staged packages on parity with direct publishes" (npm maintainer, [GitHub discussion #196675](https://github.com/orgs/community/discussions/196675), 2026-05-22). [`npm stage`](https://docs.npmjs.com/cli/v11/commands/npm-stage) needs npm 11.15.0 or later, and its `--provenance` defaults to off, so the workflow passes it.
+- Changesets cannot stage ([changesets/changesets#2025](https://github.com/changesets/changesets/issues/2025), open). `changeset publish` only has `--otp`, `--tag`, `--from-pack-dir` and `--git-tag`.
+- `pnpm stage publish` exists, but pnpm's docs do not say whether it uses OIDC. npm documents that its own `npm stage publish` does, so the stage step uses npm. GitHub's Node.js 24.22 ships npm 11.19.1 (nodejs.org release index), so nothing extra is installed. `npm stage publish <tarball> --access public --provenance --json` was dry-run with npm 11.19.1 against the packed 0.1.0 tarball.
+
+The workflow:
+
+- keeps Changesets' `select-mode` and `version` jobs;
+- replaces its `pack` with `pnpm pack` plus `actions/upload-artifact`;
+- replaces its `publish` with a `stage` job. That job downloads the tarball, runs `npm stage publish`, pushes a `v{version}` tag, creates a draft GitHub release from the `CHANGELOG.md` entry, and writes the stage id and approval steps to the job summary.
+
+npm lists a staged version only once it is approved, so Changesets' `select-mode` keeps reporting `publish` until then. The `v{version}` tag marks a version as staged, and `pack` and `stage` are skipped while it exists. The tag is pushed after staging succeeds, so a failed stage leaves no tag and the next push retries. The workflow runs `bash` with `pipefail`, so a failed `npm stage publish` fails its step even though its output is piped through `tee`.
+
+The new package's `0.0.0-stage` version, created a minute before the maintainer's `0.0.0` placeholder, is npm's placeholder for staged publishing ([staged publishing](https://docs.npmjs.com/staged-publishing)).
 
 ## Open VERIFY items
 
