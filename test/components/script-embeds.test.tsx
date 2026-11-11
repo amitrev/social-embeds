@@ -17,6 +17,7 @@ vi.mock('../../src/loader/platform-scripts', () => ({
 }));
 
 const load = vi.mocked(loadPlatformScript);
+const reel = 'https://www.facebook.com/reel/1709746083847442';
 const page = window as unknown as Record<string, unknown>;
 
 function parsed(html: string): ParsedEmbed {
@@ -348,6 +349,54 @@ describe('FacebookEmbed', () => {
     expect((container.firstElementChild as HTMLElement).style.aspectRatio).toBe(
       '',
     );
+  });
+
+  it('renders that video as the plain iframe when showText is off', () => {
+    const { container } = render(
+      <FacebookEmbed
+        embed={parsed(videoIframe)}
+        showText={false}
+        maxHeight={640}
+        lazy={false}
+      />,
+    );
+    const wrapper = container.firstElementChild as HTMLElement;
+    expect(wrapper.style.aspectRatio).toBe('267 / 476');
+    // 267:476 at most 640px tall.
+    expect(wrapper.style.maxWidth).toBe('358px');
+    expect(container.querySelector('iframe')?.getAttribute('src')).toBe(
+      `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(reel)}&show_text=false&width=267&height=476`,
+    );
+    expect(container.querySelector('.fb-video')).toBeNull();
+    expect(load).not.toHaveBeenCalled();
+  });
+
+  it('keeps the player options on that plain iframe', () => {
+    const { container } = render(
+      <FacebookEmbed
+        embed={parsed(videoIframe.replace('&t=0', '&show_captions=true'))}
+        showText={false}
+        autoplay
+        lazy={false}
+      />,
+    );
+    expect(container.querySelector('iframe')?.getAttribute('src')).toBe(
+      `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(reel)}&show_text=false&autoplay=true&show_captions=true&width=267&height=476`,
+    );
+  });
+
+  it('keeps maxHeight off the wrapper of an SDK embed', () => {
+    const { container } = render(
+      <FacebookEmbed
+        url="https://www.facebook.com/facebook/videos/10153231379946729/"
+        showText={false}
+        maxHeight={640}
+      />,
+    );
+    const wrapper = container.firstElementChild as HTMLElement;
+    expect(wrapper.hasAttribute('maxheight')).toBe(false);
+    // A video URL says nothing about its size, so it stays with the SDK.
+    expect(container.querySelector('iframe')).toBeNull();
   });
 
   it('keeps video iframe embed code without the post text as an iframe', () => {

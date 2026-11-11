@@ -25,6 +25,11 @@ function fixture(file: string): string {
   );
 }
 
+/** A Facebook reel's iframe embed code that shows the post text. */
+export function facebookReel(): string {
+  return fixture('facebook/video-iframe-reel.html');
+}
+
 /** Embed code per platform: the fixtures, plus variants no current source produces. */
 export function embedCodes(platform: PlatformKey): Sample[] {
   switch (platform) {
@@ -72,7 +77,7 @@ export function embedCodes(platform: PlatformKey): Sample[] {
         {
           label:
             'Reel, iframe with the post text from the Embed dialog (rendered with the SDK)',
-          value: fixture('facebook/video-iframe-reel.html'),
+          value: facebookReel(),
         },
         {
           label: 'Video, iframe without the post text (derived)',

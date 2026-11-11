@@ -439,9 +439,27 @@ Evidence (Chrome, 2026-11-11, the reel of that fixture):
 - `show_text=1` shows the text as `true` does; `show_text=0` does not (both loaded as `plugins/video.php` iframes).
 - The SDK sends `data-show-text` to the plugin as `show_text`: its iframe's query was `app_id, channel, container_width, href, locale, sdk, show_text`.
 
-The rule: a `plugins/video.php` iframe whose `show_text` is `true` or `1` parses as `variant: 'sdk'` with `showText: true`, for the reason §5.4 gives for posts. `allowfullscreen`, `autoplay` and `show_captions` carry over as the options the SDK reads. `width`, `height` and `t` are dropped: the SDK video is fluid (D33), as the iframe is (D29), and `fb-video` has no attribute for a start time. A video iframe without the text stays an iframe (D22, D29).
+The rule: a `plugins/video.php` iframe whose `show_text` is `true` or `1` parses as `variant: 'sdk'` with `showText: true`, for the reason §5.4 gives for posts. `allowfullscreen`, `autoplay` and `show_captions` carry over as the options the SDK reads. `width` and `height` do not go to the SDK, because its video is fluid (D33), as the iframe is (D29); they are kept as the embed's `size` (D45). `t` is dropped: `fb-video` has no attribute for a start time. A video iframe without the text stays an iframe (D22, D29).
 
 The cost: these embeds load the SDK, and their height is known only once it has rendered, so the placeholder is the SDK video's (D34).
+
+### D45. `maxHeight`, and Facebook video embed code without its post text
+
+D44 embeds are tall: the reel of its fixture is 343×962 on a 375 px phone and 550×1233 in a 550 px column. The maintainer found that too tall (2026-11-11). A height limit cannot apply while the text shows, because the text's height is unknown before rendering and grows as the box narrows (D44's table). Facebook offers nothing in between: `data-show-text` is the only documented attribute for the text (D22), and the text is inside a cross-origin iframe.
+
+Maintainer decision, 2026-11-11: add `maxHeight`, and let `showText={false}` render such code as the plain iframe.
+
+- **`maxHeight`** is a prop of the iframe-based embeds, beside `height`. With an aspect ratio, a height limit is a width limit: the wrapper's `max-width` becomes the smaller of `maxWidth` and `floor(maxHeight × width / height)`. Nothing else changes, so there is no layout shift and no new CSS. With a fixed `height`, it is the wrapper's `max-height`. Script-based embeds size themselves, so `<SocialEmbed>` and `FacebookEmbed` keep the prop off their wrappers, as they do `height`.
+- **The parser keeps the player's size.** A D44 embed's `size` is the iframe's `width` and `height` parameters (267×476 in the fixture), not its attributes: the attribute height (591) includes the text.
+- **`showText={false}`** on `FacebookEmbed`, for a video whose `size` is known, renders `plugins/video.php?href=…&show_text=false&width=…&height=…` in a box of the player's aspect ratio, with `allowfullscreen`, `autoplay` and `show_captions` when set. No SDK. Without a known size (video URLs, `fb-video` snippets) the video stays with the SDK, which then leaves the text out.
+- **`variant`** stays `'sdk'` on the parsed embed: it names the path without host props.
+- **Not done:** `showText` (true) on video embed code without the text keeps the iframe. `<SocialEmbed>` takes no platform options (D36), so a host that wants this uses `FacebookEmbed`.
+
+Evidence (playground, 2026-11-11), the fixture with `showText={false}` and `maxHeight={640}`:
+
+- Wrapper style `position:relative;width:100%;max-width:358px;aspect-ratio:267 / 476`; 358×638 at an 847 px wide viewport.
+- In a 343 px container: 343×611. The iframe loaded, the player filled it and no text showed.
+- The same sizes for YouTube Shorts (360 px wide at `maxHeight={640}`) are covered by tests only.
 
 ## Open VERIFY items
 

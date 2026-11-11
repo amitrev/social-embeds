@@ -10,7 +10,13 @@ import {
 } from 'social-embeds';
 import { type ParsedEmbed, parseEmbed } from 'social-embeds/parser';
 import { TryEmbed } from '../../components/try-embed';
-import { embedCodes, PLATFORMS, type PlatformKey, URLS } from '../../samples';
+import {
+  embedCodes,
+  facebookReel,
+  PLATFORMS,
+  type PlatformKey,
+  URLS,
+} from '../../samples';
 
 export const dynamicParams = false;
 
@@ -38,6 +44,24 @@ function ParsedOnServer({ embed }: { embed: ParsedEmbed }) {
     case 'youtube':
       return <YouTubeEmbed embed={embed} />;
   }
+}
+
+/** A video of known size without its post text: the plain iframe, limited by height. */
+function ReelWithoutText() {
+  const embed = parseEmbed(facebookReel());
+  if (!embed) return null;
+  return (
+    <section>
+      <h2>Video without the post text</h2>
+      <p>
+        The reel embed code above, with <code>showText={'{false}'}</code> and{' '}
+        <code>maxHeight={'{640}'}</code> on <code>FacebookEmbed</code>: the
+        plain iframe in a box of the player’s aspect ratio, at most 640 px tall.
+        No SDK.
+      </p>
+      <FacebookEmbed embed={embed} showText={false} maxHeight={640} />
+    </section>
+  );
 }
 
 export default async function PlatformPage({
@@ -92,6 +116,8 @@ export default async function PlatformPage({
           <ParsedOnServer embed={parsed} />
         </section>
       )}
+
+      {platform === 'facebook' && <ReelWithoutText />}
 
       <section>
         <h2>Your own embed code or URL</h2>

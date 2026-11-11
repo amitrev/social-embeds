@@ -7,7 +7,7 @@ import {
   withSize,
 } from '../platform';
 import type { ParsedEmbed } from '../types';
-import { coerce, parseUrl, type ParsedUrl } from '../url';
+import { coerce, parseUrl, pixels, type ParsedUrl } from '../url';
 
 // Rendering rules (brief §5.4, docs/decisions.md D10 and D44): posts always use the SDK,
 // video embed code keeps its iframe unless it shows the post text, video URLs use the SDK.
@@ -44,7 +44,7 @@ const OPTION_ATTRIBUTES = [
 ] as const;
 
 // plugins/video.php parameters that the SDK reads as fb-video attributes. The iframe's
-// width, height and t do not carry over: the SDK sizes the video itself.
+// width and height become the embed's size; t does not carry over.
 const VIDEO_SDK_PARAMETERS = [
   ['show_text', 'showText'],
   ['allowfullscreen', 'allowfullscreen'],
@@ -182,7 +182,15 @@ export const facebook: PlatformParser = {
           const value = src.query.get(parameter);
           if (value !== undefined) options[key] = coerce(value);
         }
-        return embed(found, 'video', 'sdk', { ...options, showText: true });
+        // The player's own size: the iframe's height attribute includes the text.
+        const width = pixels(src.query.get('width'));
+        const height = pixels(src.query.get('height'));
+        return withSize(
+          embed(found, 'video', 'sdk', { ...options, showText: true }),
+          width === undefined || height === undefined
+            ? undefined
+            : { width, height },
+        );
       }
       // Kept as the iframe that came in: every parameter except href, as given.
       const options: Options = Object.fromEntries(

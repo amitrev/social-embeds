@@ -83,6 +83,9 @@ describe('Facebook video embed code', () => {
       id: '1709746083847442',
       variant: 'sdk',
       options: { showText: true },
+      // The player's own size, from the iframe's parameters: 115 of the iframe's 591px
+      // are for the text.
+      size: { width: 267, height: 476 },
     });
   });
 
