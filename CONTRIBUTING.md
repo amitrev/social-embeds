@@ -21,7 +21,7 @@ pnpm install
 | `pnpm check:publint`    | publint                                                               |
 | `pnpm check:attw`       | Are the Types Wrong, ESM-only profile                                 |
 
-CI runs all of them on Node 22, 24 and 26.
+CI runs all of them on Node 22, 24 and 26, and then builds the playground with the built package (`pnpm --dir playground build`). That build fails when a change breaks the package in Next.js, for example a missing `'use client'` or a type error in a page that uses a component.
 
 ## Layout
 

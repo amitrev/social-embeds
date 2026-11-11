@@ -350,7 +350,7 @@ Both were checked in a visible window in Milestone 7 (D37). X renders. That Inst
   - a client box for your own embed code or URL, which reports `onLoad`, `onError` and `fallback`.
 - **`/many`** has 20 embeds from post URLs. A bar in the layout counts each platform's script on the page and stays mounted during client navigation.
 - **RSC boundary:** every page is a Server Component that renders the package's components directly. `next build` pre-renders all pages, which works only through the `'use client'` directive in `dist/index.js`. The server HTML of every page has fallback content or skeletons, no platform scripts and no iframes.
-- **Lint and CI:** the root ESLint config still ignores `playground/`, and `next build` type-checks it. CI does not build the playground.
+- **Lint and CI:** the root ESLint config still ignores `playground/`, and `next build` type-checks it. CI does not build the playground. (Since D47: it does.)
 
 Browser check in Chrome 156 on 2026-11-03:
 
@@ -474,6 +474,12 @@ The loader (`skipped` on a `PlatformScript`): when a script's `load` event finds
 Verified in Chrome on the playground's `/eager` page (one embed per script-based platform, `lazy` off), reached by client navigation. Instagram's first tag was held back until the SDK had loaded, to force the order. The loader then added the script again while `FB.__buffer === true`; Instagram registered and rendered (iframe `instagram-media-rendered`, 883 px tall), one embed.js tag was left in the page, and the mark was gone. Threads lost the same race on its own in that run and recovered the same way.
 
 Still not covered, as in D38: a host page that adds the SDK and then Instagram's script itself.
+
+### D47. CI builds the playground
+
+D37 left the playground out of CI, so a change that broke the package in Next.js showed only when someone built or ran the playground by hand. The CI job now runs `pnpm --dir playground build` after the package's own checks, on Node 22, 24 and 26. `next build` type-checks every page against the built `dist/` and pre-renders all of them, which takes the `'use client'` directive and a server render of every sample (D37).
+
+Checked on 2026-11-11: the build passes in about 5 s, and it fails when `'use client'` is removed from `src/index.ts` before the package is built.
 
 ## Open VERIFY items
 
