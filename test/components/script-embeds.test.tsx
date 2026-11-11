@@ -4,6 +4,7 @@ import { FacebookEmbed, InstagramEmbed, ThreadsEmbed, XEmbed } from '../../src';
 import { loadPlatformScript } from '../../src/loader/platform-scripts';
 import { parseEmbed, type ParsedEmbed } from '../../src/parser';
 import postIframe from '../fixtures/facebook/post-iframe.html?raw';
+import videoIframe from '../fixtures/facebook/video-iframe-reel.html?raw';
 import videoSdk from '../fixtures/facebook/video-sdk-docs.html?raw';
 import instagramCode from '../fixtures/instagram/post-captioned.html?raw';
 import threadsCode from '../fixtures/threads/oembed.html?raw';
@@ -336,12 +337,22 @@ describe('FacebookEmbed', () => {
     expect(load).toHaveBeenCalledWith('facebook', { locale: 'en_US' });
   });
 
-  it('keeps video iframe embed code as an iframe', () => {
-    const video = 'https://www.facebook.com/facebook/videos/10153231379946729/';
+  it('renders video iframe embed code that shows the post text through the SDK', () => {
+    const { container } = render(
+      <FacebookEmbed embed={parsed(videoIframe)} lazy={false} />,
+    );
+    expect(markupOf(container)).toBe(
+      '<div class="fb-video" data-href="https://www.facebook.com/reel/1709746083847442" data-show-text="true"></div>',
+    );
+    expect(container.querySelector('iframe')).toBeNull();
+    expect((container.firstElementChild as HTMLElement).style.aspectRatio).toBe(
+      '',
+    );
+  });
+
+  it('keeps video iframe embed code without the post text as an iframe', () => {
     const embed = parsed(
-      postIframe
-        .replace('/plugins/post.php', '/plugins/video.php')
-        .replace(/href=[^&]+/, `href=${encodeURIComponent(video)}`),
+      videoIframe.replace('show_text=true', 'show_text=false'),
     );
     const { container } = render(
       <FacebookEmbed embed={embed} lazy={false} height={300} />,

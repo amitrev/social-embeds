@@ -18,7 +18,8 @@ Real embed codes, stored byte for byte as the platform produced them. Prettier i
 | `tiktok/webapp-share-player.html`              | TikTok website share dialog → Embed, pasted by the maintainer                                  | 2026-11-03 |
 | `instagram/post-captioned.html`                | Instagram post menu → Embed, "Include caption" on, pasted by the maintainer                    | 2026-11-03 |
 | `facebook/post-iframe.html`                    | Facebook post menu → Embed, pasted by the maintainer                                           | 2026-11-03 |
+| `facebook/video-iframe-reel.html`              | Facebook reel menu → Embed, "Include full post" ticked, as published in a news article        | 2026-11-11 |
 | `facebook/post-sdk-docs.html`                  | Meta's [Embedded Posts](https://developers.facebook.com/docs/plugins/embedded-posts) "Add Code Manually" steps 2–3 | 2026-11-03 |
 | `facebook/video-sdk-docs.html`                 | Meta's [Embedded Videos](https://developers.facebook.com/docs/plugins/embedded-video-player) "Full Code Example", `<body>` content | 2026-11-03 |
 
-Variants that no current source produces are derived inside the tests from these files: the legacy `twitter.com` hosts, X `data-conversation`/`data-align`, the Facebook video iframe, and Instagram permalink and caption variants. The TikTok blockquote tests use the structure from brief §3 (see `docs/decisions.md` D11).
+Variants that no current source produces are derived inside the tests from these files: the legacy `twitter.com` hosts, X `data-conversation`/`data-align`, the Facebook video iframe without the post text, and Instagram permalink and caption variants. The TikTok blockquote tests use the structure from brief §3 (see `docs/decisions.md` D11).

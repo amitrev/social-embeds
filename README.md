@@ -223,6 +223,7 @@ The rules:
 
 - **Posts** always render through the SDK, including when the embed code is the `plugins/post.php` iframe. That iframe's height only fits the `width` it was made for, so it cannot be responsive; the SDK resizes the post itself. `show_text` and `width` from the iframe carry over; `height` is dropped.
 - **Video embed code** (the `plugins/video.php` iframe) renders as that iframe, in a box with its aspect ratio. No script.
+- **Video embed code that shows the post text** (`show_text=true`, the Embed dialog's "Include full post") renders through the SDK, like a post. The text below the player has its own height at every width, so no aspect ratio fits the iframe, and its own height cuts the text off. `show_text`, `allowfullscreen`, `autoplay` and `show_captions` carry over; `width`, `height` and `t` are dropped.
 - **Video URLs** and `fb-video` SDK code render through the SDK, which knows the video's real size (videos are both 16:9 and vertical).
 
 URL shapes, each tested against Facebook's plugins on `www.facebook.com`, `facebook.com` and `m.facebook.com`:

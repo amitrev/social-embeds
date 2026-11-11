@@ -2,11 +2,13 @@ import { describe, expect, it } from 'vitest';
 import { matchUrl, parseEmbed } from '../../src/parser';
 import postIframe from '../fixtures/facebook/post-iframe.html?raw';
 import postSdk from '../fixtures/facebook/post-sdk-docs.html?raw';
+import videoIframe from '../fixtures/facebook/video-iframe-reel.html?raw';
 import videoSdk from '../fixtures/facebook/video-sdk-docs.html?raw';
 
 const pfbid =
   'pfbid0r3hJSv19StgY9tsUXoENzXsNzNaPtjm27KZSyJFxk1p16pZxmY5LVdM2jAgZmPnel';
 const docsVideo = 'https://www.facebook.com/facebook/videos/10153231379946729/';
+const reel = 'https://www.facebook.com/reel/1709746083847442';
 
 describe('Facebook post embed code', () => {
   it('renders the post iframe through the SDK, keeping show_text and width', () => {
@@ -57,19 +59,52 @@ describe('Facebook video embed code', () => {
     });
   });
 
-  it('keeps the video iframe as given', () => {
-    // Derived from the post iframe: same embed dialog markup, video plugin and URL.
-    const code = postIframe
-      .replace('/plugins/post.php', '/plugins/video.php')
-      .replace(/href=[^&]+/, `href=${encodeURIComponent(docsVideo)}`);
+  it('keeps a video iframe without the post text as given', () => {
+    // Derived: the Embed dialog with "Include full post" unticked adds no height for text.
+    const code = videoIframe
+      .replace('show_text=true', 'show_text=false')
+      .replace('height="591"', 'height="476"');
     expect(parseEmbed(code)).toEqual({
       platform: 'facebook',
       kind: 'video',
-      url: docsVideo,
-      id: '10153231379946729',
+      url: reel,
+      id: '1709746083847442',
       variant: 'iframe',
-      options: { show_text: true, width: 500 },
-      size: { width: 500, height: 726 },
+      options: { height: 476, show_text: false, width: 267, t: 0 },
+      size: { width: 267, height: 476 },
+    });
+  });
+
+  it('renders a video iframe that shows the post text through the SDK', () => {
+    expect(parseEmbed(videoIframe)).toEqual({
+      platform: 'facebook',
+      kind: 'video',
+      url: reel,
+      id: '1709746083847442',
+      variant: 'sdk',
+      options: { showText: true },
+    });
+  });
+
+  it('reads show_text=1 as showing the post text', () => {
+    // plugins/video.php renders the text for 1 as it does for true (decisions.md D44).
+    const code = videoIframe.replace('show_text=true', 'show_text=1');
+    expect(parseEmbed(code)).toMatchObject({
+      variant: 'sdk',
+      options: { showText: true },
+    });
+  });
+
+  it('carries the player parameters the SDK also reads over to it', () => {
+    const code = videoIframe.replace(
+      '&t=0',
+      '&t=0&allowfullscreen=true&autoplay=true&show_captions=true',
+    );
+    expect(parseEmbed(code)?.options).toEqual({
+      showText: true,
+      allowfullscreen: true,
+      autoplay: true,
+      showCaptions: true,
     });
   });
 
