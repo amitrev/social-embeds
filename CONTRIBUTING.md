@@ -21,7 +21,7 @@ pnpm install
 | `pnpm check:publint`    | publint                                                               |
 | `pnpm check:attw`       | Are the Types Wrong, ESM-only profile                                 |
 
-CI runs all of them on Node 22, 24 and 26.
+CI runs all of them on Node 22, 24 and 26, and then builds the playground with the built package (`pnpm --dir playground build`). That build fails when a change breaks the package in Next.js, for example a missing `'use client'` or a type error in a page that uses a component.
 
 ## Layout
 
@@ -34,7 +34,7 @@ CI runs all of them on Node 22, 24 and 26.
 
 ## Comments and docblocks
 
-Names, types and tests carry the meaning; comments are rare. Most existing comments predate this rule: bring a block into line when your change touches the code it describes, and never rewrite comments in an unrelated diff.
+Names, types and tests carry the meaning; comments are rare. Change a comment when your change touches the code it describes, and never rewrite comments in an unrelated diff.
 
 - **TSDoc carries only what the signature cannot.** TypeScript is the type system: never `@param {T}` or `@returns {T}`, never `@param id - the id`, never a summary line that restates the name. A `/** */` on an export holds `@deprecated` (naming the replacement), `@throws`, or a one-line gotcha meant for the IDE hover. Narrow with code, not comments: `satisfies`, a typed `const`, a type guard.
 - **Plain `.js` and `.mjs` files use JSDoc as their type system** (`scripts/check-directives.mjs`, `eslint.config.js`): `/** @type {…} */` and `@param {string} key` belong there. The prose rules still apply.

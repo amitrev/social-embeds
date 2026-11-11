@@ -10,8 +10,8 @@ import { ScriptEmbed } from './script-embed';
 import { type EmbedSource, resolveEmbed, type SharedProps } from './shared';
 
 /**
- * The embedded post attributes X documents. `data-width` has no prop, because `width` is
- * the wrapper's; the post fills the wrapper up to `maxWidth` (docs/decisions.md D33).
+ * `data-width` has no prop, because `width` is the wrapper's: the post fills the wrapper up
+ * to `maxWidth` (docs/decisions.md D33).
  */
 export type XOptions = {
   theme?: 'light' | 'dark';

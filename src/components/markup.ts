@@ -2,7 +2,7 @@ import { escapeAttribute } from '../parser/html';
 
 type Value = string | number | boolean;
 
-/** `name="value"` pairs for defined values; `true` becomes a valueless attribute. */
+/** `true` becomes a valueless attribute. */
 export function attributes(entries: Record<string, Value | undefined>): string {
   let html = '';
   for (const [name, value] of Object.entries(entries)) {
@@ -15,10 +15,7 @@ export function attributes(entries: Record<string, Value | undefined>): string {
   return html;
 }
 
-/**
- * Options written as the platform's `data-*` attributes, in the given order. Booleans are
- * written as `"true"`/`"false"`, as platforms document them.
- */
+/** Booleans are written as `"true"` and `"false"`, the way the platforms document them. */
 export function dataAttributes(
   names: Readonly<Record<string, string>>,
   options: Readonly<Record<string, Value>>,

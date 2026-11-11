@@ -1,7 +1,6 @@
 import { act } from '@testing-library/react';
 import { vi } from 'vitest';
 
-/** A controllable IntersectionObserver: tests decide when an element comes into view. */
 export class FakeIntersectionObserver {
   static instances: FakeIntersectionObserver[] = [];
   readonly targets: Element[] = [];
@@ -27,7 +26,6 @@ export class FakeIntersectionObserver {
     return [];
   }
 
-  /** Reports every observed element as intersecting. */
   enter() {
     const entries = this.targets.map(
       (target) =>

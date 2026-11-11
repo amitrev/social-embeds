@@ -28,7 +28,6 @@ function isPlatform(value: string): value is PlatformKey {
   return Object.hasOwn(PLATFORMS, value);
 }
 
-/** The platform component for an embed parsed on the server, as a CMS would store it. */
 function ParsedOnServer({ embed }: { embed: ParsedEmbed }) {
   switch (embed.platform) {
     case 'x':
@@ -46,7 +45,6 @@ function ParsedOnServer({ embed }: { embed: ParsedEmbed }) {
   }
 }
 
-/** A video of known size without its post text: the plain iframe, limited by height. */
 function ReelWithoutText() {
   const embed = parseEmbed(facebookReel());
   if (!embed) return null;

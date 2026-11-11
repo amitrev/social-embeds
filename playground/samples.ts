@@ -17,7 +17,6 @@ export interface Sample {
   value: string;
 }
 
-/** A real embed code from the package's test fixtures (see test/fixtures/README.md). */
 function fixture(file: string): string {
   return readFileSync(
     join(process.cwd(), '..', 'test', 'fixtures', file),
@@ -25,12 +24,13 @@ function fixture(file: string): string {
   );
 }
 
-/** A Facebook reel's iframe embed code that shows the post text. */
+const FACEBOOK_POST =
+  'https://www.facebook.com/vasil.popov.98/posts/pfbid0r3hJSv19StgY9tsUXoENzXsNzNaPtjm27KZSyJFxk1p16pZxmY5LVdM2jAgZmPnel';
+
 export function facebookReel(): string {
   return fixture('facebook/video-iframe-reel.html');
 }
 
-/** Embed code per platform: the fixtures, plus variants no current source produces. */
 export function embedCodes(platform: PlatformKey): Sample[] {
   switch (platform) {
     case 'x':
@@ -46,8 +46,7 @@ export function embedCodes(platform: PlatformKey): Sample[] {
     case 'instagram':
       return [
         {
-          label:
-            'Embed dialog, caption on (post since removed: onError after the retries)',
+          label: 'oEmbed, caption on',
           value: fixture('instagram/post-captioned.html'),
         },
       ];
@@ -66,9 +65,11 @@ export function embedCodes(platform: PlatformKey): Sample[] {
           value: fixture('facebook/post-iframe.html'),
         },
         {
-          label:
-            'Post, SDK code from Meta’s docs (post since removed: Facebook shows a notice)',
-          value: fixture('facebook/post-sdk-docs.html'),
+          label: 'Post, SDK code from Meta’s docs with a live post (derived)',
+          value: fixture('facebook/post-sdk-docs.html').replace(
+            'https://www.facebook.com/20531316728/posts/10154009990506729/',
+            FACEBOOK_POST,
+          ),
         },
         {
           label: 'Video, SDK code from Meta’s docs',
@@ -123,11 +124,8 @@ export const URLS: Record<PlatformKey, Sample[]> = {
     },
   ],
   instagram: [
-    {
-      label: 'Post since removed',
-      value: 'https://www.instagram.com/p/Dc85J9XNoGN/',
-    },
     { label: 'Post', value: 'https://www.instagram.com/p/DfPQchkG1tg/' },
+    { label: 'Reel', value: 'https://www.instagram.com/reel/DfQCqMnhpsG/' },
   ],
   threads: [
     {
@@ -136,10 +134,7 @@ export const URLS: Record<PlatformKey, Sample[]> = {
     },
   ],
   facebook: [
-    {
-      label: 'Post since removed (Facebook shows a notice)',
-      value: 'https://www.facebook.com/20531316728/posts/10154009990506729/',
-    },
+    { label: 'Post', value: FACEBOOK_POST },
     {
       label: 'Video',
       value: 'https://www.facebook.com/facebook/videos/10153231379946729/',

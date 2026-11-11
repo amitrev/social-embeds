@@ -26,12 +26,10 @@ function parsed(html: string): ParsedEmbed {
   return embed;
 }
 
-/** The container the platform markup is written into. */
 function markupOf(container: HTMLElement): string {
   return container.firstElementChild?.firstElementChild?.innerHTML ?? '';
 }
 
-/** Brings the embed into view and lets the script load resolve. */
 async function enter() {
   lastObserver().enter();
   await act(async () => {
@@ -117,7 +115,7 @@ describe('XEmbed', () => {
         '<p lang="en" dir="ltr">just setting up my twttr</p>— jack (@jack) ' +
         '<a href="https://x.com/jack/status/20?ref_src=twsrc%5Etfw">21 de marzo de 2006</a></blockquote>',
     );
-    // Fallback content stands in for the placeholder (brief §4.3).
+    // Fallback content stands in for the placeholder.
     expect(container.querySelector('[aria-hidden="true"]')).toBeNull();
   });
 
@@ -245,7 +243,7 @@ describe('InstagramEmbed', () => {
     const embed = parsed(instagramCode);
     const { container, rerender } = render(<InstagramEmbed embed={embed} />);
     expect(markupOf(container)).toMatch(
-      /^<blockquote data-instgrm-permalink="https:\/\/www\.instagram\.com\/p\/Dc85J9XNoGN\/" data-instgrm-version="14" data-instgrm-captioned="" style="width:calc\(100% - 2px\)"><div> <a href=/,
+      /^<blockquote data-instgrm-permalink="https:\/\/www\.instagram\.com\/p\/DfPQchkG1tg\/" data-instgrm-version="14" data-instgrm-captioned="" style="width:calc\(100% - 2px\)"><div> <a href=/,
     );
     rerender(<InstagramEmbed embed={embed} captioned={false} />);
     expect(markupOf(container)).not.toContain('data-instgrm-captioned');

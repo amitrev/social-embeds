@@ -186,7 +186,7 @@ Not supported, for lack of a live sample: group posts (`/groups/{id}/posts/{id}`
 
 ### D23. Instagram embed code
 
-From the maintainer's pasted embed code (photo post with caption), 2026-11-03:
+From the maintainer's pasted embed code (photo post with caption), 2026-11-03. (Since D48: the fixture is the oEmbed code of a live post, with the same structure.)
 
 - The script is protocol-relative: `//www.instagram.com/embed.js`. The parser also accepts `https:`.
 - The permalink carries `?utm_source=ig_embed&amp;utm_campaign=loading`; the canonical URL drops it (D15).
@@ -350,12 +350,12 @@ Both were checked in a visible window in Milestone 7 (D37). X renders. That Inst
   - a client box for your own embed code or URL, which reports `onLoad`, `onError` and `fallback`.
 - **`/many`** has 20 embeds from post URLs. A bar in the layout counts each platform's script on the page and stays mounted during client navigation.
 - **RSC boundary:** every page is a Server Component that renders the package's components directly. `next build` pre-renders all pages, which works only through the `'use client'` directive in `dist/index.js`. The server HTML of every page has fallback content or skeletons, no platform scripts and no iframes.
-- **Lint and CI:** the root ESLint config still ignores `playground/`, and `next build` type-checks it. CI does not build the playground.
+- **Lint and CI:** the root ESLint config still ignores `playground/`, and `next build` type-checks it. CI does not build the playground. (Since D47: it does.)
 
 Browser check in Chrome 156 on 2026-11-03:
 
 - Every platform renders from embed code, from a URL and from a server-parsed `embed`. That includes X with options: dark theme, Spanish, centred and 400 px wide.
-- Two sample posts have since been removed. Instagram post `Dc85J9XNoGN`, the maintainer's embed code, gets Instagram's notice that the post "may have been removed", so it never renders. Meta's Embedded Posts sample post shows Facebook's "no longer available" notice. The playground labels both.
+- Two sample posts have since been removed. Instagram post `Dc85J9XNoGN`, the maintainer's embed code, gets Instagram's notice that the post "may have been removed", so it never renders. Meta's Embedded Posts sample post shows Facebook's "no longer available" notice. The playground labels both. (Since D48: both are replaced.)
 - On `/many`, while scrolling down, each embed loads as it comes near, in page order, and each platform's script loads once.
 - Client navigation keeps the same document, adds no script tags, and renders every embed again on each mount.
 - The app's built-in browser pane paints only while it is on screen. When hidden, X's iframe never sends its height and IntersectionObserver never fires. Chrome has neither problem.
@@ -474,6 +474,30 @@ The loader (`skipped` on a `PlatformScript`): when a script's `load` event finds
 Verified in Chrome on the playground's `/eager` page (one embed per script-based platform, `lazy` off), reached by client navigation. Instagram's first tag was held back until the SDK had loaded, to force the order. The loader then added the script again while `FB.__buffer === true`; Instagram registered and rendered (iframe `instagram-media-rendered`, 883 px tall), one embed.js tag was left in the page, and the mark was gone. Threads lost the same race on its own in that run and recovered the same way.
 
 Still not covered, as in D38: a host page that adds the SDK and then Instagram's script itself.
+
+### D47. CI builds the playground
+
+D37 left the playground out of CI, so a change that broke the package in Next.js showed only when someone built or ran the playground by hand. The CI job now runs `pnpm --dir playground build` after the package's own checks, on Node 22, 24 and 26. `next build` type-checks every page against the built `dist/` and pre-renders all of them, which takes the `'use client'` directive and a server render of every sample (D37).
+
+Checked on 2026-11-11: the build passes in about 5 s, and it fails when `'use client'` is removed from `src/index.ts` before the package is built.
+
+### D48. Sample posts replaced
+
+Instagram post `Dc85J9XNoGN` is gone (D37): `instagram.com/api/v1/oembed/` answers 404 for it. `instagram/post-captioned.html` is now the embed code of `https://www.instagram.com/p/DfPQchkG1tg/`, a captioned post of the `instagram` account that was already the playground's URL sample.
+
+- **Source:** `https://www.instagram.com/api/v1/oembed/?url=…&maxwidth=540`, the `html` field, fetched on 2026-11-11 without a login or a token.
+- **Same code as the Embed dialog's:** apart from the post code and the "A post shared by …" text, every element, attribute and inline style is the one in the code it replaces (D23), including `data-instgrm-captioned`, `data-instgrm-version="14"` and the protocol-relative script. Without `maxwidth` the inline style says `max-width:658px`; with 540 it says `max-width:540px`, as the Embed dialog code did.
+- The `html` field ends after the script tag, without a newline.
+
+Facebook: Meta's Embedded Posts documentation still shows its removed sample post (checked 2026-11-11), so `facebook/post-sdk-docs.html` stays as documented and remains a parser fixture. In the playground, that snippet now carries the maintainer's post from `facebook/post-iframe.html`, which `plugins/post.php` still renders, and the post URL sample and `/many` use the same post. The Instagram URL samples are the post above and a reel, `DfQCqMnhpsG`.
+
+No removed post is left among the playground samples. The box for your own input still shows what a removed post does.
+
+Checked in Chrome on 2026-11-11, in a visible window:
+
+- `/instagram`: the new embed code rendered at 540 px wide and 1205 px tall, with its caption; the post and the reel from their URLs rendered 883 px tall. One `embed.js` tag.
+- `/facebook`: the SDK snippet with the live post rendered 500×725, not the 202 px notice (D34); the post from its URL rendered 552×706.
+- `/many`: both Facebook posts rendered, no skeleton was left after scrolling to the end, and each platform's script was on the page once.
 
 ## Open VERIFY items
 

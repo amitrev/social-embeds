@@ -12,8 +12,7 @@ import { ScriptEmbed } from './script-embed';
 import { type EmbedSource, type FrameProps, resolveEmbed } from './shared';
 
 /**
- * The plugin attributes Facebook documents, plus the SDK locale. `data-width` and
- * `data-lazy` have no props, because `width` and `lazy` are the wrapper's
+ * `data-width` and `data-lazy` have no props, because `width` and `lazy` are the wrapper's
  * (docs/decisions.md D33).
  */
 export type FacebookOptions = {
@@ -42,7 +41,6 @@ const ATTRIBUTES = {
   showCaptions: 'data-show-captions',
 };
 
-/** The video options under the names `plugins/video.php` reads them by. */
 const PLAYER_PARAMETERS = {
   showText: 'show_text',
   allowfullscreen: 'allowfullscreen',
@@ -56,12 +54,7 @@ const POST_MAX_WIDTH = 750;
 /** docs/decisions.md D34. */
 const MIN_HEIGHT = { post: 300, video: 200 };
 
-/**
- * Facebook rendering rules (brief §5.4): posts always through the SDK; video embed code as
- * the iframe that came in; video URLs through the SDK. The parser has set `variant`.
- * Video embed code that shows the post text also goes through the SDK (D44), unless
- * `showText` turns the text off: then it is the plain iframe (D45).
- */
+// Which input renders through the SDK and which as an iframe: docs/decisions.md D22, D44, D45.
 export function FacebookEmbed(props: FacebookEmbedProps) {
   const {
     url,
@@ -92,8 +85,7 @@ export function FacebookEmbed(props: FacebookEmbedProps) {
     showCaptions,
   });
 
-  // Without the post text, a video whose player size is known is just that player: the
-  // plain iframe in a box of its aspect ratio, with no script (docs/decisions.md D45).
+  // Without its post text, a video of known size is the plain iframe (docs/decisions.md D45).
   const { size } = embed;
   if (
     embed.kind === 'video' &&

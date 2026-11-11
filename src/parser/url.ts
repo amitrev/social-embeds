@@ -1,7 +1,4 @@
-/**
- * URL helpers. `URL` and `URLSearchParams` are deliberately not used: they are declared only
- * in the DOM and Node type libraries, which the parser does not depend on.
- */
+// `URL` and `URLSearchParams` are not used, on purpose: docs/decisions.md D20.
 
 export type ParsedUrl = {
   host: string; // lower-cased, may include a port
@@ -12,7 +9,7 @@ export type ParsedUrl = {
 const URL_PATTERN =
   /^(?:https?:)?\/\/([^/?#\s@]+)((?:\/[^?#\s]*)?)(?:\?([^#\s]*))?(?:#\S*)?$/i;
 
-/** Splits an absolute or protocol-relative http(s) URL, or returns `null`. */
+/** Absolute or protocol-relative http(s) URLs only. */
 export function parseUrl(input: string): ParsedUrl | null {
   const match = URL_PATTERN.exec(input.trim());
   if (!match) return null;
@@ -46,7 +43,6 @@ export function coerce(value: string): string | number | boolean {
   return value;
 }
 
-/** Positive integer pixel size from an attribute or query value. */
 export function pixels(value: string | undefined): number | undefined {
   return value !== undefined && /^[1-9]\d{0,5}$/.test(value)
     ? Number(value)

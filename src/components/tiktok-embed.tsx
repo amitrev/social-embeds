@@ -47,14 +47,11 @@ export type TikTokEmbedProps = EmbedSource &
   Omit<FrameProps, keyof TikTokOptions> &
   TikTokOptions;
 
-// TikTok's oEmbed and share dialog embed code (test/fixtures/tiktok/).
+// The value in TikTok's own embed code.
 const ALLOW =
   'accelerometer; autoplay; clipboard-write; encrypted-media; fullscreen; gyroscope; picture-in-picture; web-share';
 
-/**
- * Every TikTok input renders the Embed Player iframe (docs/decisions.md D11). It is at
- * most 325px wide, the size of TikTok's own embed code (D40).
- */
+/** At most 325px wide by default, the size of TikTok's own embed code (docs/decisions.md D40). */
 export function TikTokEmbed(props: TikTokEmbedProps) {
   const {
     url,

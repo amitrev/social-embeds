@@ -16,10 +16,8 @@ const FALLBACK: Whitelist = new Map([
   ['p', []],
 ]);
 
-/**
- * embed.js serves only /p/, /reel/ and /tv/ permalinks; /reels/ and /{user}/… return 404
- * (docs/decisions.md D15), so the canonical URL drops the username and maps reels → reel.
- */
+// embed.js serves only /p/, /reel/ and /tv/ permalinks: the canonical URL drops the
+// username and maps reels to reel (docs/decisions.md D15).
 function post(url: ParsedUrl | null): Omit<ParsedEmbed, 'options'> | null {
   if (!url || !HOSTS.has(url.host)) return null;
   const [, user, type, code] = POST_PATH.exec(url.path) ?? [];

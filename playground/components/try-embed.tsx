@@ -3,7 +3,6 @@
 import { useRef, useState } from 'react';
 import { SocialEmbed } from 'social-embeds';
 
-/** Renders pasted embed code or a post URL, with the onLoad/onError/fallback results. */
 export function TryEmbed() {
   const [input, setInput] = useState('');
   const [submitted, setSubmitted] = useState({ value: '', count: 0 });

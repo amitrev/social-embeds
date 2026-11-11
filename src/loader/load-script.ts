@@ -1,19 +1,13 @@
-/**
- * Loads third-party platform scripts (brief §7): at most once per page, one shared promise
- * for concurrent callers, reusing a script the host already added. Browser-only; nothing
- * here touches `window` or `document` until called, so it is safe to import on the server.
- * Scripts are never removed: other embeds and the host may still need them.
- */
+// Imported on the server too: nothing here may touch `window` or `document` until called.
+// A script that has loaded is never removed: other embeds and the host may still need it.
 
 export type PlatformScript = {
   /** One script per key per page. */
   key: string;
-  /** The URL added when the page does not have the script yet. */
   url: string;
   crossOrigin?: 'anonymous';
   /** Recognises the platform's script, whether this package or the host added it. */
   isOwn: (src: string) => boolean;
-  /** Whether the platform's global is in place. */
   isPresent: () => boolean;
   /** Set up before the script is added; resolves when the platform calls back as ready. */
   readyCallback?: () => Promise<void>;
@@ -21,16 +15,12 @@ export type PlatformScript = {
   whenPresent?: () => Promise<void>;
   /** Prepares the page for the script to run; the returned function undoes that. */
   prepare?: () => () => void;
-  /**
-   * Whether the script has run and done nothing. It is then added again, so that `prepare`
-   * can act on what stopped it.
-   */
+  /** True when the script ran and did nothing: it is then added again (docs/decisions.md D46). */
   skipped?: () => boolean;
 };
 
-// Fixed retry policy (brief §6.2): three attempts, waiting 1 s and then 2 s.
 const ATTEMPTS = 3;
-const RETRY_DELAY_MS = 1000;
+const RETRY_DELAY_MS = 1000; // doubles with each attempt
 const TIMEOUT_MS = 15_000;
 const POLL_MS = 50;
 

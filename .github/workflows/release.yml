@@ -1,9 +1,6 @@
 name: Release
 
-# Changesets versions the package; npm staged publishing releases it (docs/releasing.md).
-# Only the stage job can request an OIDC token, and no npm token exists anywhere: if the
-# token exchange fails, npm has no credentials to fall back on and the job fails. A staged
-# version goes live only when a maintainer approves it on npm with two-factor authentication.
+# No npm token exists anywhere: only the stage job can request an OIDC token (docs/releasing.md).
 
 on:
   push:
@@ -14,8 +11,7 @@ permissions: {}
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
 
-# Named explicitly so that steps run with `-o pipefail`: a failed `npm stage publish` must
-# fail its step even when piped through `tee`.
+# Named so that steps run with `-o pipefail`: a failed `npm stage publish | tee` must fail its step.
 defaults:
   run:
     shell: bash
@@ -43,8 +39,7 @@ jobs:
         uses: changesets/action/select-mode@ae32849d5ba541f9ae29e40e22a623bc13562f51 # v2.1.2
       - id: version
         run: echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
-      # npm lists a staged version only once it is approved, so the tag that the stage job
-      # pushes is what stops later pushes from staging the same version again.
+      # npm lists a staged version only once approved: the tag is what stops a second staging.
       - id: staged
         env:
           VERSION: ${{ steps.version.outputs.version }}
@@ -55,7 +50,6 @@ jobs:
             echo "staged=false" >> "$GITHUB_OUTPUT"
           fi
 
-  # Changesets on main: open or update the "Version Packages" pull request.
   version:
     if: needs.select-mode.outputs.mode == 'version'
     needs: select-mode
@@ -75,8 +69,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - uses: changesets/action/version@ae32849d5ba541f9ae29e40e22a623bc13562f51 # v2.1.2
 
-  # A version that is neither on npm nor staged: check, build and pack it without publish
-  # rights.
+  # Packs without publish rights: only the stage job has them.
   pack:
     if: needs.select-mode.outputs.mode == 'publish' && needs.select-mode.outputs.staged == 'false'
     needs: select-mode
@@ -108,9 +101,7 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
-  # Stages the packed tarball through npm trusted publishing (OIDC), with provenance, then
-  # tags the commit and drafts the GitHub release. npm 11.15.0 or later can stage; Node 24
-  # ships it. Changesets cannot stage yet (changesets/changesets#2025).
+  # Staging needs npm 11.15.0 or later, which Node 24 ships (docs/releasing.md).
   stage:
     needs: [select-mode, pack]
     runs-on: ubuntu-latest

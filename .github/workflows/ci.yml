@@ -32,3 +32,6 @@ jobs:
       - run: pnpm check:directives
       - run: pnpm check:publint
       - run: pnpm check:attw
+      - run: pnpm --dir playground build
+        env:
+          NEXT_TELEMETRY_DISABLED: 1

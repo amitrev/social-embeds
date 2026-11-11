@@ -17,7 +17,6 @@ const PLAYER_PATH = /^\/player\/v1\/(\d{1,25})\/?$/;
 const VIDEO_ID = /^\d{1,25}$/;
 const SCRIPT = /^(?:https?:)?\/\/www\.tiktok\.com\/embed\.js$/;
 
-/** `user` is unknown for player iframe input; TikTok serves `/@/video/{id}` for that case. */
 function video(id: string, user = '', options: Options = {}): ParsedEmbed {
   return {
     platform: 'tiktok',
@@ -49,7 +48,6 @@ export const tiktok: PlatformParser = {
     if (!src || !HOSTS.has(src.host)) return null;
     const [, id] = PLAYER_PATH.exec(src.path) ?? [];
     if (id === undefined) return null;
-    // Player parameters are kept as given (https://developers.tiktok.com/doc/embed-player).
     const options: Options = Object.fromEntries(
       [...src.query].map(([key, value]) => [key, coerce(value)]),
     );

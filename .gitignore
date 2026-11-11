@@ -3,6 +3,8 @@ dist
 coverage
 *.tsbuildinfo
 .DS_Store
+.idea/
+.vscode/
 playground/.next
 .remember/
 playground/next-env.d.ts

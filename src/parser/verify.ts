@@ -4,7 +4,6 @@ import { platforms } from './platforms';
 import { x } from './platforms/x';
 import type { ParsedEmbed, Platform } from './types';
 
-/** The kind and variant pairs the parser produces for each platform. */
 const SHAPES: Record<Platform, readonly string[]> = {
   x: ['post sdk'],
   instagram: ['post sdk'],
@@ -15,16 +14,8 @@ const SHAPES: Record<Platform, readonly string[]> = {
 };
 
 /**
- * Checks an embed handed to a component. It may not come from this parser: a host can build
- * one, or read one back from storage.
- *
- * - Its URL must be one `matchUrl` recognises for the same platform and id, and its kind
- *   and variant a pair the parser produces, because components put the URL and id into
- *   iframe sources and platform markup.
- * - Its `fallbackHtml` must be exactly what the platform's whitelist rebuilds, because
- *   components write it into the page as HTML. For X it must also link to the same post,
- *   because widgets.js renders the post the blockquote links to. Otherwise the fallback is
- *   dropped.
+ * Security: the embed may be host-built, and its url, id and `fallbackHtml` are written
+ * into the page: only what this parser itself produces passes (docs/decisions.md D35).
  */
 export function verifyEmbed(embed: ParsedEmbed): ParsedEmbed | null {
   const matched = matchUrl(embed.url);
@@ -49,7 +40,7 @@ function trustedFallback(embed: ParsedEmbed, fallbackHtml: string): boolean {
     return false;
   if (embed.platform !== 'x') return true;
 
-  // The same check parseEmbed makes: the last status link names the post.
+  // widgets.js renders the post that the blockquote's last status link names.
   const [root] =
     parseHtml(
       `<blockquote class="twitter-tweet">${fallbackHtml}</blockquote>`,

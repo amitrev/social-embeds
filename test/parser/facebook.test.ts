@@ -90,7 +90,7 @@ describe('Facebook video embed code', () => {
   });
 
   it('reads show_text=1 as showing the post text', () => {
-    // plugins/video.php renders the text for 1 as it does for true (decisions.md D44).
+    // plugins/video.php renders the text for 1 as it does for true (docs/decisions.md D44).
     const code = videoIframe.replace('show_text=true', 'show_text=1');
     expect(parseEmbed(code)).toMatchObject({
       variant: 'sdk',

@@ -4,10 +4,8 @@ import { platforms } from './platforms';
 import type { ParsedEmbed } from './types';
 
 /**
- * Recognises a platform's own embed code. The input must consist of exactly one embed
- * element plus, optionally, the platform's own `<script src>` tags, Facebook's empty
- * `<div id="fb-root">`, whitespace and comments. Anything else returns `null`
- * (docs/decisions.md D14). Never throws.
+ * Never throws. `null` unless the input is one embed element plus, at most, the platform's
+ * own scripts, `<div id="fb-root">`, whitespace and comments (docs/decisions.md D14).
  */
 export function parseEmbed(html: string): ParsedEmbed | null {
   // Callers without type checking may pass anything.

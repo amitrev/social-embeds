@@ -1,13 +1,8 @@
 import { type RefObject, useEffect, useRef, useState } from 'react';
 
-// Starts loading a little before the embed scrolls into view, so it is not seen blank.
 const ROOT_MARGIN = '200px 0px';
 
-/**
- * Whether the element has come near the viewport. Always false on the server and in the
- * first client render, so server and client markup match; true right after mount when
- * `lazy` is off or IntersectionObserver is unavailable.
- */
+/** False on the server and in the first client render, so the markup matches on hydration. */
 export function useNearViewport(
   ref: RefObject<Element | null>,
   lazy: boolean,

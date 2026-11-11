@@ -8,18 +8,15 @@ type IframeEmbedProps = Omit<FrameProps, 'onError'> & {
   allow: string;
   referrerPolicy?: 'strict-origin-when-cross-origin';
   scrolling?: 'no';
-  /** Aspect ratio when the input carries no size (brief §6.1). */
+  /** Used when the input carries no size. */
   ratio: { width: number; height: number };
   size?: { width?: number; height?: number };
 };
 
 const FILL: CSSProperties = { position: 'absolute', inset: 0 };
 
-/**
- * Group B: a responsive wrapper whose aspect ratio comes from the input, with the
- * iframe filling it. The iframe is created on the client only, so its load event is
- * never missed before hydration; the placeholder covers the box until then.
- */
+// The iframe is created on the client only: one in the server HTML can load before
+// hydration, and React then never sees its load event (docs/decisions.md D28).
 export function IframeEmbed({
   src,
   title,
@@ -73,8 +70,7 @@ export function IframeEmbed({
             allow={allow}
             allowFullScreen
             referrerPolicy={referrerPolicy}
-            // Deprecated in HTML, but Facebook's own embed code sets it; browsers honour it.
-            // eslint-disable-next-line @typescript-eslint/no-deprecated
+            // eslint-disable-next-line @typescript-eslint/no-deprecated -- Facebook's own embed code sets it
             scrolling={scrolling}
             style={{
               display: 'block',
@@ -96,7 +92,6 @@ export function IframeEmbed({
   );
 }
 
-/** The default placeholder: a neutral box, readable on light and dark pages. */
 export function Skeleton({ minHeight }: { minHeight?: number }) {
   return (
     <div
@@ -105,7 +100,7 @@ export function Skeleton({ minHeight }: { minHeight?: number }) {
         width: '100%',
         height: '100%',
         minHeight,
-        background: 'rgba(128, 128, 128, 0.12)',
+        background: 'rgba(128, 128, 128, 0.12)', // visible on light and dark pages
       }}
     />
   );
