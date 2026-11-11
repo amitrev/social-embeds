@@ -1,4 +1,4 @@
-// Only the default entry may carry 'use client' (brief §5.3); publint and attw do not check this.
+// Only the default entry may carry 'use client' (docs/decisions.md D2).
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 

@@ -3,16 +3,10 @@ import {
   loadPlatformScript,
 } from '../loader/platform-scripts';
 
-/**
- * How each script-based platform renders the embeds in a container and how it signals that
- * it has. Evidence from the platforms' scripts and browser probes: docs/decisions.md D32.
- */
+// How each platform renders an embed and signals that it has: docs/decisions.md D32.
 export type Driver = {
   load: () => Promise<void>;
-  /**
-   * Asks the platform to render the embed in `container` and calls `done` once it has.
-   * Returns a cleanup. May throw; the caller retries.
-   */
+  /** Returns a cleanup. May throw: the caller retries. */
   render: (container: HTMLElement, done: () => void) => () => void;
 };
 
@@ -39,7 +33,6 @@ type Globals = {
 
 const globals = () => window as unknown as Globals;
 
-/** Calls `done` once `rendered(container)` holds, checking after every DOM change. */
 function watch(
   container: HTMLElement,
   rendered: (container: HTMLElement) => boolean,
@@ -65,19 +58,14 @@ function watch(
   };
 }
 
-/**
- * widgets.js and embed.js render every blockquote with their class anywhere in the page, on
- * load and on each call, so the components write the blockquote without it. The class is
- * added once, when this embed renders; a platform that has since replaced it with its own
- * (Threads' `text-post-media-registered`) keeps that (docs/decisions.md D39).
- */
+// widgets.js and embed.js render every blockquote that has their class, anywhere on the
+// page: the class is added only when this embed renders (docs/decisions.md D39).
 function reveal(container: HTMLElement, className: string): void {
   const blockquote = container.querySelector('blockquote');
   if (blockquote && !blockquote.hasAttribute('class'))
     blockquote.classList.add(className);
 }
 
-/** An iframe in `container` that the platform has given a height. */
 function hasSizedIframe(container: HTMLElement): boolean {
   return [...container.querySelectorAll('iframe')].some(
     (iframe) => Number.parseFloat(iframe.style.height) > 0,
@@ -157,7 +145,6 @@ export function facebookDriver(locale: string): Driver {
         const parse = fb?.XFBML?.parse;
         if (!fb || !parse)
           throw new Error('social-embeds: FB.XFBML.parse is missing');
-        // parse() renders the plugins inside the container, then calls back.
         const run = () => {
           parse(container, done);
         };

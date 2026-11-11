@@ -17,7 +17,6 @@ export interface Sample {
   value: string;
 }
 
-/** A real embed code from the package's test fixtures (see test/fixtures/README.md). */
 function fixture(file: string): string {
   return readFileSync(
     join(process.cwd(), '..', 'test', 'fixtures', file),
@@ -25,12 +24,10 @@ function fixture(file: string): string {
   );
 }
 
-/** A Facebook reel's iframe embed code that shows the post text. */
 export function facebookReel(): string {
   return fixture('facebook/video-iframe-reel.html');
 }
 
-/** Embed code per platform: the fixtures, plus variants no current source produces. */
 export function embedCodes(platform: PlatformKey): Sample[] {
   switch (platform) {
     case 'x':

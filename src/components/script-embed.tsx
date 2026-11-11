@@ -4,16 +4,15 @@ import { useNearViewport } from './hooks';
 import { Skeleton } from './iframe-embed';
 import type { SharedProps } from './shared';
 
-// Fixed policy (brief §6.2): three attempts to render, 15 s each, 1 s and 2 s apart.
 const ATTEMPTS = 3;
-const RENDER_TIMEOUT_MS = 15_000;
-const RETRY_DELAY_MS = 1000;
+const RENDER_TIMEOUT_MS = 15_000; // for each attempt
+const RETRY_DELAY_MS = 1000; // doubles with each attempt
 
 type ScriptEmbedProps = SharedProps & {
   driver: Driver;
-  /** The platform's embed element, with fallback content when the input had some. */
+  /** Reaches `dangerouslySetInnerHTML`: built only from a verified embed and escaped values. */
   markup: string;
-  /** Html input with fallback content shows that instead of a placeholder (§4.3, §6.3). */
+  /** Fallback content stands in for the placeholder (docs/decisions.md D34). */
   hasFallback: boolean;
   /** Height of the default skeleton, to limit layout shift. */
   minHeight: number;
@@ -24,11 +23,8 @@ function toError(error: unknown): Error {
   return error instanceof Error ? error : new Error(String(error));
 }
 
-/**
- * Group A: the platform markup is written once into a container React never updates
- * again, so the platform script can replace it in place (brief §6.3). Callers key this
- * component by `markup`, so different markup gets a fresh container.
- */
+// React never updates the container after the first render, so the platform script can
+// replace its content: callers key this component by `markup` (docs/decisions.md D35).
 export function ScriptEmbed({
   driver,
   markup,
@@ -118,7 +114,7 @@ export function ScriptEmbed({
   }, [near, driver, label]);
 
   const wrapper: CSSProperties = { width, maxWidth, ...style };
-  // Group A embeds size themselves (brief §6.1): the wrapper only sets width limits.
+  // Script-based embeds size themselves: the wrapper only limits the width.
   return (
     <div {...rest} style={wrapper}>
       <div

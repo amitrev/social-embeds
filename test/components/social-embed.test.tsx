@@ -14,7 +14,6 @@ vi.mock('../../src/loader/platform-scripts', () => ({
   loadPlatformScript: vi.fn(() => new Promise(() => {})),
 }));
 
-/** The platform markup a script-based embed wrote, or the iframe of an iframe embed. */
 function rendered(container: HTMLElement): string {
   const iframe = container.querySelector('iframe');
   if (iframe) return `iframe ${iframe.getAttribute('src') ?? ''}`;

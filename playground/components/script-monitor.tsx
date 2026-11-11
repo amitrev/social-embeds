@@ -2,10 +2,8 @@
 
 import { useEffect, useState } from 'react';
 
-/**
- * The loader script of each platform. The Facebook SDK loads its main file as a second
- * `sdk.js?hash=…` script, so only the loader URL is counted.
- */
+// The Facebook SDK loads its main file as a second `sdk.js?hash=…` script: only the loader
+// URL is counted.
 const SCRIPTS = [
   ['X', /^https:\/\/platform\.(?:twitter|x)\.com\/widgets\.js(?:[?#]|$)/],
   ['Instagram', /^https:\/\/www\.instagram\.com\/embed\.js(?:[?#]|$)/],
@@ -22,7 +20,7 @@ function countScripts(): string {
   ).join(' · ');
 }
 
-/** Counts platform scripts on the page; it lives in the layout, so it survives navigation. */
+// Lives in the layout, so the counts survive navigation.
 export function ScriptMonitor() {
   const [counts, setCounts] = useState('');
 

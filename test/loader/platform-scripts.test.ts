@@ -73,7 +73,6 @@ describe('Instagram and Threads', () => {
     fire(added[0], 'load');
     await expect(instagram).resolves.toBeUndefined();
 
-    // Instagram's registration does not make Threads ready.
     fire(added[1], 'load');
     page.instgrm = embeds('instagram', 'threads');
     await expect(threads).resolves.toBeUndefined();
@@ -85,7 +84,6 @@ describe('Instagram and Threads', () => {
     page.FB = fb;
     const added = captureScripts();
     const promise = load('instagram');
-    // embed.js skips itself while FB is a loaded SDK without __buffer.
     expect(fb.__buffer).toBe(true);
 
     page.instgrm = embeds('instagram');
@@ -110,7 +108,6 @@ describe('Instagram and Threads', () => {
   it('adds embed.js again when a Facebook SDK finished loading before it ran', async () => {
     const load = await freshLoader();
     const added = captureScripts();
-    // No SDK on the page yet, so there is nothing to mark.
     const promise = load('instagram');
     expect(added).toHaveLength(1);
     const first = added[0];
@@ -127,7 +124,6 @@ describe('Instagram and Threads', () => {
     });
     expect(added[1]?.src).toBe('https://www.instagram.com/embed.js');
     expect(removed).toHaveBeenCalled();
-    // This time the SDK is marked while the script runs.
     expect(fb.__buffer).toBe(true);
 
     page.instgrm = embeds('instagram');

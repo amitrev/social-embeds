@@ -9,14 +9,11 @@ import { TikTokEmbed, type TikTokOptions } from './tiktok-embed';
 import { XEmbed, type XOptions } from './x-embed';
 import { YouTubeEmbed, type YouTubeOptions } from './youtube-embed';
 
-/** Embed code or a post URL; never both (brief §5.2). */
 export type SocialEmbedSource =
   { html: string; url?: never } | { url: string; html?: never };
 
-/**
- * Platform options come from the embed code. Div attributes that share a name with one
- * (`lang`, `color`, `rel`) are left out, because each platform reads that name its own way.
- */
+// Div attributes that share a name with a platform option (`lang`, `color`, `rel`) are
+// left out, because each platform reads that name its own way.
 type PlatformOption =
   | keyof XOptions
   | keyof InstagramOptions
@@ -28,16 +25,13 @@ type PlatformOption =
 export type SocialEmbedProps = SocialEmbedSource &
   Omit<FrameProps, PlatformOption> & {
     /**
-     * Called with the original string when `html` is not a recognised embed code
-     * (brief §6.4). Without it, nothing is rendered and `onError` is called.
+     * Called with the original string when `html` is not a recognised embed code. Without
+     * it, nothing is rendered and `onError` is called.
      */
     fallback?: (html: string) => ReactNode;
   };
 
-/**
- * Recognises embed code or a post URL and renders the platform's component. `height` and
- * `maxHeight` reach only the iframe-based embeds; the others size themselves (brief §6.1).
- */
+/** `height` and `maxHeight` reach only the iframe-based embeds: the others size themselves. */
 export function SocialEmbed(props: SocialEmbedProps) {
   const { html, url, fallback, height, maxHeight, onError, ...shared } = props;
   const frame = { height, maxHeight };
@@ -45,7 +39,7 @@ export function SocialEmbed(props: SocialEmbedProps) {
     () => (html !== undefined ? parseEmbed(html) : matchUrl(url)),
     [html, url],
   );
-  // With a fallback, unrecognised embed code is the host's to handle (brief §6.4).
+  // With a fallback, unrecognised embed code is the host's to handle, not an error.
   const unrecognised = embed === null && !(html !== undefined && fallback);
   useReportError(
     unrecognised

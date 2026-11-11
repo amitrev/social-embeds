@@ -1,11 +1,5 @@
-/**
- * A small, strict HTML tokenizer for platform embed codes.
- *
- * Embed codes are machine-generated and well-formed, so anything this cannot read with
- * certainty (unclosed or mismatched tags, a stray `<`, an unterminated quote or comment)
- * is rejected with `null`. It uses no DOM or browser API, so it runs unchanged in Node,
- * Server Components and browsers.
- */
+// Strict on purpose: anything not read with certainty (unclosed or mismatched tags, a stray
+// `<`, an unterminated quote or comment) is rejected with `null`, never repaired.
 
 export type HtmlElement = {
   type: 'element';
@@ -63,7 +57,6 @@ const NAMED_ENTITIES: ReadonlyMap<string, string> = new Map([
   ['nbsp', ' '],
 ]);
 
-/** Parses an HTML fragment into a node list, or `null` if it is not well-formed. */
 export function parseHtml(input: string): HtmlNode[] | null {
   const root: HtmlElement = {
     type: 'element',
@@ -193,7 +186,7 @@ export function hasClass(element: HtmlElement, name: string): boolean {
   return (element.attrs.get('class') ?? '').split(/\s+/).includes(name);
 }
 
-/** All descendant elements in document order. */
+/** In document order. */
 export function descendants(nodes: readonly HtmlNode[]): HtmlElement[] {
   const found: HtmlElement[] = [];
   for (const node of nodes) {
@@ -203,19 +196,16 @@ export function descendants(nodes: readonly HtmlNode[]): HtmlElement[] {
   return found;
 }
 
-/** An allowed attribute, optionally restricted to values matching a pattern. */
 export type AttributeRule = string | { name: string; value: RegExp };
 
-/** Allowed elements and, for each, its allowed attributes. */
 export type Whitelist = ReadonlyMap<string, readonly AttributeRule[]>;
 
 const URL_ATTRIBUTES = new Set(['href', 'cite']);
 const HTTP_URL = /^https?:\/\//i;
 
 /**
- * Rebuilds markup from whitelisted elements and attributes only. Elements not on the list
- * are dropped together with their content; `href` and `cite` must be http(s) URLs. Text is
- * copied as written: the tokenizer guarantees it contains no `<`, so it cannot open a tag.
+ * Security: the result reaches `dangerouslySetInnerHTML`. Elements off the list are dropped
+ * with their content, `href` and `cite` must be http(s) URLs, and text never holds a `<`.
  */
 export function rebuild(
   nodes: readonly HtmlNode[],

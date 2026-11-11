@@ -61,7 +61,7 @@ export type YouTubeEmbedProps = EmbedSource &
   Omit<FrameProps, keyof YouTubeOptions> &
   YouTubeOptions;
 
-// The share dialog's own embed code (test/fixtures/youtube/share.html).
+// The value in YouTube's own embed code.
 const ALLOW =
   'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
 
@@ -97,7 +97,6 @@ export function YouTubeEmbed(props: YouTubeEmbedProps) {
   useReportError(error, onError);
   if (!embed) return null;
 
-  // Parameters from the embed code first; props given by the host take precedence.
   const { nocookie: parsedNocookie, ...parsed } = embed.options;
   const host =
     (nocookie ?? parsedNocookie === true)

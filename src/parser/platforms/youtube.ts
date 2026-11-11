@@ -68,7 +68,6 @@ export const youtube: PlatformParser = {
     const [, id] = EMBED_PATH.exec(src.path) ?? [];
     if (id === undefined) return null;
 
-    // Every query parameter of the embed URL is kept, as given.
     const entries = [...src.query]
       .filter(([key]) => key !== 't')
       .map(([key, value]): [string, string | number | boolean] => [

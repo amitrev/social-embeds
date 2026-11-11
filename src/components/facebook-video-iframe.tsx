@@ -2,15 +2,11 @@ import type { ParsedEmbed } from '../parser';
 import { IframeEmbed } from './iframe-embed';
 import { type FrameProps, query } from './shared';
 
-// The embed dialog's own iframe attributes (test/fixtures/facebook/post-iframe.html).
+// The value in Facebook's own embed code.
 const ALLOW =
   'autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share';
 
-/**
- * Facebook video from embed code: the iframe that came in (brief §5.4), rebuilt from the
- * parsed href and parameters. Its content fills the iframe at any width, whatever its
- * `width` parameter says (docs/decisions.md D29). `FacebookEmbed` routes here.
- */
+// Its content fills the iframe at any width, whatever `width` says (docs/decisions.md D29).
 export function FacebookVideoIframe({
   embed,
   ...frame

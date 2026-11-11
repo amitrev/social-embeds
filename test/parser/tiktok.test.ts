@@ -40,8 +40,8 @@ describe('TikTok embed code', () => {
   });
 });
 
-// Legacy blockquote codes, structure as in brief §3. No real fixture yet: TikTok's oEmbed
-// and share dialog both return the player iframe now (docs/decisions.md D11).
+// No real fixture: TikTok's oEmbed and share dialog both return the player iframe now
+// (docs/decisions.md D11).
 describe('TikTok legacy blockquote', () => {
   const cite = 'https://www.tiktok.com/@scout2015/video/6718335390845095173';
   const blockquote = (attributes: string) =>

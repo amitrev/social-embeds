@@ -16,11 +16,8 @@ export type InstagramEmbedProps = EmbedSource &
 /** A photo post without caption at 375px, the smallest measured (docs/decisions.md D34). */
 const MIN_HEIGHT = 680;
 
-/**
- * embed.js copies the blockquote's inline style onto its iframe and gives the iframe no
- * width of its own, so without this the post stays 326px wide. The value is the one in
- * Instagram's own embed code (docs/decisions.md D33).
- */
+// embed.js copies the blockquote's inline style onto its iframe, which has no width of
+// its own: without this the post stays 326px wide (docs/decisions.md D33).
 const FLUID_WIDTH = 'width:calc(100% - 2px)';
 
 export function InstagramEmbed(props: InstagramEmbedProps) {

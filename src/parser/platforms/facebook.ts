@@ -9,14 +9,13 @@ import {
 import type { ParsedEmbed } from '../types';
 import { coerce, parseUrl, pixels, type ParsedUrl } from '../url';
 
-// Rendering rules (brief §5.4, docs/decisions.md D10 and D44): posts always use the SDK,
-// video embed code keeps its iframe unless it shows the post text, video URLs use the SDK.
+// Which input renders through the SDK and which as an iframe: docs/decisions.md D10, D22, D44.
 
 const HOSTS = new Set(['facebook.com', 'www.facebook.com', 'm.facebook.com']);
 const PLUGIN_HOSTS = new Set(['facebook.com', 'www.facebook.com']);
 const BASE = 'https://www.facebook.com';
 
-// URL shapes verified against plugins/post.php and plugins/video.php (decisions.md D21).
+// URL shapes: docs/decisions.md D21.
 const NAME = '[A-Za-z0-9.\\-]{1,80}';
 const POST_ID = '(?:\\d{1,25}|pfbid[A-Za-z0-9]{10,120})';
 const POSTS_PATH = new RegExp(`^/(${NAME})/posts/(${POST_ID})/?$`);
@@ -43,8 +42,7 @@ const OPTION_ATTRIBUTES = [
   ['data-show-captions', 'showCaptions'],
 ] as const;
 
-// plugins/video.php parameters that the SDK reads as fb-video attributes. The iframe's
-// width and height become the embed's size; t does not carry over.
+// The plugins/video.php parameters that fb-video has an attribute for.
 const VIDEO_SDK_PARAMETERS = [
   ['show_text', 'showText'],
   ['allowfullscreen', 'allowfullscreen'],
@@ -163,8 +161,7 @@ export const facebook: PlatformParser = {
     if (!found) return null;
 
     if (src.path === '/plugins/post.php') {
-      // The post iframe's height only fits its width, so posts render through the SDK;
-      // the iframe parameters that the SDK also understands carry over.
+      // A post iframe's height only fits its width: posts go to the SDK (docs/decisions.md D22).
       const options: Options = {};
       const showText = src.query.get('show_text');
       const width = src.query.get('width');
@@ -175,8 +172,7 @@ export const facebook: PlatformParser = {
     if (src.path === '/plugins/video.php') {
       const showText = coerce(src.query.get('show_text') ?? '');
       if (showText === true || showText === 1) {
-        // The post text below the player has its own height at every width, so the
-        // iframe's height only fits its width, as a post's does (decisions.md D44).
+        // The post text has its own height at every width: docs/decisions.md D44.
         const options: Options = {};
         for (const [parameter, key] of VIDEO_SDK_PARAMETERS) {
           const value = src.query.get(parameter);
@@ -192,7 +188,6 @@ export const facebook: PlatformParser = {
             : { width, height },
         );
       }
-      // Kept as the iframe that came in: every parameter except href, as given.
       const options: Options = Object.fromEntries(
         [...src.query]
           .filter(([key]) => key !== 'href')

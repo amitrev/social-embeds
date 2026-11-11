@@ -14,7 +14,7 @@ describe('server rendering', () => {
     expect(html).not.toContain('<iframe');
   });
 
-  it('renders the fallback content of embed code for crawlers (brief §6.3)', () => {
+  it('renders the fallback content of embed code for crawlers', () => {
     const html = renderToString(<SocialEmbed html={xLink} />);
     // The class is added on the client when the post renders (docs/decisions.md D39).
     expect(html).toContain(

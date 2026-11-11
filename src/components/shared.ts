@@ -2,11 +2,9 @@ import type { ComponentProps, ReactNode } from 'react';
 import { matchUrl, type ParsedEmbed, type Platform } from '../parser';
 import { verifyEmbed } from '../parser/verify';
 
-/** A platform component takes a post URL or an already-parsed embed (brief §5.2). */
 export type EmbedSource =
   { url: string; embed?: never } | { embed: ParsedEmbed; url?: never };
 
-/** Props every embed component shares (brief §6). */
 export type SharedProps = Omit<
   ComponentProps<'div'>,
   'children' | 'onLoad' | 'onError'
@@ -25,7 +23,6 @@ export type SharedProps = Omit<
   onError?: (error: Error) => void;
 };
 
-/** Iframe-based embeds (Group B) may also be given a fixed or a maximum height. */
 export type FrameProps = SharedProps & {
   /** A fixed height in pixels, instead of the embed's aspect ratio. */
   height?: number;
@@ -42,7 +39,6 @@ const NAMES: Record<Platform, string> = {
   youtube: 'YouTube',
 };
 
-/** The embed for `platform`, or a message saying why the input is not one. */
 export function resolveEmbed(
   url: string | undefined,
   given: ParsedEmbed | undefined,
@@ -68,7 +64,7 @@ export function resolveEmbed(
   return { embed: verified };
 }
 
-/** Serialises query parameters; later entries replace earlier ones with the same name. */
+/** Later entries replace earlier ones with the same name. */
 export function query(
   ...sources: (
     Iterable<readonly [string, string | number | boolean]> | undefined
@@ -84,10 +80,7 @@ export function query(
   return pairs.length > 0 ? `?${pairs.join('&')}` : '';
 }
 
-/**
- * Maps option props to the platform's parameter names. Player parameters take 0 and 1,
- * so booleans become numbers; undefined props are left out.
- */
+/** Player parameters take 0 and 1, so booleans become numbers. */
 export function playerParams(
   props: Readonly<Record<string, unknown>>,
   names: Readonly<Record<string, string>>,

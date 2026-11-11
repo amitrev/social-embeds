@@ -12,7 +12,7 @@ afterEach(() => {
 
 describe('FacebookVideoIframe', () => {
   it('rebuilds the video iframe that came in, sized by its own width and height', () => {
-    // Derived, as in the parser tests: the Embed dialog without the post text.
+    // Derived: the Embed dialog's code without the post text.
     const embed = parseEmbed(
       videoIframe
         .replace('show_text=true', 'show_text=false')

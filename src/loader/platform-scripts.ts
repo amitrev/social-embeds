@@ -1,7 +1,6 @@
 import { loadScript, type PlatformScript } from './load-script';
 
-// Script URLs, globals and ready signals are taken from the platforms' own scripts and
-// from browser probes (docs/decisions.md D24–D26).
+// Script URLs, globals and ready signals: docs/decisions.md D24–D26.
 
 type PlatformGlobals = {
   twttr?: {
@@ -20,10 +19,7 @@ type PlatformGlobals = {
 
 const globals = () => window as unknown as PlatformGlobals;
 
-/**
- * The SDK refuses to parse without a Graph API version. Social plugins render with old and
- * new versions alike; this is the one Meta's Embedded Posts documentation uses.
- */
+/** The SDK refuses to parse without a Graph API version (docs/decisions.md D26). */
 export const FACEBOOK_SDK_VERSION = 'v26.0';
 
 const LOCALE = /^[a-z]{2,3}_[A-Z]{2}$/;
@@ -59,12 +55,8 @@ const x: PlatformScript = {
     }),
 };
 
-/**
- * Instagram's and Threads' embed.js do nothing when a loaded Facebook SDK is on the page:
- * both start with `(window.FB && !window.FB.__buffer) || …`. The SDK's own stub carries
- * `__buffer` while the SDK loads, so a loaded SDK is marked the same way while the script
- * runs. Neither script reads `FB` anywhere else (docs/decisions.md D38).
- */
+// embed.js does nothing beside a loaded Facebook SDK, unless `FB.__buffer` is set as it is
+// while the SDK loads (docs/decisions.md D38).
 function besideFacebookSdk(): () => void {
   const fb = globals().FB;
   if (!fb || fb.__buffer) return () => {};
@@ -74,12 +66,8 @@ function besideFacebookSdk(): () => void {
   };
 }
 
-/**
- * The SDK can finish loading after embed.js was added and before it runs, for instance
- * when both are added at once: there was nothing to mark, and the script did nothing. It
- * registers while it runs, so no registration beside a loaded SDK means exactly that, and
- * the loader adds it again (docs/decisions.md D46).
- */
+// embed.js registers while it runs: no registration beside a loaded SDK means it ran
+// before the SDK could be marked, and did nothing (docs/decisions.md D46).
 function skippedBesideFacebookSdk(name: string): () => boolean {
   const registered = embedSdkRegistered(name);
   return () => {
@@ -108,10 +96,7 @@ const threads: PlatformScript = {
   skipped: skippedBesideFacebookSdk('threads'),
 };
 
-/**
- * `xfbml=0` stops the SDK from scanning the whole page; embeds are parsed explicitly. One
- * SDK serves the whole page, so the first locale requested wins.
- */
+// `xfbml=0` stops the SDK from scanning the whole page: each embed is parsed on its own.
 function facebook(locale: string): PlatformScript {
   return {
     key: 'facebook',
