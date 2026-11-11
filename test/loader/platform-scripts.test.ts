@@ -107,6 +107,65 @@ describe('Instagram and Threads', () => {
     expect(fb.__buffer).toBe(buffer);
   });
 
+  it('adds embed.js again when a Facebook SDK finished loading before it ran', async () => {
+    const load = await freshLoader();
+    const added = captureScripts();
+    // No SDK on the page yet, so there is nothing to mark.
+    const promise = load('instagram');
+    expect(added).toHaveLength(1);
+    const first = added[0];
+    if (!first) throw new Error('no script was added');
+    const removed = vi.spyOn(first, 'remove');
+
+    // The SDK, added at the same moment, finishes first: embed.js runs and does nothing.
+    const fb: Page = { XFBML: { parse: () => undefined } };
+    page.FB = fb;
+    fire(first, 'load');
+
+    await vi.waitFor(() => {
+      expect(added).toHaveLength(2);
+    });
+    expect(added[1]?.src).toBe('https://www.instagram.com/embed.js');
+    expect(removed).toHaveBeenCalled();
+    // This time the SDK is marked while the script runs.
+    expect(fb.__buffer).toBe(true);
+
+    page.instgrm = embeds('instagram');
+    fire(added[1], 'load');
+    await expect(promise).resolves.toBeUndefined();
+    expect('__buffer' in fb).toBe(false);
+  });
+
+  it('does not add a script again that has only not registered yet', async () => {
+    const load = await freshLoader();
+    const added = captureScripts();
+    const promise = load('threads');
+    // Loaded, no registration yet, and no Facebook SDK that could have stopped it.
+    fire(added[0], 'load');
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    expect(added).toHaveLength(1);
+
+    page.instgrm = embeds('threads');
+    await expect(promise).resolves.toBeUndefined();
+  });
+
+  it('adds a script that keeps doing nothing three times at most', async () => {
+    const load = await freshLoader();
+    const added = captureScripts();
+    const promise = load('instagram');
+    promise.catch(() => undefined);
+    page.FB = { XFBML: { parse: () => undefined } };
+
+    for (const attempt of [0, 1, 2]) {
+      await vi.waitFor(() => {
+        expect(added).toHaveLength(attempt + 1);
+      });
+      fire(added[attempt], 'load');
+    }
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    expect(added).toHaveLength(3);
+  });
+
   it('reuses the protocol-relative Instagram script of an embed code', async () => {
     const load = await freshLoader();
     addHostScript('//www.instagram.com/embed.js');
