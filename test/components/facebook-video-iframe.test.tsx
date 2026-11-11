@@ -2,9 +2,9 @@ import { cleanup, render } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { FacebookVideoIframe } from '../../src/components/facebook-video-iframe';
 import { parseEmbed } from '../../src/parser';
-import postIframe from '../fixtures/facebook/post-iframe.html?raw';
+import videoIframe from '../fixtures/facebook/video-iframe-reel.html?raw';
 
-const video = 'https://www.facebook.com/facebook/videos/10153231379946729/';
+const reel = 'https://www.facebook.com/reel/1709746083847442';
 
 afterEach(() => {
   cleanup();
@@ -12,11 +12,11 @@ afterEach(() => {
 
 describe('FacebookVideoIframe', () => {
   it('rebuilds the video iframe that came in, sized by its own width and height', () => {
-    // Derived from the post iframe, as in the parser tests (docs/decisions.md D22).
+    // Derived, as in the parser tests: the Embed dialog without the post text.
     const embed = parseEmbed(
-      postIframe
-        .replace('/plugins/post.php', '/plugins/video.php')
-        .replace(/href=[^&]+/, `href=${encodeURIComponent(video)}`),
+      videoIframe
+        .replace('show_text=true', 'show_text=false')
+        .replace('height="591"', 'height="476"'),
     );
     if (!embed) throw new Error('fixture did not parse');
 
@@ -24,11 +24,11 @@ describe('FacebookVideoIframe', () => {
       <FacebookVideoIframe embed={embed} lazy={false} />,
     );
     expect((container.firstElementChild as HTMLElement).style.aspectRatio).toBe(
-      '500 / 726',
+      '267 / 476',
     );
     const iframe = container.querySelector('iframe');
     expect(iframe?.getAttribute('src')).toBe(
-      `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(video)}&show_text=true&width=500`,
+      `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(reel)}&height=476&show_text=false&width=267&t=0`,
     );
     expect(iframe?.getAttribute('scrolling')).toBe('no');
     expect(iframe?.getAttribute('allow')).toBe(

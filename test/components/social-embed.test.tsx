@@ -152,6 +152,26 @@ describe('SocialEmbed props', () => {
     expect(wrapper.style.height).toBe('360px');
   });
 
+  it('forwards maxHeight to iframe embeds only', () => {
+    const video = render(
+      <SocialEmbed
+        url="https://youtube.com/shorts/jNQXAC9IVRw"
+        maxHeight={640}
+      />,
+    );
+    expect(
+      (video.container.firstElementChild as HTMLElement).style.maxWidth,
+    ).toBe('360px');
+
+    // A script-based embed sizes itself: the prop must not reach its wrapper div.
+    const post = render(
+      <SocialEmbed url="https://x.com/jack/status/20" maxHeight={640} />,
+    );
+    const wrapper = post.container.firstElementChild as HTMLElement;
+    expect(wrapper.hasAttribute('maxheight')).toBe(false);
+    expect(wrapper.style.maxWidth).toBe('550px');
+  });
+
   it('accepts html or url, never both or neither', () => {
     // Checked by `pnpm typecheck`: each element below must be a type error.
     const invalid = [

@@ -178,7 +178,7 @@ Not supported, for lack of a live sample: group posts (`/groups/{id}/posts/{id}`
 ### D22. Facebook embed code
 
 - **Post iframe** (`plugins/post.php`, as pasted by the maintainer from a post's Embed dialog): renders through the SDK (§5.4). `show_text` and `width` carry over as `showText` and `width`, which the SDK also reads. `height` is dropped, because it only fits the iframe's width.
-- **Video iframe** (`plugins/video.php`): kept as an iframe. Every query parameter except `href` stays an option under its own name, and `size` comes from the `width` and `height` attributes. No real video iframe code has been collected yet; the test derives one from the post iframe.
+- **Video iframe** (`plugins/video.php`): kept as an iframe. Every query parameter except `href` stays an option under its own name, and `size` comes from the `width` and `height` attributes. No real video iframe code has been collected yet; the test derives one from the post iframe. (Since D44: real code is collected, and a video iframe that shows the post text renders through the SDK.)
 - **SDK snippets** (`fb-post`, `fb-video`): options come from the documented attributes `data-width`, `data-show-text`, `data-lazy`, `data-allowfullscreen`, `data-autoplay` and `data-show-captions`. The fixtures are Meta's own documented snippets ([Embedded Posts](https://developers.facebook.com/docs/plugins/embedded-posts), [Embedded Videos](https://developers.facebook.com/docs/plugins/embedded-video-player)).
 - **Locale:** the SDK script URL `connect.facebook.net/{locale}/sdk.js` carries the locale; the parser exposes it as `options.locale`. The `version` in the script URL is not extracted: it is the Graph API version, which the script loader sets (D26).
 - **Fallback content:** whitelisted as `div`, `blockquote[cite]`, `a[href]` and `p`. The `class` attribute is kept only when it is exactly `fb-xfbml-parse-ignore`, the marker that tells the SDK not to parse that content.
@@ -416,6 +416,50 @@ The workflow:
 npm lists a staged version only once it is approved, so Changesets' `select-mode` keeps reporting `publish` until then. The `v{version}` tag marks a version as staged, and `pack` and `stage` are skipped while it exists. The tag is pushed after staging succeeds, so a failed stage leaves no tag and the next push retries. The workflow runs `bash` with `pipefail`, so a failed `npm stage publish` fails its step even though its output is piped through `tee`.
 
 The new package's `0.0.0-stage` version, created a minute before the maintainer's `0.0.0` placeholder, is npm's placeholder for staged publishing ([staged publishing](https://docs.npmjs.com/staged-publishing)).
+
+### D44. Facebook video iframe that shows the post text renders through the SDK
+
+§5.4 keeps video embed code "as the iframe that came in", because its "aspect ratio is known from `width`/`height`". That holds only without the post text. With "Include full post" ticked, the Embed dialog produces `plugins/video.php?height=476&…&show_text=true&width=267` in a 267×591 iframe (`facebook/video-iframe-reel.html`, the first real video iframe code collected; D22 had none). The player is 267×476 and the other 115 px are for the text, which does not scale with the player. Reported from a host page, where the 267:591 box cut the text off.
+
+Evidence (Chrome, 2026-11-11, the reel of that fixture):
+
+- **Iframe as given**, in a 550 px wide 267:591 box (550×1217): the player takes 550×978 and the row of reactions below the text is cut off.
+- **Through the SDK** (`fb-video`, `data-show-text="true"`, no `data-width`): the SDK sized the iframe to its content, with the whole text visible.
+
+  | Box width | SDK iframe | Player (9:16) | Text |
+  | --------- | ---------- | ------------- | ---- |
+  | 267       | 267×885    | 475           | 410  |
+  | 343       | 343×962    | 610           | 352  |
+  | 360       | 360×973    | 640           | 333  |
+  | 550       | 550×1233   | 978           | 255  |
+  | 760       | 760×1548   | 1351          | 197  |
+
+  The text's height is neither a ratio of the width nor a constant, so no CSS box can reserve it. Facebook's own 267×591 iframe leaves 115 px where the text needs 410: the embed code as given is cut off too.
+
+- `show_text=1` shows the text as `true` does; `show_text=0` does not (both loaded as `plugins/video.php` iframes).
+- The SDK sends `data-show-text` to the plugin as `show_text`: its iframe's query was `app_id, channel, container_width, href, locale, sdk, show_text`.
+
+The rule: a `plugins/video.php` iframe whose `show_text` is `true` or `1` parses as `variant: 'sdk'` with `showText: true`, for the reason §5.4 gives for posts. `allowfullscreen`, `autoplay` and `show_captions` carry over as the options the SDK reads. `width` and `height` do not go to the SDK, because its video is fluid (D33), as the iframe is (D29); they are kept as the embed's `size` (D45). `t` is dropped: `fb-video` has no attribute for a start time. A video iframe without the text stays an iframe (D22, D29).
+
+The cost: these embeds load the SDK, and their height is known only once it has rendered, so the placeholder is the SDK video's (D34).
+
+### D45. `maxHeight`, and Facebook video embed code without its post text
+
+D44 embeds are tall: the reel of its fixture is 343×962 on a 375 px phone and 550×1233 in a 550 px column. The maintainer found that too tall (2026-11-11). A height limit cannot apply while the text shows, because the text's height is unknown before rendering and grows as the box narrows (D44's table). Facebook offers nothing in between: `data-show-text` is the only documented attribute for the text (D22), and the text is inside a cross-origin iframe.
+
+Maintainer decision, 2026-11-11: add `maxHeight`, and let `showText={false}` render such code as the plain iframe.
+
+- **`maxHeight`** is a prop of the iframe-based embeds, beside `height`. With an aspect ratio, a height limit is a width limit: the wrapper's `max-width` becomes the smaller of `maxWidth` and `floor(maxHeight × width / height)`. Nothing else changes, so there is no layout shift and no new CSS. With a fixed `height`, it is the wrapper's `max-height`. Script-based embeds size themselves, so `<SocialEmbed>` and `FacebookEmbed` keep the prop off their wrappers, as they do `height`.
+- **The parser keeps the player's size.** A D44 embed's `size` is the iframe's `width` and `height` parameters (267×476 in the fixture), not its attributes: the attribute height (591) includes the text.
+- **`showText={false}`** on `FacebookEmbed`, for a video whose `size` is known, renders `plugins/video.php?href=…&show_text=false&width=…&height=…` in a box of the player's aspect ratio, with `allowfullscreen`, `autoplay` and `show_captions` when set. No SDK. Without a known size (video URLs, `fb-video` snippets) the video stays with the SDK, which then leaves the text out.
+- **`variant`** stays `'sdk'` on the parsed embed: it names the path without host props.
+- **Not done:** `showText` (true) on video embed code without the text keeps the iframe. `<SocialEmbed>` takes no platform options (D36), so a host that wants this uses `FacebookEmbed`.
+
+Evidence (playground, 2026-11-11), the fixture with `showText={false}` and `maxHeight={640}`:
+
+- Wrapper style `position:relative;width:100%;max-width:358px;aspect-ratio:267 / 476`; 358×638 at an 847 px wide viewport.
+- In a 343 px container: 343×611. The iframe loaded, the player filled it and no text showed.
+- The same sizes for YouTube Shorts (360 px wide at `maxHeight={640}`) are covered by tests only.
 
 ## Open VERIFY items
 

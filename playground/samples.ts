@@ -25,6 +25,11 @@ function fixture(file: string): string {
   );
 }
 
+/** A Facebook reel's iframe embed code that shows the post text. */
+export function facebookReel(): string {
+  return fixture('facebook/video-iframe-reel.html');
+}
+
 /** Embed code per platform: the fixtures, plus variants no current source produces. */
 export function embedCodes(platform: PlatformKey): Sample[] {
   switch (platform) {
@@ -70,7 +75,12 @@ export function embedCodes(platform: PlatformKey): Sample[] {
           value: fixture('facebook/video-sdk-docs.html'),
         },
         {
-          label: 'Video, iframe (derived)',
+          label:
+            'Reel, iframe with the post text from the Embed dialog (rendered with the SDK)',
+          value: facebookReel(),
+        },
+        {
+          label: 'Video, iframe without the post text (derived)',
           value:
             '<iframe src="https://www.facebook.com/plugins/video.php?height=314&href=https%3A%2F%2Fwww.facebook.com%2Ffacebook%2Fvideos%2F10153231379946729%2F&show_text=false&width=560&t=0" width="560" height="314" style="border:none;overflow:hidden" scrolling="no" frameborder="0" allowfullscreen="true" allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"></iframe>',
         },

@@ -31,6 +31,7 @@ export function IframeEmbed({
   width = '100%',
   maxWidth,
   height,
+  maxHeight,
   placeholder,
   lazy = true,
   onLoad,
@@ -44,13 +45,21 @@ export function IframeEmbed({
 
   const aspectWidth = size?.width ?? ratio.width;
   const aspectHeight = size?.height ?? ratio.height;
+  // With an aspect ratio, a height limit is a width limit: the widest box that fits it.
+  const widest =
+    maxHeight === undefined || height !== undefined
+      ? undefined
+      : Math.floor((maxHeight * aspectWidth) / aspectHeight);
   const wrapper: CSSProperties = {
     position: 'relative',
     width,
-    maxWidth,
+    maxWidth:
+      widest === undefined || (maxWidth !== undefined && maxWidth < widest)
+        ? maxWidth
+        : widest,
     ...(height === undefined
       ? { aspectRatio: `${String(aspectWidth)} / ${String(aspectHeight)}` }
-      : { height }),
+      : { height, maxHeight }),
     ...style,
   };
 

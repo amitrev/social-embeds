@@ -25,10 +25,12 @@ export type SharedProps = Omit<
   onError?: (error: Error) => void;
 };
 
-/** Iframe-based embeds (Group B) may also be given a fixed height. */
+/** Iframe-based embeds (Group B) may also be given a fixed or a maximum height. */
 export type FrameProps = SharedProps & {
   /** A fixed height in pixels, instead of the embed's aspect ratio. */
   height?: number;
+  /** The embed is at most this tall, in pixels: it narrows to keep its aspect ratio. */
+  maxHeight?: number;
 };
 
 const NAMES: Record<Platform, string> = {

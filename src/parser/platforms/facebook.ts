@@ -7,10 +7,10 @@ import {
   withSize,
 } from '../platform';
 import type { ParsedEmbed } from '../types';
-import { coerce, parseUrl, type ParsedUrl } from '../url';
+import { coerce, parseUrl, pixels, type ParsedUrl } from '../url';
 
-// Rendering rules (brief §5.4, docs/decisions.md D10): posts always use the SDK, video
-// embed code keeps its iframe, video URLs use the SDK.
+// Rendering rules (brief §5.4, docs/decisions.md D10 and D44): posts always use the SDK,
+// video embed code keeps its iframe unless it shows the post text, video URLs use the SDK.
 
 const HOSTS = new Set(['facebook.com', 'www.facebook.com', 'm.facebook.com']);
 const PLUGIN_HOSTS = new Set(['facebook.com', 'www.facebook.com']);
@@ -41,6 +41,15 @@ const OPTION_ATTRIBUTES = [
   ['data-allowfullscreen', 'allowfullscreen'],
   ['data-autoplay', 'autoplay'],
   ['data-show-captions', 'showCaptions'],
+] as const;
+
+// plugins/video.php parameters that the SDK reads as fb-video attributes. The iframe's
+// width and height become the embed's size; t does not carry over.
+const VIDEO_SDK_PARAMETERS = [
+  ['show_text', 'showText'],
+  ['allowfullscreen', 'allowfullscreen'],
+  ['autoplay', 'autoplay'],
+  ['show_captions', 'showCaptions'],
 ] as const;
 
 const PARSE_IGNORE = { name: 'class', value: /^fb-xfbml-parse-ignore$/ };
@@ -164,6 +173,25 @@ export const facebook: PlatformParser = {
       return embed(found, 'post', 'sdk', options);
     }
     if (src.path === '/plugins/video.php') {
+      const showText = coerce(src.query.get('show_text') ?? '');
+      if (showText === true || showText === 1) {
+        // The post text below the player has its own height at every width, so the
+        // iframe's height only fits its width, as a post's does (decisions.md D44).
+        const options: Options = {};
+        for (const [parameter, key] of VIDEO_SDK_PARAMETERS) {
+          const value = src.query.get(parameter);
+          if (value !== undefined) options[key] = coerce(value);
+        }
+        // The player's own size: the iframe's height attribute includes the text.
+        const width = pixels(src.query.get('width'));
+        const height = pixels(src.query.get('height'));
+        return withSize(
+          embed(found, 'video', 'sdk', { ...options, showText: true }),
+          width === undefined || height === undefined
+            ? undefined
+            : { width, height },
+        );
+      }
       // Kept as the iframe that came in: every parameter except href, as given.
       const options: Options = Object.fromEntries(
         [...src.query]

@@ -35,6 +35,14 @@ describe('TikTokEmbed', () => {
     expect(iframe?.getAttribute('title')).toBe('TikTok video player');
   });
 
+  it('takes the narrower of maxWidth and the width maxHeight allows', () => {
+    // 9:16 at most 400px tall is 225px wide, under the default 325px.
+    const { container } = render(<TikTokEmbed url={URL} maxHeight={400} />);
+    expect((container.firstElementChild as HTMLElement).style.maxWidth).toBe(
+      '225px',
+    );
+  });
+
   it('rebuilds the oEmbed player code with its size and parameters', () => {
     const { container } = render(
       <TikTokEmbed embed={parsed(player)} lazy={false} />,

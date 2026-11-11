@@ -4,6 +4,7 @@ import { FacebookEmbed, InstagramEmbed, ThreadsEmbed, XEmbed } from '../../src';
 import { loadPlatformScript } from '../../src/loader/platform-scripts';
 import { parseEmbed, type ParsedEmbed } from '../../src/parser';
 import postIframe from '../fixtures/facebook/post-iframe.html?raw';
+import videoIframe from '../fixtures/facebook/video-iframe-reel.html?raw';
 import videoSdk from '../fixtures/facebook/video-sdk-docs.html?raw';
 import instagramCode from '../fixtures/instagram/post-captioned.html?raw';
 import threadsCode from '../fixtures/threads/oembed.html?raw';
@@ -16,6 +17,7 @@ vi.mock('../../src/loader/platform-scripts', () => ({
 }));
 
 const load = vi.mocked(loadPlatformScript);
+const reel = 'https://www.facebook.com/reel/1709746083847442';
 const page = window as unknown as Record<string, unknown>;
 
 function parsed(html: string): ParsedEmbed {
@@ -336,12 +338,70 @@ describe('FacebookEmbed', () => {
     expect(load).toHaveBeenCalledWith('facebook', { locale: 'en_US' });
   });
 
-  it('keeps video iframe embed code as an iframe', () => {
-    const video = 'https://www.facebook.com/facebook/videos/10153231379946729/';
+  it('renders video iframe embed code that shows the post text through the SDK', () => {
+    const { container } = render(
+      <FacebookEmbed embed={parsed(videoIframe)} lazy={false} />,
+    );
+    expect(markupOf(container)).toBe(
+      '<div class="fb-video" data-href="https://www.facebook.com/reel/1709746083847442" data-show-text="true"></div>',
+    );
+    expect(container.querySelector('iframe')).toBeNull();
+    expect((container.firstElementChild as HTMLElement).style.aspectRatio).toBe(
+      '',
+    );
+  });
+
+  it('renders that video as the plain iframe when showText is off', () => {
+    const { container } = render(
+      <FacebookEmbed
+        embed={parsed(videoIframe)}
+        showText={false}
+        maxHeight={640}
+        lazy={false}
+      />,
+    );
+    const wrapper = container.firstElementChild as HTMLElement;
+    expect(wrapper.style.aspectRatio).toBe('267 / 476');
+    // 267:476 at most 640px tall.
+    expect(wrapper.style.maxWidth).toBe('358px');
+    expect(container.querySelector('iframe')?.getAttribute('src')).toBe(
+      `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(reel)}&show_text=false&width=267&height=476`,
+    );
+    expect(container.querySelector('.fb-video')).toBeNull();
+    expect(load).not.toHaveBeenCalled();
+  });
+
+  it('keeps the player options on that plain iframe', () => {
+    const { container } = render(
+      <FacebookEmbed
+        embed={parsed(videoIframe.replace('&t=0', '&show_captions=true'))}
+        showText={false}
+        autoplay
+        lazy={false}
+      />,
+    );
+    expect(container.querySelector('iframe')?.getAttribute('src')).toBe(
+      `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(reel)}&show_text=false&autoplay=true&show_captions=true&width=267&height=476`,
+    );
+  });
+
+  it('keeps maxHeight off the wrapper of an SDK embed', () => {
+    const { container } = render(
+      <FacebookEmbed
+        url="https://www.facebook.com/facebook/videos/10153231379946729/"
+        showText={false}
+        maxHeight={640}
+      />,
+    );
+    const wrapper = container.firstElementChild as HTMLElement;
+    expect(wrapper.hasAttribute('maxheight')).toBe(false);
+    // A video URL says nothing about its size, so it stays with the SDK.
+    expect(container.querySelector('iframe')).toBeNull();
+  });
+
+  it('keeps video iframe embed code without the post text as an iframe', () => {
     const embed = parsed(
-      postIframe
-        .replace('/plugins/post.php', '/plugins/video.php')
-        .replace(/href=[^&]+/, `href=${encodeURIComponent(video)}`),
+      videoIframe.replace('show_text=true', 'show_text=false'),
     );
     const { container } = render(
       <FacebookEmbed embed={embed} lazy={false} height={300} />,

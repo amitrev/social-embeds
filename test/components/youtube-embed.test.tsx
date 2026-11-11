@@ -110,6 +110,38 @@ describe('YouTubeEmbed', () => {
     expect(wrapper.style.aspectRatio).toBe('');
   });
 
+  it('narrows a vertical video so it is at most maxHeight tall', () => {
+    const { container } = render(
+      <YouTubeEmbed
+        url="https://youtube.com/shorts/jNQXAC9IVRw"
+        maxHeight={640}
+      />,
+    );
+    const wrapper = container.firstElementChild as HTMLElement;
+    expect(wrapper.style.aspectRatio).toBe('9 / 16');
+    expect(wrapper.style.maxWidth).toBe('360px');
+    expect(wrapper.hasAttribute('maxheight')).toBe(false);
+  });
+
+  it('keeps a maxWidth that already makes the embed shorter than maxHeight', () => {
+    // 16:9 at 964px is 542px tall.
+    const { container } = render(
+      <YouTubeEmbed url={URL} maxWidth={964} maxHeight={640} />,
+    );
+    expect((container.firstElementChild as HTMLElement).style.maxWidth).toBe(
+      '964px',
+    );
+  });
+
+  it('limits a fixed height to maxHeight', () => {
+    const { container } = render(
+      <YouTubeEmbed url={URL} height={800} maxHeight={640} />,
+    );
+    const wrapper = container.firstElementChild as HTMLElement;
+    expect(wrapper.style.height).toBe('800px');
+    expect(wrapper.style.maxHeight).toBe('640px');
+  });
+
   it('shows the placeholder until the iframe loads, and calls onLoad once', () => {
     const onLoad = vi.fn();
     const { container, queryByText } = render(

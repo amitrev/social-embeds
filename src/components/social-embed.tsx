@@ -35,11 +35,12 @@ export type SocialEmbedProps = SocialEmbedSource &
   };
 
 /**
- * Recognises embed code or a post URL and renders the platform's component. `height`
- * reaches only the iframe-based embeds; the others size themselves (brief §6.1).
+ * Recognises embed code or a post URL and renders the platform's component. `height` and
+ * `maxHeight` reach only the iframe-based embeds; the others size themselves (brief §6.1).
  */
 export function SocialEmbed(props: SocialEmbedProps) {
-  const { html, url, fallback, height, onError, ...shared } = props;
+  const { html, url, fallback, height, maxHeight, onError, ...shared } = props;
+  const frame = { height, maxHeight };
   const embed = useMemo(
     () => (html !== undefined ? parseEmbed(html) : matchUrl(url)),
     [html, url],
@@ -67,30 +68,15 @@ export function SocialEmbed(props: SocialEmbedProps) {
       return <ThreadsEmbed {...shared} onError={onError} embed={embed} />;
     case 'facebook':
       return (
-        <FacebookEmbed
-          {...shared}
-          height={height}
-          onError={onError}
-          embed={embed}
-        />
+        <FacebookEmbed {...shared} {...frame} onError={onError} embed={embed} />
       );
     case 'tiktok':
       return (
-        <TikTokEmbed
-          {...shared}
-          height={height}
-          onError={onError}
-          embed={embed}
-        />
+        <TikTokEmbed {...shared} {...frame} onError={onError} embed={embed} />
       );
     case 'youtube':
       return (
-        <YouTubeEmbed
-          {...shared}
-          height={height}
-          onError={onError}
-          embed={embed}
-        />
+        <YouTubeEmbed {...shared} {...frame} onError={onError} embed={embed} />
       );
   }
 }

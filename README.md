@@ -169,19 +169,20 @@ A component checks an `embed` before using it: its `url` must be one `matchUrl` 
 
 ## Shared props
 
-| Prop          | Type                     | Default      | Notes                                                                                                                                          |
-| ------------- | ------------------------ | ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| `url`         | `string`                 |              | Post URL. Platform components take `url` or `embed`; `<SocialEmbed>` takes `url` or `html`.                                                    |
-| `embed`       | `ParsedEmbed`            |              | Platform components only.                                                                                                                      |
-| `html`        | `string`                 |              | `<SocialEmbed>` only.                                                                                                                          |
-| `width`       | `number \| string`       | `'100%'`     | Wrapper width.                                                                                                                                 |
-| `maxWidth`    | `number`                 | per platform | The embed fills its container up to this width, in pixels. See [Platforms](#platforms).                                                        |
-| `height`      | `number`                 |              | Iframe-based embeds only (YouTube, TikTok, Facebook video embed code): a fixed height instead of the aspect ratio. The others size themselves. |
-| `placeholder` | `ReactNode`              | a skeleton   | Shown until the post has loaded. The default skeleton has a per-platform minimum height to limit layout shift.                                 |
-| `lazy`        | `boolean`                | `true`       | Load the embed only when it comes within 200 px of the viewport.                                                                               |
-| `onLoad`      | `() => void`             |              | Called once the platform has rendered the post (iframe embeds: when the iframe has loaded).                                                    |
-| `onError`     | `(error: Error) => void` |              | Called on invalid input, a script that fails to load, or a post that does not render. Components never throw.                                  |
-| `...rest`     | `ComponentProps<'div'>`  |              | Passed to the wrapper `div` (`className`, `style`, `data-*`, …).                                                                               |
+| Prop          | Type                     | Default      | Notes                                                                                                                                                   |
+| ------------- | ------------------------ | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `url`         | `string`                 |              | Post URL. Platform components take `url` or `embed`; `<SocialEmbed>` takes `url` or `html`.                                                             |
+| `embed`       | `ParsedEmbed`            |              | Platform components only.                                                                                                                               |
+| `html`        | `string`                 |              | `<SocialEmbed>` only.                                                                                                                                   |
+| `width`       | `number \| string`       | `'100%'`     | Wrapper width.                                                                                                                                          |
+| `maxWidth`    | `number`                 | per platform | The embed fills its container up to this width, in pixels. See [Platforms](#platforms).                                                                 |
+| `height`      | `number`                 |              | Iframe-based embeds only (YouTube, TikTok, Facebook video embed code): a fixed height instead of the aspect ratio. The others size themselves.          |
+| `maxHeight`   | `number`                 |              | Iframe-based embeds only: the embed is at most this tall, in pixels. It narrows to keep its aspect ratio, so a vertical video does not fill the column. |
+| `placeholder` | `ReactNode`              | a skeleton   | Shown until the post has loaded. The default skeleton has a per-platform minimum height to limit layout shift.                                          |
+| `lazy`        | `boolean`                | `true`       | Load the embed only when it comes within 200 px of the viewport.                                                                                        |
+| `onLoad`      | `() => void`             |              | Called once the platform has rendered the post (iframe embeds: when the iframe has loaded).                                                             |
+| `onError`     | `(error: Error) => void` |              | Called on invalid input, a script that fails to load, or a post that does not render. Components never throw.                                           |
+| `...rest`     | `ComponentProps<'div'>`  |              | Passed to the wrapper `div` (`className`, `style`, `data-*`, …).                                                                                        |
 
 Script-based embeds try to render three times, waiting 15 s each time, 1 s and then 2 s apart, before `onError` reports the failure.
 
@@ -223,6 +224,15 @@ The rules:
 
 - **Posts** always render through the SDK, including when the embed code is the `plugins/post.php` iframe. That iframe's height only fits the `width` it was made for, so it cannot be responsive; the SDK resizes the post itself. `show_text` and `width` from the iframe carry over; `height` is dropped.
 - **Video embed code** (the `plugins/video.php` iframe) renders as that iframe, in a box with its aspect ratio. No script.
+- **Video embed code that shows the post text** (`show_text=true`, the Embed dialog's "Include full post") renders through the SDK, like a post. The text below the player has its own height at every width, so no aspect ratio fits the iframe, and its own height cuts the text off. `show_text`, `allowfullscreen`, `autoplay` and `show_captions` carry over, `width` and `height` are kept as the player's size, and `t` is dropped.
+- **That code without its text**: pass `showText={false}` to `FacebookEmbed`. The player's size is known from the embed code, so it renders as the plain iframe again, in a box of the player's aspect ratio. No script, and `maxHeight` applies:
+
+  ```tsx
+  <FacebookEmbed embed={embed} showText={false} maxHeight={640} />
+  ```
+
+  A 9:16 reel is then at most 358×638 px, where the same code with its text is 550×1233 px in a 550 px column. Facebook has no option for a shorter text: it is shown in full or not at all.
+
 - **Video URLs** and `fb-video` SDK code render through the SDK, which knows the video's real size (videos are both 16:9 and vertical).
 
 URL shapes, each tested against Facebook's plugins on `www.facebook.com`, `facebook.com` and `m.facebook.com`:
@@ -302,7 +312,7 @@ The platform's class (`twitter-tweet`, `instagram-media`, `text-post-media`) is 
 The host does nothing to make embeds responsive:
 
 - **Script-based embeds** (X, Instagram, Threads, Facebook SDK) get a wrapper of `width: 100%` (or `width`) and `max-width: {maxWidth}px`, and the platform widget fills it. Their height is the platform's own.
-- **Iframe embeds** get a wrapper with `aspect-ratio` taken from the embed code's `width` and `height` (16:9 without them; 9:16 for TikTok and YouTube Shorts URLs), and the iframe fills it. `height` replaces the aspect ratio with a fixed height.
+- **Iframe embeds** get a wrapper with `aspect-ratio` taken from the embed code's `width` and `height` (16:9 without them; 9:16 for TikTok and YouTube Shorts URLs), and the iframe fills it. `height` replaces the aspect ratio with a fixed height. `maxHeight` keeps the aspect ratio and lowers the wrapper's `max-width` to the widest box that is at most that tall.
 
 ## License
 
