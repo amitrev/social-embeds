@@ -1,6 +1,6 @@
 {
   "name": "social-embeds",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Turn social media embed code or post URLs into working React components.",
   "license": "MIT",
   "author": "Atanas Mitrev",
