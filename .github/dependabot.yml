@@ -22,44 +22,29 @@ updates:
       prefix: ci
       include: scope
 
-  # The package, through pnpm: Dependabot reads pnpm-lock.yaml.
+  # The whole pnpm workspace, the package and the playground, from the root: Dependabot
+  # reads pnpm-lock.yaml there. An entry for /playground would leave that lockfile stale.
   - package-ecosystem: npm
     directory: /
     schedule:
       interval: weekly
     cooldown:
       default-days: 2
+    # Development dependencies, plus the playground's Next.js. Peer dependencies are not
+    # allowed, so the package's react and react-dom ranges are never narrowed.
     allow:
       - dependency-type: development
+      - dependency-name: next
     versioning-strategy: increase
     ignore:
       # typescript-eslint supports TypeScript below 6.1 only (docs/decisions.md D3).
-      - dependency-name: typescript
-        update-types: ['version-update:semver-major']
-    groups:
-      dev-dependencies:
-        patterns: ['*']
-        update-types: [minor, patch]
-    commit-message:
-      prefix: chore
-      include: scope
-
-  # The private Next.js playground: all of its dependencies are development tools.
-  - package-ecosystem: npm
-    directory: /playground
-    schedule:
-      interval: weekly
-    cooldown:
-      default-days: 2
-    versioning-strategy: increase
-    ignore:
       - dependency-name: typescript
         update-types: ['version-update:semver-major']
       # Kept at the oldest Node.js line the package supports (engines >=22).
       - dependency-name: '@types/node'
         update-types: ['version-update:semver-major']
     groups:
-      playground:
+      dev-dependencies:
         patterns: ['*']
         update-types: [minor, patch]
     commit-message:
