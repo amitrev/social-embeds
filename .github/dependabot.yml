@@ -22,7 +22,7 @@ updates:
       prefix: ci
       include: scope
 
-  # pnpm, read from pnpm-lock.yaml.
+  # The package, through pnpm: Dependabot reads pnpm-lock.yaml.
   - package-ecosystem: npm
     directory: /
     schedule:
