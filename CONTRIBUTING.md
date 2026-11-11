@@ -32,6 +32,20 @@ CI runs all of them on Node 22, 24 and 26.
 - `playground/`: a Next.js app for checking embeds in a real browser.
 - `docs/decisions.md`: what each platform actually does, with evidence. Read the entries for a platform before changing it.
 
+## Comments and docblocks
+
+Names, types and tests carry the meaning; comments are rare. Most existing comments predate this rule: bring a block into line when your change touches the code it describes, and never rewrite comments in an unrelated diff.
+
+- **TSDoc carries only what the signature cannot.** TypeScript is the type system: never `@param {T}` or `@returns {T}`, never `@param id - the id`, never a summary line that restates the name. A `/** */` on an export holds `@deprecated` (naming the replacement), `@throws`, or a one-line gotcha meant for the IDE hover. Narrow with code, not comments: `satisfies`, a typed `const`, a type guard.
+- **Plain `.js` and `.mjs` files use JSDoc as their type system** (`scripts/check-directives.mjs`, `eslint.config.js`): `/** @type {…} */` and `@param {string} key` belong there. The prose rules still apply.
+- **`@throws` names the error**, with a short condition when the name does not say it.
+- **A prose comment is one line, a warning or a unit:** `const TIMEOUT_MS = 15_000; // 15 s`. Two lines at most, and only for a gotcha a reader would otherwise break: security (what reaches `dangerouslySetInnerHTML`, how a URL is verified), ordering, or a quirk of a platform script or of React. A module or component docblock is for that too, never a description.
+- **Directives carry their reason inline:** `// eslint-disable-next-line <rule> -- <why>` (never file-wide) and `// @ts-expect-error <why>` (never `@ts-ignore` or `@ts-nocheck`). Tool directives (`/* v8 ignore next */`, `// prettier-ignore`) and `'use client'` are not comments.
+- **Never:** step narration (`// parse the URL`, `{/* Header */}` in JSX); an explanation of a pattern or a framework feature; "mirrors X", "same as Y" or "see also Z" pointers to other code; task, milestone or review ids, dates, incidents, history or review notes; commented-out code; `TODO` or `FIXME` (open an issue instead); comments in any language but English.
+- **Tests:** the `describe` and `it` names are the documentation. Comment only a non-obvious input or fixture. In a type test, the `@ts-expect-error` reason names the rejected case.
+- **CSS and YAML:** no comments, except a one-line gotcha.
+- **One home per fact.** Longer reasoning goes in one `docs/decisions.md` entry or in the commit message, and the code points there in a few words: `// docs/decisions.md D38`.
+
 ## Running the playground
 
 The playground uses the built package, so build first:
