@@ -243,7 +243,7 @@ describe('InstagramEmbed', () => {
     const embed = parsed(instagramCode);
     const { container, rerender } = render(<InstagramEmbed embed={embed} />);
     expect(markupOf(container)).toMatch(
-      /^<blockquote data-instgrm-permalink="https:\/\/www\.instagram\.com\/p\/Dc85J9XNoGN\/" data-instgrm-version="14" data-instgrm-captioned="" style="width:calc\(100% - 2px\)"><div> <a href=/,
+      /^<blockquote data-instgrm-permalink="https:\/\/www\.instagram\.com\/p\/DfPQchkG1tg\/" data-instgrm-version="14" data-instgrm-captioned="" style="width:calc\(100% - 2px\)"><div> <a href=/,
     );
     rerender(<InstagramEmbed embed={embed} captioned={false} />);
     expect(markupOf(container)).not.toContain('data-instgrm-captioned');

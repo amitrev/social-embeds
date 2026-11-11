@@ -12,12 +12,12 @@ const post = (type: string, code: string) =>
   }) as const;
 
 const link =
-  'https://www.instagram.com/p/Dc85J9XNoGN/?utm_source=ig_embed&amp;utm_campaign=loading';
+  'https://www.instagram.com/p/DfPQchkG1tg/?utm_source=ig_embed&amp;utm_campaign=loading';
 
 describe('Instagram embed code', () => {
-  it('parses the embed dialog code with caption', () => {
+  it('parses the oEmbed code with caption', () => {
     expect(parseEmbed(captioned)).toEqual({
-      ...post('p', 'Dc85J9XNoGN'),
+      ...post('p', 'DfPQchkG1tg'),
       options: { captioned: true, version: 14 },
       // Inline styles and the logo SVG are dropped; the placeholder structure, the
       // "View this post" text and the attribution link remain.
@@ -26,7 +26,7 @@ describe('Instagram embed code', () => {
         '<div></div> <div></div><div> <div>View this post on Instagram</div></div><div></div> ' +
         '<div><div> <div></div> <div></div> <div></div></div><div> <div></div> <div></div></div>' +
         '<div> <div></div> <div></div> <div></div></div></div> <div> <div></div> <div></div></div></a>' +
-        `<p><a href="${link}">A post shared by LuLu LoveBottom (@lululovebttm)</a></p></div>`,
+        `<p><a href="${link}">A post shared by Instagram (@instagram)</a></p></div>`,
     });
   });
 
@@ -37,7 +37,7 @@ describe('Instagram embed code', () => {
 
   it('falls back to the last post link when the permalink attribute is missing', () => {
     const code = captioned.replace(/ data-instgrm-permalink="[^"]*"/, '');
-    expect(parseEmbed(code)).toMatchObject(post('p', 'Dc85J9XNoGN'));
+    expect(parseEmbed(code)).toMatchObject(post('p', 'DfPQchkG1tg'));
   });
 
   it.each([
@@ -57,7 +57,7 @@ describe('Instagram embed code', () => {
       'src="//www.instagram.com/embed.js"',
       'src="https://www.instagram.com/embed.js"',
     );
-    expect(parseEmbed(code)?.id).toBe('Dc85J9XNoGN');
+    expect(parseEmbed(code)?.id).toBe('DfPQchkG1tg');
   });
 
   it('rejects a permalink that is not a post', () => {

@@ -4,9 +4,8 @@ const YOUTUBE = 'https://www.youtube.com/watch?v=jNQXAC9IVRw';
 const TIKTOK = 'https://www.tiktok.com/@scout2015/video/6718335390845095173';
 const FACEBOOK_VIDEO =
   'https://www.facebook.com/facebook/videos/10153231379946729/';
-// Removed since; Facebook renders its "no longer available" notice in its place.
 const FACEBOOK_POST =
-  'https://www.facebook.com/20531316728/posts/10154009990506729/';
+  'https://www.facebook.com/vasil.popov.98/posts/pfbid0r3hJSv19StgY9tsUXoENzXsNzNaPtjm27KZSyJFxk1p16pZxmY5LVdM2jAgZmPnel';
 const THREADS = 'https://www.threads.com/@instagram/post/DfQSavwEs5C';
 const INSTAGRAM = 'https://www.instagram.com/p/DfPQchkG1tg/';
 const X_1 = 'https://x.com/jack/status/20';
