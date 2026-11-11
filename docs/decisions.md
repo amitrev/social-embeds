@@ -461,6 +461,20 @@ Evidence (playground, 2026-11-11), the fixture with `showText={false}` and `maxH
 - In a 343 px container: 343×611. The iframe loaded, the player filled it and no text showed.
 - The same sizes for YouTube Shorts (360 px wide at `maxHeight={640}`) are covered by tests only.
 
+### D46. Instagram's or Threads' script added while the Facebook SDK loads
+
+D38 marks a loaded SDK at the moment embed.js is added. It did not cover an SDK that finishes loading after embed.js was added and before it runs: there is nothing to mark yet, and the script then runs beside a loaded SDK and does nothing. D38's guess about D27's first run was this.
+
+Reported from a host article with Facebook, X and Instagram embeds, all with `lazy` off (2026-11-11). The three scripts were added in the same task. After a client navigation the SDK's two files had loaded at 1709 and 1749 ms and embed.js at 1760 ms; `window.instgrm` never appeared, and no Instagram post rendered. On a direct load with the scripts in the HTTP cache the SDK was first again, with the same result. The loader waited 15 s and reported that Instagram did not initialise.
+
+embed.js (fetched 2026-11-11) still begins with `(window.FB && !window.FB.__buffer) || (function () { … })()`, and it registers while it runs: its last module calls `PolarisEmbedSDKImpl.init()`, which calls `registerEmbedSDK("instagram", …)`. So at its `load` event, no registration beside a loaded SDK means that it skipped itself and changed nothing.
+
+The loader (`skipped` on a `PlatformScript`): when a script's `load` event finds that it skipped itself, its tag is removed and the script is added again. `prepare` runs again and now marks the SDK. At most three tags are added in all, the retry limit of §6.2. Without a loaded SDK, a script that has not registered yet is waited for as before and never added twice.
+
+Verified in Chrome on the playground's `/eager` page (one embed per script-based platform, `lazy` off), reached by client navigation. Instagram's first tag was held back until the SDK had loaded, to force the order. The loader then added the script again while `FB.__buffer === true`; Instagram registered and rendered (iframe `instagram-media-rendered`, 883 px tall), one embed.js tag was left in the page, and the mark was gone. Threads lost the same race on its own in that run and recovered the same way.
+
+Still not covered, as in D38: a host page that adds the SDK and then Instagram's script itself.
+
 ## Open VERIFY items
 
 | ID  | Item                                            | Milestone | Status                                          |

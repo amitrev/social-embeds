@@ -74,6 +74,20 @@ function besideFacebookSdk(): () => void {
   };
 }
 
+/**
+ * The SDK can finish loading after embed.js was added and before it runs, for instance
+ * when both are added at once: there was nothing to mark, and the script did nothing. It
+ * registers while it runs, so no registration beside a loaded SDK means exactly that, and
+ * the loader adds it again (docs/decisions.md D46).
+ */
+function skippedBesideFacebookSdk(name: string): () => boolean {
+  const registered = embedSdkRegistered(name);
+  return () => {
+    const fb = globals().FB;
+    return !registered() && fb !== undefined && !fb.__buffer;
+  };
+}
+
 const instagram: PlatformScript = {
   key: 'instagram',
   url: 'https://www.instagram.com/embed.js',
@@ -81,6 +95,7 @@ const instagram: PlatformScript = {
     /^https?:\/\/www\.instagram\.com\/embed\.js(?:[?#]|$)/.test(src),
   isPresent: embedSdkRegistered('instagram'),
   prepare: besideFacebookSdk,
+  skipped: skippedBesideFacebookSdk('instagram'),
 };
 
 const threads: PlatformScript = {
@@ -90,6 +105,7 @@ const threads: PlatformScript = {
     /^https?:\/\/www\.threads\.(?:com|net)\/embed\.js(?:[?#]|$)/.test(src),
   isPresent: embedSdkRegistered('threads'),
   prepare: besideFacebookSdk,
+  skipped: skippedBesideFacebookSdk('threads'),
 };
 
 /**

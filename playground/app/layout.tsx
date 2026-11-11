@@ -21,6 +21,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             </Link>
           ))}
           <Link href="/many">Many embeds</Link>
+          <Link href="/eager">All at once</Link>
         </nav>
         <main>{children}</main>
         <ScriptMonitor />

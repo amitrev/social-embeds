@@ -21,6 +21,11 @@ export type PlatformScript = {
   whenPresent?: () => Promise<void>;
   /** Prepares the page for the script to run; the returned function undoes that. */
   prepare?: () => () => void;
+  /**
+   * Whether the script has run and done nothing. It is then added again, so that `prepare`
+   * can act on what stopped it.
+   */
+  skipped?: () => boolean;
 };
 
 // Fixed retry policy (brief §6.2): three attempts, waiting 1 s and then 2 s.
@@ -67,8 +72,10 @@ async function add(script: PlatformScript): Promise<void> {
   const ready = script.readyCallback?.();
   for (let attempt = 1; ; attempt++) {
     try {
-      await insert(script);
-      break;
+      const element = await insert(script);
+      if (attempt >= ATTEMPTS || !script.skipped?.()) break;
+      // Removed like a failed tag; the next one runs on a prepared page.
+      element.remove();
     } catch (error) {
       // A tag that timed out may still arrive and run, so only a reported failure is
       // retried; retrying a timeout could run the script twice.
@@ -81,10 +88,10 @@ async function add(script: PlatformScript): Promise<void> {
     : poll(script));
 }
 
-async function insert(script: PlatformScript): Promise<void> {
+async function insert(script: PlatformScript): Promise<HTMLScriptElement> {
   const restore = script.prepare?.();
+  const element = document.createElement('script');
   const loaded = new Promise<void>((resolve, reject) => {
-    const element = document.createElement('script');
     element.src = script.url;
     element.async = true;
     if (script.crossOrigin) element.crossOrigin = script.crossOrigin;
@@ -104,6 +111,7 @@ async function insert(script: PlatformScript): Promise<void> {
     // A script runs before its load event, so the page can be put back now.
     restore?.();
   }
+  return element;
 }
 
 function poll(script: PlatformScript): Promise<void> {
