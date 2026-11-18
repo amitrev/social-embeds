@@ -74,6 +74,7 @@ export function RedditEmbed(props: RedditEmbedProps) {
     const value = values[prop as keyof RedditOptions];
     if (value !== undefined) fromProps.push([name, value]);
   }
+  // verifyEmbed guarantees the canonical `https://www.reddit.com/r/…` form (docs/decisions.md D57).
   const path = embed.url.slice('https://www.reddit.com'.length);
 
   return (

@@ -157,6 +157,22 @@ describe('RedditEmbed', () => {
     expect(wrapper.style.height).toBe('402px');
   });
 
+  it('rejects a host-built embed whose URL is not the canonical one', () => {
+    const onError = vi.fn();
+    const { container } = render(
+      <RedditEmbed
+        embed={{
+          ...parsed(redditPost),
+          url: 'https://reddit.com/r/ab/comments/1xz8iq4/',
+        }}
+        onError={onError}
+        lazy={false}
+      />,
+    );
+    expect(container.querySelector('iframe')).toBeNull();
+    expect(onError).toHaveBeenCalledTimes(1);
+  });
+
   it('embeds a comment', () => {
     const { container } = render(
       <RedditEmbed embed={parsed(redditComment)} lazy={false} />,

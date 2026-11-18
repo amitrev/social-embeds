@@ -620,6 +620,12 @@ Checked in Chrome on 2026-11-18 on a temporary playground page, one embed of eac
 - Snapchat: the profile and the Spotlight video at 416×692.
 - LinkedIn: share and activity URNs (`collapsed`) at 504×670.
 
+### D57. `verifyEmbed` requires the canonical URL
+
+A post-commit security review of Milestone 4 found that `RedditEmbed` built its iframe `src` by cutting a fixed-length `https://www.reddit.com` off `embed.url`. `verifyEmbed` checked only that `matchUrl(embed.url)` gave the same platform and id, so a host-built embed with `url: 'https://reddit.com/r/ab/comments/1xz8iq4/'` passed. The cut then left `b/comments/…`, and the iframe loaded `https://embed.reddit.comb/comments/…`, a host the package never meant to frame. `TelegramEmbed` and `SnapchatEmbed` also build `src` from the URL, where a query or fragment would have reached the iframe.
+
+The fix: `verifyEmbed` also requires `matchUrl(embed.url).url === embed.url`, for every platform. The parser and `matchUrl` already write the canonical form for every fixture (checked for all 27 on 2026-11-18), so only hand-built embeds with another URL form are now rejected, with `onError`. Tests: a `twitter.com` URL for an X post, the Reddit URL above, and a Telegram URL with a query and fragment are all rejected, and `RedditEmbed` with that URL renders no iframe.
+
 ## Open VERIFY items
 
 | ID  | Item                                            | Milestone | Status                                          |

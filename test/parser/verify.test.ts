@@ -73,6 +73,28 @@ describe('verifyEmbed', () => {
       { ...x, variant: 'iframe' as const },
     ],
     ['a kind the platform does not have', { ...x, kind: 'video' as const }],
+    [
+      'a URL in another form than the parser writes',
+      {
+        ...x,
+        url: 'https://twitter.com/TheEllenShow/status/440322224407314432',
+      },
+    ],
+    // Components build iframe `src` from the canonical URL (docs/decisions.md D57).
+    [
+      'a Reddit URL whose path would shift into the iframe host',
+      {
+        ...(parseEmbed(reddit) as ParsedEmbed),
+        url: 'https://reddit.com/r/ab/comments/1xz8iq4/',
+      },
+    ],
+    [
+      'a Telegram URL with a query',
+      {
+        ...(parseEmbed(telegram) as ParsedEmbed),
+        url: 'https://t.me/telegram/83?embed=0#x',
+      },
+    ],
   ])('rejects %s', (_, embed) => {
     expect(verifyEmbed(embed)).toBeNull();
   });
