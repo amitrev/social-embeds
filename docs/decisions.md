@@ -583,6 +583,20 @@ The VERIFY items of [wave-2-brief.md](./wave-2-brief.md), checked on 2026-11-18.
 - **Snapchat links:** every link inside the blockquote must name the content of `data-snapchat-embed-url`, else `null`. Its inline `style` and `data-snapchat-embed-style` are ignored.
 - **No `fallbackHtml`** for any of the five (brief §2).
 
+## Message-sized iframes (Milestone 3, 2026-11-18)
+
+### D55. `IframeEmbed` takes its height from the frame's messages
+
+Telegram and Reddit frames post their own height (D49, D52); LinkedIn's do not (D53). `IframeEmbed` gains a third sizing mode beside the aspect ratio (D29) and a fixed `height`: a `messageHeight` of `{ origin, read }`.
+
+- **Layout:** the wrapper has `width` and `maxWidth` and a `height` of `startHeight` until the first height arrives, then that height. No aspect ratio, and `height`/`maxHeight` do not apply.
+- **Accepted messages:** only from `iframe.contentWindow` and only from `origin`. `read(event.data)` returns the height or `undefined`; if it throws, the message is ignored. Heights outside 1–50,000 px are ignored; others are rounded up.
+- **Rendered:** the first accepted height removes the placeholder and calls `onLoad`, once. The iframe's `load` event does not count, because the frame loads before its post has a height.
+- **Timeout:** if no height arrives within 15 s of the iframe being created, the placeholder is removed, the frame shows at `startHeight`, and `onError` is called. There is no retry, unlike the script loader (§6.2): reloading the same iframe would load the same page. The brief (§3.2) assumed the retry would apply.
+- **Unmount** removes the listener and the timer.
+
+Tests fake the messages (`test/components/iframe-embed.test.tsx`), including the wrong origin, the wrong window, data that is not JSON, and absurd heights. Not yet checked in a browser: that comes with the platform components (Milestone 4).
+
 ## Open VERIFY items
 
 | ID  | Item                                            | Milestone | Status                                          |
