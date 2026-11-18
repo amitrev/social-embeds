@@ -89,7 +89,7 @@ Milestone 1 resolved the VERIFY items below in `docs/decisions.md` D49–D53; wh
 
 ### 2.5 Pinterest — script + manual initialisation (Group A)
 
-- **Embed code:** `<a data-pin-do="embedPin" data-pin-width="{small|medium|large}" href="https://www.pinterest.com/pin/{id}/"></a>` plus `<script async defer src="//assets.pinterest.com/js/pinit.js">`.
+- **Embed code:** `<a data-pin-do="embedPin" data-pin-width="{small|medium|large}" href="https://www.pinterest.com/pin/{id}/"></a>` plus `<script async defer src="//assets.pinterest.com/js/pinit.js">`. Pinterest's oEmbed returns `<iframe src="https://assets.pinterest.com/ext/embed.html?id={id}&src=oembed">` instead; that code is parsed too and renders through the widget (D51).
 - **What the script does:**
   - **Loader:** `pinit.js` is a 290-byte loader. Once per day per page (a `PIN_{day}` window counter) it adds `https://assets.pinterest.com/js/pinit_main.js?{random}`.
   - **Init:** `pinit_main.js` exposes `window.PinUtils` with `build(element)`.
@@ -102,7 +102,6 @@ Milestone 1 resolved the VERIFY items below in `docs/decisions.md` D49–D53; wh
   - pixel widths of `small`/`medium`/`large`;
   - that loading `pinit_main.js` directly behaves like loading `pinit.js`;
   - whether a host page that already loaded `pinit.js` can be detected.
-- **Alternative if the script cannot be driven per element:** the iframe `https://assets.pinterest.com/ext/embed.html?id={id}` exists (HTTP 200) but is undocumented.
 
 ## 3. Shared changes
 

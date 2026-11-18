@@ -533,14 +533,14 @@ The VERIFY items of [wave-2-brief.md](./wave-2-brief.md), checked on 2026-11-18.
 ### D51. Pinterest: two kinds of embed code; both render through the widget
 
 - **Widget code** (`pinterest/widget-docs.html`): `<a href="https://www.pinterest.com/pin/{id}/" data-pin-do="embedPin">` and `pinit.js`, assembled from the two snippets of Pinterest's [widgets](https://developers.pinterest.com/docs/web-features/widgets/) and [add-ons](https://developers.pinterest.com/docs/web-features/add-ons-overview/) docs. The widget builder now redirects to the docs.
-- **oEmbed code** (`pinterest/oembed-iframe.html`): `pinterest.com/oembed.json` returns `<iframe src="https://assets.pinterest.com/ext/embed.html?id={id}&src=oembed" height="436" width="450" frameborder="0" scrolling="no">`. Rendered, it shows a pin card about 360 px wide inside the fixed 450×436 frame and posts no message: the height fits one width only, like Facebook's `plugins/post.php` (§5.4).
+- **oEmbed code** (`pinterest/oembed-iframe.html`): `pinterest.com/oembed.json` returns `<iframe src="https://assets.pinterest.com/ext/embed.html?id={id}&src=oembed" height="436" width="450" frameborder="0" scrolling="no">`. Rendered, it shows a pin card about 360 px wide inside the fixed 450×436 frame and posts no message: the height fits one width only, like Facebook's `plugins/post.php` (§5.4). The endpoint is listed on [oembed.com](https://oembed.com/providers.json) (scheme `https://www.pinterest.com/*`, discovery on), but Pinterest's developer docs mention neither it nor `ext/embed.html`; the widget is the only documented embed.
 - **The widget** (`pinit_main.js` loaded directly):
   - `window.PinUtils` has `build`.
   - On load it builds every anchor with `data-pin-do` on the page, and leaves an anchor without the attribute alone.
   - `PinUtils.build(element)` builds only that subtree: an anchor with `data-pin-do` outside it stayed an anchor.
   - The pin is drawn into the page, not an iframe: the anchor becomes `span.PIN_{n}_embed_pin` with `data-pin-id`, whose height follows its content.
   - Widths: 236 by default and for `small`, 345 for `medium`, 600 for `large`.
-- **Proposed** (maintainer to confirm): oEmbed iframe code renders through the widget, as Facebook post iframes do through the SDK. Both inputs then share one path, the D39 pattern (anchor written without `data-pin-do`, added before `build`), and one ready signal (the anchor replaced by `span[data-pin-id]`).
+- **Maintainer decision, 2026-11-18:** oEmbed iframe code renders through the widget, as Facebook post iframes do through the SDK. Both inputs then share one path, the D39 pattern (anchor written without `data-pin-do`, added before `build`), and one ready signal (the anchor replaced by `span[data-pin-id]`).
 
 ### D52. Reddit: own iframe, no `embed_host_url`, height from `resize.embed`
 
