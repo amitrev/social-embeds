@@ -22,7 +22,7 @@ Not planned: Bluesky, which has no visible use in Bulgaria (maintainer decision,
 
 ## 2. Platforms
 
-All five probed on 2026-11-18 by reading each platform's own script. Findings below are what the scripts do; real embed code from each platform's Embed dialog is still needed for fixtures (§10 of the project brief).
+Milestone 1 resolved the VERIFY items below in `docs/decisions.md` D49–D53; where those entries differ from this section, they win. All five probed on 2026-11-18 by reading each platform's own script. Findings below are what the scripts do; real embed code from each platform's Embed dialog is still needed for fixtures (§10 of the project brief).
 
 ### 2.1 Telegram — iframe sized by messages
 

@@ -21,5 +21,15 @@ Real embed codes, stored byte for byte as the platform produced them. Prettier i
 | `facebook/video-iframe-reel.html`              | Facebook reel menu → Embed, "Include full post" ticked, as published in a news article        | 2026-11-11 |
 | `facebook/post-sdk-docs.html`                  | Meta's [Embedded Posts](https://developers.facebook.com/docs/plugins/embedded-posts) "Add Code Manually" steps 2–3; its sample post has since been removed | 2026-11-03 |
 | `facebook/video-sdk-docs.html`                 | Meta's [Embedded Videos](https://developers.facebook.com/docs/plugins/embedded-video-player) "Full Code Example", `<body>` content | 2026-11-03 |
+| `telegram/widget-configurator.html`            | `core.telegram.org/widgets/post` configurator, post `telegram/83`, defaults                    | 2026-11-18 |
+| `telegram/widget-configurator-options.html`    | same, "Always hide" author photo, red accent, dark theme                                       | 2026-11-18 |
+| `snapchat/profile-share.html`                  | snapchat.com profile `@teamsnapchat` → Share → Embed                                           | 2026-11-18 |
+| `snapchat/lens-share.html`                     | snapchat.com Lens `61141491143` → Share → Embed                                                | 2026-11-18 |
+| `pinterest/widget-docs.html`                   | Pinterest [widgets](https://developers.pinterest.com/docs/web-features/widgets/) docs: the `pinit.js` tag and the Pin widget anchor, joined | 2026-11-18 |
+| `pinterest/oembed-iframe.html`                 | `pinterest.com/oembed.json?url=https://www.pinterest.com/pin/99360735500167749/`, the `html` field | 2026-11-18 |
+| `reddit/post-share.html`                       | Reddit post → Share → Embed, r/bulgaria `1xz8iq4`, pasted by the maintainer                    | 2026-11-18 |
+| `reddit/comment-share.html`                    | Reddit comment → Share → Embed, same post, pasted by the maintainer                            | 2026-11-18 |
+| `linkedin/post-collapsed.html`                 | LinkedIn post → Embed this post, "less text", pasted by the maintainer                         | 2026-11-18 |
+| `linkedin/post-full.html`                      | LinkedIn post → Embed this post, full post, pasted by the maintainer                           | 2026-11-18 |
 
-Variants that no current source produces are derived inside the tests from these files: the legacy `twitter.com` hosts, X `data-conversation`/`data-align`, the Facebook video iframe without the post text, and Instagram permalink and caption variants. The TikTok blockquote tests use the structure from brief §3 (see `docs/decisions.md` D11).
+Snapchat Spotlight embed code is derived from the profile and Lens codes (`docs/decisions.md` D50). Variants that no current source produces are derived inside the tests from these files: the legacy `twitter.com` hosts, X `data-conversation`/`data-align`, the Facebook video iframe without the post text, and Instagram permalink and caption variants. The TikTok blockquote tests use the structure from brief §3 (see `docs/decisions.md` D11).
