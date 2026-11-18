@@ -565,6 +565,24 @@ The VERIFY items of [wave-2-brief.md](./wave-2-brief.md), checked on 2026-11-18.
 - **Headers:** `frame-ancestors *`.
 - **Default height: 670** (maintainer decision, 2026-11-18), LinkedIn's own height for the collapsed image post. Two samples (670 collapsed, 879 full) were too few for the brief's measurement. A taller post scrolls inside the frame; a shorter one leaves space below it.
 
+## Wave 2 parser (Milestone 2, 2026-11-18)
+
+### D54. What the parser returns for the wave 2 platforms
+
+| Platform  | `kind` / `variant`                                   | `id`                                              | Canonical `url`                                                                 |
+| --------- | ---------------------------------------------------- | ------------------------------------------------- | ------------------------------------------------------------------------------- |
+| Telegram  | post / iframe                                        | `{channel}/{post}`                                | `https://t.me/{channel}/{post}`                                                 |
+| Snapchat  | video / iframe (Spotlight), post / iframe (the rest) | Spotlight id, username, Lens id or highlight uuid | `https://www.snapchat.com/…` without `/embed`; `/add/{user}` becomes `/@{user}` |
+| LinkedIn  | post / iframe                                        | the URN, `urn:li:{activity\|share\|ugcPost}:{id}` | `https://www.linkedin.com/feed/update/{urn}/`                                   |
+| Reddit    | post / iframe (posts and comments)                   | post id, or comment id                            | `…/r/{sub}/comments/{post}/`, or `…/comment/{comment}/`, without the title slug |
+| Pinterest | post / sdk                                           | pin id                                            | `https://www.pinterest.com/pin/{id}/`                                           |
+
+- **Telegram's embed code is a single `<script>`.** D14 requires one embed element beside the scripts; `parseEmbed` now also accepts exactly one script with no content when a platform reads it as its embed (`parseScript`). Only Telegram does. The script must carry `data-telegram-post` and none of the login, discussion or share attributes.
+- **Options** follow D18's naming: Telegram's `data-dark-color` is `darkColor`, `data-single` (read by presence) is `single: true`; Reddit's `data-embed-*` keep their names after the prefix (`showmedia`, `locale`); Snapchat's `data-snapchat-embed-title` is `title`; Pinterest's `data-pin-width` is `width`. LinkedIn's iframe query is kept as given (`collapsed: 1`).
+- **Sizes:** Snapchat's `data-snapchat-embed-width`/`height` and LinkedIn's iframe attributes are `size`. Reddit's `data-embed-height` is `size.height`: the starting height until the frame reports its own.
+- **Snapchat links:** every link inside the blockquote must name the content of `data-snapchat-embed-url`, else `null`. Its inline `style` and `data-snapchat-embed-style` are ignored.
+- **No `fallbackHtml`** for any of the five (brief §2).
+
 ## Open VERIFY items
 
 | ID  | Item                                            | Milestone | Status                                          |

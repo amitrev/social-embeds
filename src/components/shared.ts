@@ -37,6 +37,11 @@ const NAMES: Record<Platform, string> = {
   threads: 'Threads',
   tiktok: 'TikTok',
   youtube: 'YouTube',
+  telegram: 'Telegram',
+  snapchat: 'Snapchat',
+  linkedin: 'LinkedIn',
+  reddit: 'Reddit',
+  pinterest: 'Pinterest',
 };
 
 export function resolveEmbed(

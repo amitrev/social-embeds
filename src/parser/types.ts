@@ -1,9 +1,19 @@
 export type Platform =
-  'x' | 'instagram' | 'facebook' | 'threads' | 'tiktok' | 'youtube';
+  | 'x'
+  | 'instagram'
+  | 'facebook'
+  | 'threads'
+  | 'tiktok'
+  | 'youtube'
+  | 'telegram'
+  | 'snapchat'
+  | 'linkedin'
+  | 'reddit'
+  | 'pinterest';
 
 export type ParsedEmbed = {
   platform: Platform;
-  kind: 'post' | 'video'; // only Facebook has both; others are fixed
+  kind: 'post' | 'video'; // Facebook and Snapchat have both; others are fixed
   url: string; // canonical post URL
   id: string;
   variant: 'sdk' | 'iframe';

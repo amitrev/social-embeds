@@ -11,6 +11,11 @@ const SHAPES: Record<Platform, readonly string[]> = {
   facebook: ['post sdk', 'video sdk', 'video iframe'],
   tiktok: ['video iframe'],
   youtube: ['video iframe'],
+  telegram: ['post iframe'],
+  snapchat: ['post iframe', 'video iframe'],
+  linkedin: ['post iframe'],
+  reddit: ['post iframe'],
+  pinterest: ['post sdk'],
 };
 
 /**

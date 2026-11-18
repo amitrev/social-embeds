@@ -10,6 +10,8 @@ export type PlatformParser = {
   fallback?: Whitelist;
   /** The embed element (blockquote, div or iframe) of the platform's own embed code. */
   parse: (root: HtmlElement) => ParsedEmbed | null;
+  /** Embed code that is a single `<script>` tag, as Telegram's is. */
+  parseScript?: (script: HtmlElement) => ParsedEmbed | null;
   isOwnScript: (src: string) => boolean;
   scriptOptions?: (src: string) => Options;
   allowsFbRoot?: boolean;

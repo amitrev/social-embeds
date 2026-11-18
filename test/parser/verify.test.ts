@@ -5,6 +5,14 @@ import postIframe from '../fixtures/facebook/post-iframe.html?raw';
 import postSdk from '../fixtures/facebook/post-sdk-docs.html?raw';
 import videoSdk from '../fixtures/facebook/video-sdk-docs.html?raw';
 import instagram from '../fixtures/instagram/post-captioned.html?raw';
+import linkedin from '../fixtures/linkedin/post-collapsed.html?raw';
+import pinterestIframe from '../fixtures/pinterest/oembed-iframe.html?raw';
+import pinterest from '../fixtures/pinterest/widget-docs.html?raw';
+import redditComment from '../fixtures/reddit/comment-share.html?raw';
+import reddit from '../fixtures/reddit/post-share.html?raw';
+import snapchatLens from '../fixtures/snapchat/lens-share.html?raw';
+import snapchat from '../fixtures/snapchat/profile-share.html?raw';
+import telegram from '../fixtures/telegram/widget-configurator-options.html?raw';
 import threads from '../fixtures/threads/oembed.html?raw';
 import tiktok from '../fixtures/tiktok/oembed-player.html?raw';
 import xHashtag from '../fixtures/x/oembed-hashtag.html?raw';
@@ -21,6 +29,14 @@ const fixtures = {
   xHashtag,
   xOptions,
   youtube,
+  telegram,
+  snapchat,
+  snapchatLens,
+  linkedin,
+  reddit,
+  redditComment,
+  pinterest,
+  pinterestIframe,
 };
 
 describe('verifyEmbed', () => {
