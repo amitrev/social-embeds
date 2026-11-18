@@ -1,12 +1,19 @@
 import { act, cleanup, render } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { FacebookEmbed, InstagramEmbed, ThreadsEmbed, XEmbed } from '../../src';
+import {
+  FacebookEmbed,
+  InstagramEmbed,
+  PinterestEmbed,
+  ThreadsEmbed,
+  XEmbed,
+} from '../../src';
 import { loadPlatformScript } from '../../src/loader/platform-scripts';
 import { parseEmbed, type ParsedEmbed } from '../../src/parser';
 import postIframe from '../fixtures/facebook/post-iframe.html?raw';
 import videoIframe from '../fixtures/facebook/video-iframe-reel.html?raw';
 import videoSdk from '../fixtures/facebook/video-sdk-docs.html?raw';
 import instagramCode from '../fixtures/instagram/post-captioned.html?raw';
+import pinterestIframe from '../fixtures/pinterest/oembed-iframe.html?raw';
 import threadsCode from '../fixtures/threads/oembed.html?raw';
 import xOptions from '../fixtures/x/oembed-options.html?raw';
 import { installObserver, lastObserver } from './helpers';
@@ -429,6 +436,45 @@ describe('FacebookEmbed', () => {
     );
     expect(container.querySelector('iframe')?.getAttribute('src')).toBe(
       `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(video)}&t=5`,
+    );
+  });
+});
+
+describe('PinterestEmbed', () => {
+  it('writes the pin link without data-pin-do, then loads and builds it', async () => {
+    const build = vi.fn();
+    page.PinUtils = { build };
+    const { container } = render(
+      <PinterestEmbed url="https://pin.it/x" onError={vi.fn()} />,
+    );
+    expect(container.innerHTML).toBe('');
+    cleanup();
+
+    const view = render(
+      <PinterestEmbed url="https://www.pinterest.com/pin/99360735500167749/" />,
+    );
+    const wrapper = view.container.firstElementChild as HTMLElement;
+    expect(wrapper.style.maxWidth).toBe('236px');
+    expect(markupOf(view.container)).toBe(
+      '<a href="https://www.pinterest.com/pin/99360735500167749/"></a>',
+    );
+    await enter();
+    expect(load).toHaveBeenCalledWith('pinterest');
+    expect(build).toHaveBeenCalledWith(wrapper.firstElementChild);
+    expect(markupOf(view.container)).toBe(
+      '<a href="https://www.pinterest.com/pin/99360735500167749/" data-pin-do="embedPin"></a>',
+    );
+  });
+
+  it('renders oEmbed iframe code as the widget, with the width prop', () => {
+    const { container } = render(
+      <PinterestEmbed embed={parsed(pinterestIframe)} pinWidth="large" />,
+    );
+    expect(markupOf(container)).toBe(
+      '<a href="https://www.pinterest.com/pin/99360735500167749/" data-pin-width="large"></a>',
+    );
+    expect((container.firstElementChild as HTMLElement).style.maxWidth).toBe(
+      '600px',
     );
   });
 });

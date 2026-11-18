@@ -499,6 +499,169 @@ Checked in Chrome on 2026-11-11, in a visible window:
 - `/facebook`: the SDK snippet with the live post rendered 500×725, not the 202 px notice (D34); the post from its URL rendered 552×706.
 - `/many`: both Facebook posts rendered, no skeleton was left after scrolling to the end, and each platform's script was on the page once.
 
+## Wave 2 research (Milestone 1, 2026-11-18)
+
+The VERIFY items of [wave-2-brief.md](./wave-2-brief.md), checked on 2026-11-18. The probes were static pages on `localhost:4173` that load each platform's iframe or script, with a `message` listener logging what the iframes post. The built-in browser pane refuses reddit.com and, after a few loads, stopped loading `embed.reddit.com` frames, so the Reddit and LinkedIn probes ran in Chrome.
+
+### D49. Telegram: own iframe, height from `resize` messages
+
+- **Embed code** (`telegram/widget-configurator*.html`): the configurator at `core.telegram.org/widgets/post` writes `<script async src="https://telegram.org/js/telegram-widget.js?24" data-telegram-post="telegram/83" data-width="100%">`. Its options add `data-userpic="false"`, `data-color="E22F38"`, `data-dark="1"` and, with a colour and dark together, `data-dark-color="F95C54"`. No blockquote form came out of it.
+- **No handshake:** an iframe of `https://t.me/telegram/83?embed=1`, added without Telegram's script, posted `{"event":"resize","height":540}` and `{"event":"ready"}` from `https://t.me` about 90 ms after loading. At 360 px wide with the options it posted 443. The frame's `widget-frame.js` runs `initWidgetFrame({ auto_height: true })`, which checks the body's height every animation frame and posts `resize` whenever it changes, to any origin. The parent's `visible` and `focus` messages only start animations and are not needed.
+- **Width:** `widget-frame.css` gives `body.body_widget_post` `min-width: 300px; max-width: 500px`, so the default `maxWidth` is 500.
+
+### D50. Snapchat: every embeddable type is an iframe at `{url}/embed`
+
+- **Embed code** (`snapchat/profile-share.html`, `snapchat/lens-share.html`): the Embed button on a profile (`/@teamsnapchat`) and on a Lens (`/lens/61141491143`, whose canonical id is `9c4b773c46ca43acba564858059f7d7a`) write the same markup. A `blockquote.snapchat-embed` with `data-snapchat-embed-width="416"`, `data-snapchat-embed-height="692"`, `data-snapchat-embed-url="{canonical url}/embed"`, `data-snapchat-embed-style="border-radius: 40px;"` and a title. Then an inline style (`height:650px; max-width:416px; min-width:326px` among others), two links to the canonical URL and "View more on Snapchat", then `embed.js`.
+- **No Spotlight fixture:** on a Spotlight video, Share → Embed opens a "Spotlight is even better on your phone" app prompt instead of the code, at both 800 and 1400 px wide. Spotlight embed code is built from the shape above.
+- **What renders** (416×692 iframes with the script's `allow`, `allowfullscreen` and `scrolling="no"`):
+
+  | URL                                       | `/embed` result                            |
+  | ----------------------------------------- | ------------------------------------------ |
+  | `/spotlight/{id}`                         | renders                                    |
+  | `/@{user}/spotlight/{id}`                 | renders (`/spotlight/{id}` redirects here) |
+  | `/@{user}`                                | renders; has a Stories tab                 |
+  | `/add/{user}`                             | 308 to `/@{user}/embed`, renders           |
+  | `/lens/{hex id}`, `/lens/{numeric id}`    | renders                                    |
+  | `/@{user}/highlight/{uuid}` (saved story) | renders                                    |
+  | `/@{user}/{story id}` (one public story)  | 404                                        |
+  | `/p/{uuid}` (publisher story)             | 400                                        |
+
+  Public stories therefore embed only inside the profile embed. No `/embed` page posts any message, so all use a fixed aspect ratio, 416:692.
+
+- **Headers:** every `/embed` page sends `Content-Security-Policy: frame-ancestors *`. A Lens also sends `X-Frame-Options: DENY`, which browsers ignore when `frame-ancestors` is present, and it rendered.
+
+### D51. Pinterest: two kinds of embed code; both render through the widget
+
+- **Widget code** (`pinterest/widget-docs.html`): `<a href="https://www.pinterest.com/pin/{id}/" data-pin-do="embedPin">` and `pinit.js`, assembled from the two snippets of Pinterest's [widgets](https://developers.pinterest.com/docs/web-features/widgets/) and [add-ons](https://developers.pinterest.com/docs/web-features/add-ons-overview/) docs. The widget builder now redirects to the docs.
+- **oEmbed code** (`pinterest/oembed-iframe.html`): `pinterest.com/oembed.json` returns `<iframe src="https://assets.pinterest.com/ext/embed.html?id={id}&src=oembed" height="436" width="450" frameborder="0" scrolling="no">`. Rendered, it shows a pin card about 360 px wide inside the fixed 450×436 frame and posts no message: the height fits one width only, like Facebook's `plugins/post.php` (§5.4). The endpoint is listed on [oembed.com](https://oembed.com/providers.json) (scheme `https://www.pinterest.com/*`, discovery on), but Pinterest's developer docs mention neither it nor `ext/embed.html`; the widget is the only documented embed.
+- **The widget** (`pinit_main.js` loaded directly):
+  - `window.PinUtils` has `build`.
+  - On load it builds every anchor with `data-pin-do` on the page, and leaves an anchor without the attribute alone.
+  - `PinUtils.build(element)` builds only that subtree: an anchor with `data-pin-do` outside it stayed an anchor.
+  - The pin is drawn into the page, not an iframe: the anchor becomes `span.PIN_{n}_embed_pin` with `data-pin-id`, whose height follows its content.
+  - Widths: 236 by default and for `small`, 345 for `medium`, 600 for `large`.
+- **Maintainer decision, 2026-11-18:** oEmbed iframe code renders through the widget, as Facebook post iframes do through the SDK. Both inputs then share one path, the D39 pattern (anchor written without `data-pin-do`, added before `build`), and one ready signal (the anchor replaced by `span[data-pin-id]`).
+
+### D52. Reddit: own iframe, no `embed_host_url`, height from `resize.embed`
+
+- **Embed code** (`reddit/post-share.html`, `reddit/comment-share.html`, pasted by the maintainer from Share → Embed):
+  - **Post:** `blockquote.reddit-embed-bq` with `style="height:316px"` and `data-embed-height="316"`, links to the post, its author and the subreddit, then `widgets.js`.
+  - **Comment:** the link is `/r/{sub}/comments/{postId}/comment/{commentId}/` (not `…/{slug}/{commentId}/`), with `data-embed-height="240"` and no inline style.
+- **What `widgets.js` builds** (probe with the pasted code):
+  - **Post `src`:** `https://embed.reddit.com/r/bulgaria/comments/1xz8iq4/{slug}/?embed=true&ref_source=embed&ref=share&utm_medium=widgets&utm_source=embedv2&utm_term=23&utm_name=post_embed&embed_host_url={page}`.
+  - **Comment `src`:** the same, with `showmedia=false&showmore=false&depth=1&utm_name=comment_embed`.
+  - **Attributes:** `width="640px"`, `sandbox="allow-scripts allow-same-origin allow-popups"`, `allow="clipboard-read; clipboard-write"`.
+  - **Height:** each frame posted `{"type":"resize.embed","data":316}` (comment: 220) from `https://embed.reddit.com`.
+- **Without the script** (own iframes, Chrome): `?embed=true` alone, no query at all, no slug, `theme=dark`, 340 px wide, and both comment queries all rendered and posted `resize.embed`. **`embed_host_url` is not needed**, so the package does not send it (brief §2.4).
+- In Chrome the post title rendered in English, a machine translation of the Bulgarian original. `data-embed-locale` is the attribute that sets it.
+- Older comment permalinks (`/comments/{postId}/{slug}/{commentId}/`) returned an `embed.reddit.com` page of the same size as the `comment/` form (337938 and 337949 bytes). Weak evidence that both work; the parser accepts both.
+
+### D53. LinkedIn: fixed iframe, activity URNs embed, consent banner inside
+
+- **Embed code** (`linkedin/post-collapsed.html`, `linkedin/post-full.html`, pasted by the maintainer): `<iframe src="https://www.linkedin.com/embed/feed/update/urn:li:share:{id}[?collapsed=1]" height width="504" frameborder="0" allowfullscreen="" title="Embedded post">`. The dialog's "less text" option adds `?collapsed=1` (height 670 for an image post); the full post was 879.
+- **No height messages:** no frame posted anything in 8 s. Content taller than the frame scrolls inside it (a scrollbar shows), at 504 and at 340 px, where the text reflows taller.
+- **Activity URNs:** each embed page names its post's activity URN (`urn:li:activity:7527261038006697984` for share `7527261037016817664`). `/embed/feed/update/urn:li:activity:{id}` renders the same post, so post URLs (`/posts/{slug}-activity-{id}-…`) map to it. A share id under `ugcPost` is a 404.
+- **Consent banner:** from Bulgaria, every frame opens with "LinkedIn respects your privacy" and Accept/Reject buttons, about 210 px tall, over the top of the post until the visitor answers. Not ours to hide; the README states it.
+- **Headers:** `frame-ancestors *`.
+- **Default height: 670** (maintainer decision, 2026-11-18), LinkedIn's own height for the collapsed image post. Two samples (670 collapsed, 879 full) were too few for the brief's measurement. A taller post scrolls inside the frame; a shorter one leaves space below it.
+
+## Wave 2 parser (Milestone 2, 2026-11-18)
+
+### D54. What the parser returns for the wave 2 platforms
+
+| Platform  | `kind` / `variant`                                   | `id`                                              | Canonical `url`                                                                 |
+| --------- | ---------------------------------------------------- | ------------------------------------------------- | ------------------------------------------------------------------------------- |
+| Telegram  | post / iframe                                        | `{channel}/{post}`                                | `https://t.me/{channel}/{post}`                                                 |
+| Snapchat  | video / iframe (Spotlight), post / iframe (the rest) | Spotlight id, username, Lens id or highlight uuid | `https://www.snapchat.com/…` without `/embed`; `/add/{user}` becomes `/@{user}` |
+| LinkedIn  | post / iframe                                        | the URN, `urn:li:{activity\|share\|ugcPost}:{id}` | `https://www.linkedin.com/feed/update/{urn}/`                                   |
+| Reddit    | post / iframe (posts and comments)                   | post id, or comment id                            | `…/r/{sub}/comments/{post}/`, or `…/comment/{comment}/`, without the title slug |
+| Pinterest | post / sdk                                           | pin id                                            | `https://www.pinterest.com/pin/{id}/`                                           |
+
+- **Telegram's embed code is a single `<script>`.** D14 requires one embed element beside the scripts; `parseEmbed` now also accepts exactly one script with no content when a platform reads it as its embed (`parseScript`). Only Telegram does. The script must carry `data-telegram-post` and none of the login, discussion or share attributes.
+- **Options** follow D18's naming: Telegram's `data-dark-color` is `darkColor`, `data-single` (read by presence) is `single: true`; Reddit's `data-embed-*` keep their names after the prefix (`showmedia`, `locale`); Snapchat's `data-snapchat-embed-title` is `title`; Pinterest's `data-pin-width` is `width`. LinkedIn's iframe query is kept as given (`collapsed: 1`).
+- **Sizes:** Snapchat's `data-snapchat-embed-width`/`height` and LinkedIn's iframe attributes are `size`. Reddit's `data-embed-height` is `size.height`: the starting height until the frame reports its own.
+- **Snapchat links:** every link inside the blockquote must name the content of `data-snapchat-embed-url`, else `null`. Its inline `style` and `data-snapchat-embed-style` are ignored.
+- **No `fallbackHtml`** for any of the five (brief §2).
+
+## Message-sized iframes (Milestone 3, 2026-11-18)
+
+### D55. `IframeEmbed` takes its height from the frame's messages
+
+Telegram and Reddit frames post their own height (D49, D52); LinkedIn's do not (D53). `IframeEmbed` gains a third sizing mode beside the aspect ratio (D29) and a fixed `height`: a `messageHeight` of `{ origin, read }`.
+
+- **Layout:** the wrapper has `width` and `maxWidth` and a `height` of `startHeight` until the first height arrives, then that height. No aspect ratio, and `height`/`maxHeight` do not apply.
+- **Accepted messages:** only from `iframe.contentWindow` and only from `origin`. `read(event.data)` returns the height or `undefined`; if it throws, the message is ignored. Heights outside 1–50,000 px are ignored; others are rounded up.
+- **Rendered:** the first accepted height removes the placeholder and calls `onLoad`, once. The iframe's `load` event does not count, because the frame loads before its post has a height.
+- **Timeout:** if no height arrives within 15 s of the iframe being created, the placeholder is removed, the frame shows at `startHeight`, and `onError` is called. There is no retry, unlike the script loader (§6.2): reloading the same iframe would load the same page. The brief (§3.2) assumed the retry would apply.
+- **Unmount** removes the listener and the timer.
+
+Tests fake the messages (`test/components/iframe-embed.test.tsx`), including the wrong origin, the wrong window, data that is not JSON, and absurd heights. Checked in Chrome with the Telegram and Reddit components (D56).
+
+## Wave 2 iframe components (Milestone 4, 2026-11-18)
+
+### D56. `TelegramEmbed`, `RedditEmbed`, `SnapchatEmbed`, `LinkedInEmbed`
+
+| Component       | `src`                                                | Size                                                                           | Default `maxWidth`         | Option props                                                         |
+| --------------- | ---------------------------------------------------- | ------------------------------------------------------------------------------ | -------------------------- | -------------------------------------------------------------------- |
+| `TelegramEmbed` | `https://t.me/{post}?embed=1&…`                      | messages from `https://t.me`, starts at 300                                    | 500                        | `userpic`, `color`, `dark`, `darkColor`                              |
+| `RedditEmbed`   | `https://embed.reddit.com{path}?embed=true&…`        | messages from `https://embed.reddit.com`, starts at `data-embed-height` or 316 | 640                        | `theme`, `showMedia`, `showTitle`, `showUsername`, `locale`, `depth` |
+| `SnapchatEmbed` | `{url}/embed`                                        | aspect ratio, embed code size or 416:692                                       | 416                        | none                                                                 |
+| `LinkedInEmbed` | `https://www.linkedin.com/embed/feed/update/{urn}?…` | fixed: `height`, else embed code height, else 670                              | embed code width, else 504 | `collapsed`                                                          |
+
+- **Query values as each platform's script writes them:** Telegram's options go in its script's order, `userpic` as `true`/`false`, other booleans as `1`/`0`, and `single` only when set. Reddit's booleans stay `true`/`false`. Embed code options come first and props replace them.
+- **Attributes copied from each script:** Reddit's `sandbox` and `allow`, Snapchat's `allow` (Lenses use the camera), `scrolling="no"` for Telegram, Reddit and Snapchat. `IframeEmbed` gains `sandbox`.
+- **Titles:** "Telegram post", "Reddit post", "LinkedIn post"; Snapchat uses the embed code's `data-snapchat-embed-title`, else "Snapchat".
+- **`height`/`maxHeight`** are not props of `TelegramEmbed` and `RedditEmbed`, which size themselves.
+
+Checked in Chrome on 2026-11-18 on a temporary playground page, one embed of each kind from its URL with `lazy` on, scrolled into view in turn. All eight called `onLoad`, and no placeholder was left:
+
+- Telegram at 500 px became 384 px tall; at 360 px with dark theme, a red accent and no author photo it became 443 px. The whole post showed, with no scrollbar.
+- Reddit: the post 640×316, the comment in dark theme 640×220.
+- Snapchat: the profile and the Spotlight video at 416×692.
+- LinkedIn: share and activity URNs (`collapsed`) at 504×670.
+
+### D57. `verifyEmbed` requires the canonical URL
+
+A post-commit security review of Milestone 4 found that `RedditEmbed` built its iframe `src` by cutting a fixed-length `https://www.reddit.com` off `embed.url`. `verifyEmbed` checked only that `matchUrl(embed.url)` gave the same platform and id, so a host-built embed with `url: 'https://reddit.com/r/ab/comments/1xz8iq4/'` passed. The cut then left `b/comments/…`, and the iframe loaded `https://embed.reddit.comb/comments/…`, a host the package never meant to frame. `TelegramEmbed` and `SnapchatEmbed` also build `src` from the URL, where a query or fragment would have reached the iframe.
+
+The fix: `verifyEmbed` also requires `matchUrl(embed.url).url === embed.url`, for every platform. The parser and `matchUrl` already write the canonical form for every fixture (checked for all 27 on 2026-11-18), so only hand-built embeds with another URL form are now rejected, with `onError`. Tests: a `twitter.com` URL for an X post, the Reddit URL above, and a Telegram URL with a query and fragment are all rejected, and `RedditEmbed` with that URL renders no iframe.
+
+## Pinterest widget (Milestone 5, 2026-11-18)
+
+### D58. `PinterestEmbed` drives the widget per pin
+
+- **Script:** the loader adds `https://assets.pinterest.com/js/pinit_main.js` itself, not `pinit.js`, which only adds `pinit_main.js` with a random query (D51). A host's own `pinit.js` or `pinit_main.js` is recognised, and the loader waits for its `PinUtils` instead of adding a second script. Ready means `PinUtils.build` is a function.
+- **Markup:** `<a href="{canonical pin url}">` with `data-pin-width`, `data-pin-lang` and `data-pin-terse` from the embed code, and no `data-pin-do`.
+- **Render:** the driver adds `data-pin-do="embedPin"` to the link, then calls `PinUtils.build(container)`. This is the D39 pattern: `pinit_main.js` builds every link with that attribute on the page when it loads. The pin has rendered when `span[data-pin-id]` appears in the container. Without `PinUtils.build` the driver throws, and the embed retries (§6.2).
+- **Width:** the pin has a fixed width per `data-pin-width`, and the default `maxWidth` is that width: 236 (default and `small`), 345 (`medium`), 600 (`large`). The prop is `pinWidth`, because `width` is the wrapper's (D33). The skeleton is 270 px tall, close to a landscape pin at 236 px.
+- **No fallback content:** the embed code's link has no text.
+
+Checked in Chrome on 2026-11-18, on a temporary playground page with three pins from their URLs (default, `large`, and `medium` 3000 px below), `lazy` on:
+
+- The two pins in view rendered at 236×278 and 600×550 and called `onLoad`.
+- The third stayed an unbuilt link with its skeleton until it was scrolled near, then rendered at 345×360.
+- `pinit_main.js` was on the page once.
+
+## Wave 2 dispatcher and playground (Milestone 6, 2026-11-18)
+
+### D59. `<SocialEmbed>` routes the wave 2 platforms
+
+- **Routing:** `telegram`, `snapchat`, `linkedin`, `reddit` and `pinterest` go to their components. `height` and `maxHeight` reach Snapchat and LinkedIn, the fixed-size iframes, and not Telegram, Reddit or Pinterest, which size themselves (D36 still holds: no platform options on the dispatcher).
+- **Props left off the dispatcher:** the new option names (`userpic`, `dark`, `darkColor`, `theme`, `showMedia`, `showTitle`, `showUsername`, `depth`, `collapsed`, `pinWidth`) join the D36 list. `color` and `locale` were already there.
+- **Playground:**
+  - One page per new platform, with every fixture, the URL samples, and an embed parsed on the server. The Snapchat Spotlight and Pinterest docs codes are derived (D50, D51).
+  - `/many` has 8 more embeds before the X posts, so X still loads last.
+  - `/eager` adds a Pinterest pin.
+  - The script bar counts Pinterest.
+
+Checked in Chrome on 2026-11-18, `next build` passing first:
+
+- **Client navigation:** from the home page through `/telegram`, `/reddit`, `/snapchat`, `/linkedin` and `/pinterest`, with every article scrolled into view, the same document stayed loaded.
+  - All 20 embeds rendered with no skeleton left: Telegram 500 px wide at 384, 367 and 622 px tall; Reddit 640×316 and 640×220; Snapchat 416×692; LinkedIn 504×879 and 504×670; Pinterest 236×278.
+  - `pinit_main.js` was added once and kept across navigation.
+- **`/many` and `/eager`:** both rendered every embed, loaded directly and reached by client navigation. Each script was on the page once.
+- **Not reproduced:** on the first run of `/many` after that tour, five Instagram and Threads embeds kept their skeletons, and Threads' script was never added. That run overlapped a script of mine that froze the tab for 45 s. Three later runs passed: the same tour, `/pinterest` then `/many`, and `/many` loaded directly. The cause was not found.
+
 ## Open VERIFY items
 
 | ID  | Item                                            | Milestone | Status                                          |

@@ -8,6 +8,11 @@ export const PLATFORMS = {
   facebook: 'Facebook',
   tiktok: 'TikTok',
   youtube: 'YouTube',
+  telegram: 'Telegram',
+  snapchat: 'Snapchat',
+  linkedin: 'LinkedIn',
+  reddit: 'Reddit',
+  pinterest: 'Pinterest',
 } as const;
 
 export type PlatformKey = keyof typeof PLATFORMS;
@@ -26,6 +31,10 @@ function fixture(file: string): string {
 
 const FACEBOOK_POST =
   'https://www.facebook.com/vasil.popov.98/posts/pfbid0r3hJSv19StgY9tsUXoENzXsNzNaPtjm27KZSyJFxk1p16pZxmY5LVdM2jAgZmPnel';
+
+const SNAPCHAT_SPOTLIGHT =
+  'https://www.snapchat.com/@yang_sixiang/spotlight/W7_EDlXWTBiXAEEniNoMPwAAYaGxkaHh3Y2xiAZ0qvNuuAZ0qvBmIAAAAAQ';
+const PINTEREST_PIN = '99360735500167749';
 
 export function facebookReel(): string {
   return fixture('facebook/video-iframe-reel.html');
@@ -112,6 +121,56 @@ export function embedCodes(platform: PlatformKey): Sample[] {
         },
         { label: 'oEmbed', value: fixture('youtube/oembed.html') },
       ];
+    case 'telegram':
+      return [
+        {
+          label: 'Widget configurator',
+          value: fixture('telegram/widget-configurator.html'),
+        },
+        {
+          label: 'Widget configurator, no photo, red accent, dark theme',
+          value: fixture('telegram/widget-configurator-options.html'),
+        },
+      ];
+    case 'snapchat':
+      return [
+        { label: 'Profile', value: fixture('snapchat/profile-share.html') },
+        { label: 'Lens', value: fixture('snapchat/lens-share.html') },
+        {
+          label: 'Spotlight video (derived: the dialog shows an app prompt)',
+          value: fixture('snapchat/profile-share.html').replaceAll(
+            'https://www.snapchat.com/@teamsnapchat',
+            SNAPCHAT_SPOTLIGHT,
+          ),
+        },
+      ];
+    case 'linkedin':
+      return [
+        { label: 'Full post', value: fixture('linkedin/post-full.html') },
+        {
+          label: '"Less text"',
+          value: fixture('linkedin/post-collapsed.html'),
+        },
+      ];
+    case 'reddit':
+      return [
+        { label: 'Post', value: fixture('reddit/post-share.html') },
+        { label: 'Comment', value: fixture('reddit/comment-share.html') },
+      ];
+    case 'pinterest':
+      return [
+        {
+          label: 'oEmbed iframe (rendered with the widget)',
+          value: fixture('pinterest/oembed-iframe.html'),
+        },
+        {
+          label: 'Widget code from the docs, with a live pin (derived)',
+          value: fixture('pinterest/widget-docs.html').replace(
+            '1234567890',
+            PINTEREST_PIN,
+          ),
+        },
+      ];
   }
 }
 
@@ -151,6 +210,43 @@ export const URLS: Record<PlatformKey, Sample[]> = {
     {
       label: 'Short link, start at 1:30',
       value: 'https://youtu.be/jNQXAC9IVRw?t=90',
+    },
+  ],
+  telegram: [
+    { label: 'Post', value: 'https://t.me/telegram/83' },
+    { label: 'Post, single', value: 'https://t.me/durov/43?single' },
+  ],
+  snapchat: [
+    { label: 'Spotlight video', value: SNAPCHAT_SPOTLIGHT },
+    { label: 'Profile', value: 'https://www.snapchat.com/add/teamsnapchat' },
+    {
+      label: 'Saved story',
+      value:
+        'https://www.snapchat.com/@erling.haaland/highlight/2312d242-718d-41be-aa25-36f70b5169fb',
+    },
+  ],
+  linkedin: [
+    {
+      label: 'Post (activity URN), default height',
+      value:
+        'https://www.linkedin.com/feed/update/urn:li:activity:7527261038006697984/',
+    },
+  ],
+  reddit: [
+    {
+      label: 'Post',
+      value: 'https://www.reddit.com/r/bulgaria/comments/1xz8iq4/',
+    },
+    {
+      label: 'Comment',
+      value:
+        'https://www.reddit.com/r/bulgaria/comments/1xz8iq4/comment/19st69pk12h39/',
+    },
+  ],
+  pinterest: [
+    {
+      label: 'Pin',
+      value: `https://www.pinterest.com/pin/${PINTEREST_PIN}/`,
     },
   ],
 };

@@ -3,6 +3,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { SocialEmbed } from '../../src';
 import fbVideo from '../fixtures/facebook/video-sdk-docs.html?raw';
 import instagram from '../fixtures/instagram/post-captioned.html?raw';
+import linkedin from '../fixtures/linkedin/post-full.html?raw';
+import pinterest from '../fixtures/pinterest/widget-docs.html?raw';
+import reddit from '../fixtures/reddit/post-share.html?raw';
+import snapchat from '../fixtures/snapchat/profile-share.html?raw';
+import telegram from '../fixtures/telegram/widget-configurator.html?raw';
 import threads from '../fixtures/threads/oembed.html?raw';
 import tiktok from '../fixtures/tiktok/oembed-player.html?raw';
 import x from '../fixtures/x/oembed-basic.html?raw';
@@ -26,6 +31,8 @@ function rendered(container: HTMLElement): string {
     root.getAttribute('data-href') ??
     root.getAttribute('data-instgrm-permalink') ??
     root.getAttribute('data-text-post-permalink') ??
+    // Pinterest: the pin link itself.
+    root.getAttribute('href') ??
     root.querySelector('a[href*="/status/"]')?.getAttribute('href') ??
     '';
   const name = root.className ? `.${root.className}` : '';
@@ -57,6 +64,23 @@ describe('SocialEmbed with embed code', () => {
       youtube,
       'iframe https://www.youtube.com/embed/jNQXAC9IVRw?si=zgsn8wwuM9wOXrRk',
     ],
+    ['Telegram', telegram, 'iframe https://t.me/telegram/83?embed=1'],
+    [
+      'Snapchat',
+      snapchat,
+      'iframe https://www.snapchat.com/@teamsnapchat/embed',
+    ],
+    [
+      'LinkedIn',
+      linkedin,
+      'iframe https://www.linkedin.com/embed/feed/update/urn:li:share:7527261037016817664',
+    ],
+    [
+      'Reddit',
+      reddit,
+      'iframe https://embed.reddit.com/r/bulgaria/comments/1xz8iq4/?embed=true',
+    ],
+    ['Pinterest', pinterest, 'a www.pinterest.com'],
   ])('routes %s embed code to its component', (_, html, expected) => {
     const { container } = render(<SocialEmbed html={html} lazy={false} />);
     expect(rendered(container)).toBe(expected);
@@ -110,6 +134,20 @@ describe('SocialEmbed with a URL', () => {
       'https://youtu.be/jNQXAC9IVRw?t=90',
       'iframe https://www.youtube.com/embed/jNQXAC9IVRw?start=90',
     ],
+    ['https://t.me/s/telegram/83', 'iframe https://t.me/telegram/83?embed=1'],
+    [
+      'https://www.snapchat.com/lens/61141491143',
+      'iframe https://www.snapchat.com/lens/61141491143/embed',
+    ],
+    [
+      'https://www.linkedin.com/feed/update/urn:li:activity:7527261038006697984/',
+      'iframe https://www.linkedin.com/embed/feed/update/urn:li:activity:7527261038006697984',
+    ],
+    [
+      'https://old.reddit.com/r/bulgaria/comments/1xz8iq4/comment/19st69pk12h39/',
+      'iframe https://embed.reddit.com/r/bulgaria/comments/1xz8iq4/comment/19st69pk12h39/?embed=true',
+    ],
+    ['https://bg.pinterest.com/pin/99360735500167749/', 'a www.pinterest.com'],
   ])('routes %s', (url, expected) => {
     const { container } = render(<SocialEmbed url={url} lazy={false} />);
     expect(rendered(container)).toBe(expected);
@@ -169,6 +207,26 @@ describe('SocialEmbed props', () => {
     const wrapper = post.container.firstElementChild as HTMLElement;
     expect(wrapper.hasAttribute('maxheight')).toBe(false);
     expect(wrapper.style.maxWidth).toBe('550px');
+  });
+
+  it('forwards height to LinkedIn and Snapchat, not to Telegram or Reddit', () => {
+    const fixed = render(
+      <SocialEmbed
+        url="https://www.linkedin.com/feed/update/urn:li:share:7527261037016817664/"
+        height={900}
+      />,
+    );
+    expect(
+      (fixed.container.firstElementChild as HTMLElement).style.height,
+    ).toBe('900px');
+
+    // Telegram sizes itself from its frame's messages, starting at 300px.
+    const sized = render(
+      <SocialEmbed url="https://t.me/telegram/83" height={900} />,
+    );
+    expect(
+      (sized.container.firstElementChild as HTMLElement).style.height,
+    ).toBe('300px');
   });
 
   it('accepts html or url, never both or neither', () => {

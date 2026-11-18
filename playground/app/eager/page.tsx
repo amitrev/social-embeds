@@ -7,6 +7,7 @@ const EMBEDS = [
   'https://www.instagram.com/p/DfPQchkG1tg/',
   'https://www.threads.com/@instagram/post/DfQSavwEs5C',
   'https://x.com/jack/status/20',
+  'https://www.pinterest.com/pin/99360735500167749/',
 ];
 
 export default function EagerEmbeds() {
@@ -15,7 +16,7 @@ export default function EagerEmbeds() {
       <h1>All at once</h1>
       <p>
         One embed per script-based platform, all with <code>lazy</code> off, so
-        the four platform scripts are added in the same moment. Open this page
+        the five platform scripts are added in the same moment. Open this page
         from a link in the navigation as well as directly: the order in which
         the scripts arrive differs.
       </p>

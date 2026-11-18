@@ -11,6 +11,11 @@ const SHAPES: Record<Platform, readonly string[]> = {
   facebook: ['post sdk', 'video sdk', 'video iframe'],
   tiktok: ['video iframe'],
   youtube: ['video iframe'],
+  telegram: ['post iframe'],
+  snapchat: ['post iframe', 'video iframe'],
+  linkedin: ['post iframe'],
+  reddit: ['post iframe'],
+  pinterest: ['post sdk'],
 };
 
 /**
@@ -21,6 +26,8 @@ export function verifyEmbed(embed: ParsedEmbed): ParsedEmbed | null {
   const matched = matchUrl(embed.url);
   if (matched?.platform !== embed.platform || matched.id !== embed.id)
     return null;
+  // Components build iframe `src` from the URL, so it must be the parser's own form (docs/decisions.md D57).
+  if (matched.url !== embed.url) return null;
   if (!SHAPES[embed.platform].includes(`${embed.kind} ${embed.variant}`))
     return null;
   if (embed.fallbackHtml === undefined) return embed;

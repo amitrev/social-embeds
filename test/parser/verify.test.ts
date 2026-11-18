@@ -5,6 +5,14 @@ import postIframe from '../fixtures/facebook/post-iframe.html?raw';
 import postSdk from '../fixtures/facebook/post-sdk-docs.html?raw';
 import videoSdk from '../fixtures/facebook/video-sdk-docs.html?raw';
 import instagram from '../fixtures/instagram/post-captioned.html?raw';
+import linkedin from '../fixtures/linkedin/post-collapsed.html?raw';
+import pinterestIframe from '../fixtures/pinterest/oembed-iframe.html?raw';
+import pinterest from '../fixtures/pinterest/widget-docs.html?raw';
+import redditComment from '../fixtures/reddit/comment-share.html?raw';
+import reddit from '../fixtures/reddit/post-share.html?raw';
+import snapchatLens from '../fixtures/snapchat/lens-share.html?raw';
+import snapchat from '../fixtures/snapchat/profile-share.html?raw';
+import telegram from '../fixtures/telegram/widget-configurator-options.html?raw';
 import threads from '../fixtures/threads/oembed.html?raw';
 import tiktok from '../fixtures/tiktok/oembed-player.html?raw';
 import xHashtag from '../fixtures/x/oembed-hashtag.html?raw';
@@ -21,6 +29,14 @@ const fixtures = {
   xHashtag,
   xOptions,
   youtube,
+  telegram,
+  snapchat,
+  snapchatLens,
+  linkedin,
+  reddit,
+  redditComment,
+  pinterest,
+  pinterestIframe,
 };
 
 describe('verifyEmbed', () => {
@@ -57,6 +73,28 @@ describe('verifyEmbed', () => {
       { ...x, variant: 'iframe' as const },
     ],
     ['a kind the platform does not have', { ...x, kind: 'video' as const }],
+    [
+      'a URL in another form than the parser writes',
+      {
+        ...x,
+        url: 'https://twitter.com/TheEllenShow/status/440322224407314432',
+      },
+    ],
+    // Components build iframe `src` from the canonical URL (docs/decisions.md D57).
+    [
+      'a Reddit URL whose path would shift into the iframe host',
+      {
+        ...(parseEmbed(reddit) as ParsedEmbed),
+        url: 'https://reddit.com/r/ab/comments/1xz8iq4/',
+      },
+    ],
+    [
+      'a Telegram URL with a query',
+      {
+        ...(parseEmbed(telegram) as ParsedEmbed),
+        url: 'https://t.me/telegram/83?embed=0#x',
+      },
+    ],
   ])('rejects %s', (_, embed) => {
     expect(verifyEmbed(embed)).toBeNull();
   });

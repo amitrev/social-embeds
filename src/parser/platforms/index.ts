@@ -1,6 +1,11 @@
 import type { PlatformParser } from '../platform';
 import { facebook } from './facebook';
 import { instagram } from './instagram';
+import { linkedin } from './linkedin';
+import { pinterest } from './pinterest';
+import { reddit } from './reddit';
+import { snapchat } from './snapchat';
+import { telegram } from './telegram';
 import { threads } from './threads';
 import { tiktok } from './tiktok';
 import { x } from './x';
@@ -13,4 +18,9 @@ export const platforms: readonly PlatformParser[] = [
   threads,
   tiktok,
   youtube,
+  telegram,
+  snapchat,
+  linkedin,
+  reddit,
+  pinterest,
 ];

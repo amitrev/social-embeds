@@ -32,7 +32,7 @@ export function fire(
 }
 
 export function resetPage(): void {
-  for (const name of ['twttr', 'instgrm', 'FB', 'fbAsyncInit'])
+  for (const name of ['twttr', 'instgrm', 'FB', 'fbAsyncInit', 'PinUtils'])
     Reflect.deleteProperty(window, name);
   document.head.replaceChildren();
   document.body.replaceChildren();

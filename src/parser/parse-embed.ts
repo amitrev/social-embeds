@@ -32,7 +32,16 @@ export function parseEmbed(html: string): ParsedEmbed | null {
       root = node;
     }
   }
-  if (!root) return null;
+  if (!root) {
+    const [script] = scripts;
+    if (fbRoot || scripts.length !== 1 || !script) return null;
+    if (script.children.length !== 0) return null;
+    for (const platform of platforms) {
+      const embed = platform.parseScript?.(script);
+      if (embed) return embed;
+    }
+    return null;
+  }
 
   for (const platform of platforms) {
     const embed = platform.parse(root);

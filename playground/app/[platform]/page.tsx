@@ -2,7 +2,12 @@ import { notFound } from 'next/navigation';
 import {
   FacebookEmbed,
   InstagramEmbed,
+  LinkedInEmbed,
+  PinterestEmbed,
+  RedditEmbed,
+  SnapchatEmbed,
   SocialEmbed,
+  TelegramEmbed,
   ThreadsEmbed,
   TikTokEmbed,
   XEmbed,
@@ -42,6 +47,16 @@ function ParsedOnServer({ embed }: { embed: ParsedEmbed }) {
       return <TikTokEmbed embed={embed} />;
     case 'youtube':
       return <YouTubeEmbed embed={embed} />;
+    case 'telegram':
+      return <TelegramEmbed embed={embed} />;
+    case 'snapchat':
+      return <SnapchatEmbed embed={embed} />;
+    case 'linkedin':
+      return <LinkedInEmbed embed={embed} />;
+    case 'reddit':
+      return <RedditEmbed embed={embed} />;
+    case 'pinterest':
+      return <PinterestEmbed embed={embed} />;
   }
 }
 
