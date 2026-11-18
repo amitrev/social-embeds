@@ -642,6 +642,26 @@ Checked in Chrome on 2026-11-18, on a temporary playground page with three pins 
 - The third stayed an unbuilt link with its skeleton until it was scrolled near, then rendered at 345×360.
 - `pinit_main.js` was on the page once.
 
+## Wave 2 dispatcher and playground (Milestone 6, 2026-11-18)
+
+### D59. `<SocialEmbed>` routes the wave 2 platforms
+
+- **Routing:** `telegram`, `snapchat`, `linkedin`, `reddit` and `pinterest` go to their components. `height` and `maxHeight` reach Snapchat and LinkedIn, the fixed-size iframes, and not Telegram, Reddit or Pinterest, which size themselves (D36 still holds: no platform options on the dispatcher).
+- **Props left off the dispatcher:** the new option names (`userpic`, `dark`, `darkColor`, `theme`, `showMedia`, `showTitle`, `showUsername`, `depth`, `collapsed`, `pinWidth`) join the D36 list. `color` and `locale` were already there.
+- **Playground:**
+  - One page per new platform, with every fixture, the URL samples, and an embed parsed on the server. The Snapchat Spotlight and Pinterest docs codes are derived (D50, D51).
+  - `/many` has 8 more embeds before the X posts, so X still loads last.
+  - `/eager` adds a Pinterest pin.
+  - The script bar counts Pinterest.
+
+Checked in Chrome on 2026-11-18, `next build` passing first:
+
+- **Client navigation:** from the home page through `/telegram`, `/reddit`, `/snapchat`, `/linkedin` and `/pinterest`, with every article scrolled into view, the same document stayed loaded.
+  - All 20 embeds rendered with no skeleton left: Telegram 500 px wide at 384, 367 and 622 px tall; Reddit 640×316 and 640×220; Snapchat 416×692; LinkedIn 504×879 and 504×670; Pinterest 236×278.
+  - `pinit_main.js` was added once and kept across navigation.
+- **`/many` and `/eager`:** both rendered every embed, loaded directly and reached by client navigation. Each script was on the page once.
+- **Not reproduced:** on the first run of `/many` after that tour, five Instagram and Threads embeds kept their skeletons, and Threads' script was never added. That run overlapped a script of mine that froze the tab for 45 s. Three later runs passed: the same tour, `/pinterest` then `/many`, and `/many` loaded directly. The cause was not found.
+
 ## Open VERIFY items
 
 | ID  | Item                                            | Milestone | Status                                          |

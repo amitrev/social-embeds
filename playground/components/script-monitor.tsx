@@ -10,6 +10,10 @@ const SCRIPTS = [
   ['Threads', /^https:\/\/www\.threads\.(?:com|net)\/embed\.js(?:[?#]|$)/],
   ['Facebook', /^https:\/\/connect\.facebook\.net\/[^/]+\/sdk\.js(?:#|$)/],
   ['TikTok', /^https:\/\/www\.tiktok\.com\/embed\.js(?:[?#]|$)/],
+  [
+    'Pinterest',
+    /^https:\/\/assets\.pinterest\.com\/js\/pinit(?:_main)?\.js(?:[?#]|$)/,
+  ],
 ] as const;
 
 function countScripts(): string {

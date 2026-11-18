@@ -11,6 +11,12 @@ const INSTAGRAM = 'https://www.instagram.com/p/DfPQchkG1tg/';
 const X_1 = 'https://x.com/jack/status/20';
 const X_2 = 'https://x.com/BarackObama/status/266031293945503744';
 const X_3 = 'https://x.com/TheEllenShow/status/440322224407314432';
+const TELEGRAM = 'https://t.me/telegram/83';
+const SNAPCHAT = 'https://www.snapchat.com/add/teamsnapchat';
+const LINKEDIN =
+  'https://www.linkedin.com/feed/update/urn:li:activity:7527261038006697984/';
+const REDDIT = 'https://www.reddit.com/r/bulgaria/comments/1xz8iq4/';
+const PINTEREST = 'https://www.pinterest.com/pin/99360735500167749/';
 
 // X comes last, so its script loads only once you scroll down to it.
 const EMBEDS = [
@@ -26,6 +32,14 @@ const EMBEDS = [
   THREADS,
   FACEBOOK_VIDEO,
   INSTAGRAM,
+  TELEGRAM,
+  REDDIT,
+  PINTEREST,
+  SNAPCHAT,
+  LINKEDIN,
+  TELEGRAM,
+  PINTEREST,
+  REDDIT,
   X_1,
   X_2,
   X_3,

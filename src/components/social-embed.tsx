@@ -3,7 +3,12 @@ import { matchUrl, parseEmbed } from '../parser';
 import { FacebookEmbed, type FacebookOptions } from './facebook-embed';
 import { useReportError } from './hooks';
 import { InstagramEmbed, type InstagramOptions } from './instagram-embed';
+import { LinkedInEmbed, type LinkedInOptions } from './linkedin-embed';
+import { PinterestEmbed, type PinterestOptions } from './pinterest-embed';
+import { RedditEmbed, type RedditOptions } from './reddit-embed';
 import type { FrameProps } from './shared';
+import { SnapchatEmbed } from './snapchat-embed';
+import { TelegramEmbed, type TelegramOptions } from './telegram-embed';
 import { ThreadsEmbed, type ThreadsOptions } from './threads-embed';
 import { TikTokEmbed, type TikTokOptions } from './tiktok-embed';
 import { XEmbed, type XOptions } from './x-embed';
@@ -20,7 +25,11 @@ type PlatformOption =
   | keyof ThreadsOptions
   | keyof FacebookOptions
   | keyof TikTokOptions
-  | keyof YouTubeOptions;
+  | keyof YouTubeOptions
+  | keyof TelegramOptions
+  | keyof RedditOptions
+  | keyof LinkedInOptions
+  | keyof PinterestOptions;
 
 export type SocialEmbedProps = SocialEmbedSource &
   Omit<FrameProps, PlatformOption> & {
@@ -72,5 +81,19 @@ export function SocialEmbed(props: SocialEmbedProps) {
       return (
         <YouTubeEmbed {...shared} {...frame} onError={onError} embed={embed} />
       );
+    case 'telegram':
+      return <TelegramEmbed {...shared} onError={onError} embed={embed} />;
+    case 'snapchat':
+      return (
+        <SnapchatEmbed {...shared} {...frame} onError={onError} embed={embed} />
+      );
+    case 'linkedin':
+      return (
+        <LinkedInEmbed {...shared} {...frame} onError={onError} embed={embed} />
+      );
+    case 'reddit':
+      return <RedditEmbed {...shared} onError={onError} embed={embed} />;
+    case 'pinterest':
+      return <PinterestEmbed {...shared} onError={onError} embed={embed} />;
   }
 }
