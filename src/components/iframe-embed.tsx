@@ -22,6 +22,7 @@ type IframeEmbedProps = FrameProps & {
   allow: string;
   referrerPolicy?: 'strict-origin-when-cross-origin';
   scrolling?: 'no';
+  sandbox?: string;
   /** Used when the input carries no size. */
   ratio: { width: number; height: number };
   size?: { width?: number; height?: number };
@@ -43,6 +44,7 @@ export function IframeEmbed({
   allow,
   referrerPolicy,
   scrolling,
+  sandbox,
   ratio,
   size,
   messageHeight,
@@ -149,6 +151,7 @@ export function IframeEmbed({
             referrerPolicy={referrerPolicy}
             // eslint-disable-next-line @typescript-eslint/no-deprecated -- Facebook's own embed code sets it
             scrolling={scrolling}
+            sandbox={sandbox}
             style={{
               display: 'block',
               width: '100%',

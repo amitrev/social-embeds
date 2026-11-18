@@ -17,6 +17,25 @@ export {
   type InstagramOptions,
 } from './components/instagram-embed';
 export {
+  LinkedInEmbed,
+  type LinkedInEmbedProps,
+  type LinkedInOptions,
+} from './components/linkedin-embed';
+export {
+  RedditEmbed,
+  type RedditEmbedProps,
+  type RedditOptions,
+} from './components/reddit-embed';
+export {
+  SnapchatEmbed,
+  type SnapchatEmbedProps,
+} from './components/snapchat-embed';
+export {
+  TelegramEmbed,
+  type TelegramEmbedProps,
+  type TelegramOptions,
+} from './components/telegram-embed';
+export {
   ThreadsEmbed,
   type ThreadsEmbedProps,
   type ThreadsOptions,

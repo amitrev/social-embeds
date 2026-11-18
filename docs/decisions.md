@@ -595,7 +595,30 @@ Telegram and Reddit frames post their own height (D49, D52); LinkedIn's do not (
 - **Timeout:** if no height arrives within 15 s of the iframe being created, the placeholder is removed, the frame shows at `startHeight`, and `onError` is called. There is no retry, unlike the script loader (§6.2): reloading the same iframe would load the same page. The brief (§3.2) assumed the retry would apply.
 - **Unmount** removes the listener and the timer.
 
-Tests fake the messages (`test/components/iframe-embed.test.tsx`), including the wrong origin, the wrong window, data that is not JSON, and absurd heights. Not yet checked in a browser: that comes with the platform components (Milestone 4).
+Tests fake the messages (`test/components/iframe-embed.test.tsx`), including the wrong origin, the wrong window, data that is not JSON, and absurd heights. Checked in Chrome with the Telegram and Reddit components (D56).
+
+## Wave 2 iframe components (Milestone 4, 2026-11-18)
+
+### D56. `TelegramEmbed`, `RedditEmbed`, `SnapchatEmbed`, `LinkedInEmbed`
+
+| Component       | `src`                                                | Size                                                                           | Default `maxWidth`         | Option props                                                         |
+| --------------- | ---------------------------------------------------- | ------------------------------------------------------------------------------ | -------------------------- | -------------------------------------------------------------------- |
+| `TelegramEmbed` | `https://t.me/{post}?embed=1&…`                      | messages from `https://t.me`, starts at 300                                    | 500                        | `userpic`, `color`, `dark`, `darkColor`                              |
+| `RedditEmbed`   | `https://embed.reddit.com{path}?embed=true&…`        | messages from `https://embed.reddit.com`, starts at `data-embed-height` or 316 | 640                        | `theme`, `showMedia`, `showTitle`, `showUsername`, `locale`, `depth` |
+| `SnapchatEmbed` | `{url}/embed`                                        | aspect ratio, embed code size or 416:692                                       | 416                        | none                                                                 |
+| `LinkedInEmbed` | `https://www.linkedin.com/embed/feed/update/{urn}?…` | fixed: `height`, else embed code height, else 670                              | embed code width, else 504 | `collapsed`                                                          |
+
+- **Query values as each platform's script writes them:** Telegram's options go in its script's order, `userpic` as `true`/`false`, other booleans as `1`/`0`, and `single` only when set. Reddit's booleans stay `true`/`false`. Embed code options come first and props replace them.
+- **Attributes copied from each script:** Reddit's `sandbox` and `allow`, Snapchat's `allow` (Lenses use the camera), `scrolling="no"` for Telegram, Reddit and Snapchat. `IframeEmbed` gains `sandbox`.
+- **Titles:** "Telegram post", "Reddit post", "LinkedIn post"; Snapchat uses the embed code's `data-snapchat-embed-title`, else "Snapchat".
+- **`height`/`maxHeight`** are not props of `TelegramEmbed` and `RedditEmbed`, which size themselves.
+
+Checked in Chrome on 2026-11-18 on a temporary playground page, one embed of each kind from its URL with `lazy` on, scrolled into view in turn. All eight called `onLoad`, and no placeholder was left:
+
+- Telegram at 500 px became 384 px tall; at 360 px with dark theme, a red accent and no author photo it became 443 px. The whole post showed, with no scrollbar.
+- Reddit: the post 640×316, the comment in dark theme 640×220.
+- Snapchat: the profile and the Spotlight video at 416×692.
+- LinkedIn: share and activity URNs (`collapsed`) at 504×670.
 
 ## Open VERIFY items
 
