@@ -1,5 +1,15 @@
 # social-embeds
 
+## 0.3.0
+
+### Minor Changes
+
+- d394e91: Add Telegram, Snapchat, LinkedIn, Reddit and Pinterest: `TelegramEmbed`, `SnapchatEmbed`, `LinkedInEmbed`, `RedditEmbed` and `PinterestEmbed`, routed by `<SocialEmbed>` and recognised by `parseEmbed` and `matchUrl`. `ParsedEmbed['platform']` has five new values, so a `switch` over every platform needs the new cases.
+
+### Patch Changes
+
+- d394e91: A component now rejects an `embed` whose `url` is not the exact URL `matchUrl` returns for it, and calls `onError`. Embeds from `parseEmbed` and `matchUrl` are unaffected; an embed built by hand with another form of the same URL is no longer rendered.
+
 ## 0.2.1
 
 ### Patch Changes
