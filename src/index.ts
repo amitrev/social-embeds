@@ -22,6 +22,11 @@ export {
   type LinkedInOptions,
 } from './components/linkedin-embed';
 export {
+  PinterestEmbed,
+  type PinterestEmbedProps,
+  type PinterestOptions,
+} from './components/pinterest-embed';
+export {
   RedditEmbed,
   type RedditEmbedProps,
   type RedditOptions,

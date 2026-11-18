@@ -15,6 +15,7 @@ type PlatformGlobals = {
   };
   FB?: { XFBML?: { parse?: unknown }; __buffer?: unknown };
   fbAsyncInit?: () => void;
+  PinUtils?: { build?: unknown };
 };
 
 const globals = () => window as unknown as PlatformGlobals;
@@ -120,7 +121,19 @@ function facebook(locale: string): PlatformScript {
   };
 }
 
-export type ScriptPlatform = 'x' | 'instagram' | 'threads' | 'facebook';
+// pinit.js only adds pinit_main.js, which builds the widgets (docs/decisions.md D51).
+const pinterest: PlatformScript = {
+  key: 'pinterest',
+  url: 'https://assets.pinterest.com/js/pinit_main.js',
+  isOwn: (src) =>
+    /^https?:\/\/assets\.pinterest\.com\/js\/pinit(?:_main)?\.js(?:[?#]|$)/.test(
+      src,
+    ),
+  isPresent: () => typeof globals().PinUtils?.build === 'function',
+};
+
+export type ScriptPlatform =
+  'x' | 'instagram' | 'threads' | 'facebook' | 'pinterest';
 
 export function loadPlatformScript(
   platform: ScriptPlatform,
@@ -133,6 +146,8 @@ export function loadPlatformScript(
       return loadScript(instagram);
     case 'threads':
       return loadScript(threads);
+    case 'pinterest':
+      return loadScript(pinterest);
     case 'facebook':
       return LOCALE.test(locale)
         ? loadScript(facebook(locale))

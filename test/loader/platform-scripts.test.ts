@@ -239,3 +239,27 @@ describe('Facebook', () => {
     expect(added).toHaveLength(0);
   });
 });
+
+describe('Pinterest', () => {
+  it('loads pinit_main.js directly and waits for PinUtils.build', async () => {
+    const load = await freshLoader();
+    const added = captureScripts();
+    const promise = load('pinterest');
+    expect(added.map((element) => element.src)).toEqual([
+      'https://assets.pinterest.com/js/pinit_main.js',
+    ]);
+    page.PinUtils = { build: () => undefined };
+    fire(added[0], 'load');
+    await expect(promise).resolves.toBeUndefined();
+  });
+
+  it("waits for the host's own pinit.js instead of adding a second script", async () => {
+    const load = await freshLoader();
+    addHostScript('//assets.pinterest.com/js/pinit.js');
+    const added = captureScripts();
+    const promise = load('pinterest');
+    page.PinUtils = { build: () => undefined };
+    await expect(promise).resolves.toBeUndefined();
+    expect(added).toHaveLength(0);
+  });
+});

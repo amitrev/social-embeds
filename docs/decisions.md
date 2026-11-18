@@ -626,6 +626,22 @@ A post-commit security review of Milestone 4 found that `RedditEmbed` built its 
 
 The fix: `verifyEmbed` also requires `matchUrl(embed.url).url === embed.url`, for every platform. The parser and `matchUrl` already write the canonical form for every fixture (checked for all 27 on 2026-11-18), so only hand-built embeds with another URL form are now rejected, with `onError`. Tests: a `twitter.com` URL for an X post, the Reddit URL above, and a Telegram URL with a query and fragment are all rejected, and `RedditEmbed` with that URL renders no iframe.
 
+## Pinterest widget (Milestone 5, 2026-11-18)
+
+### D58. `PinterestEmbed` drives the widget per pin
+
+- **Script:** the loader adds `https://assets.pinterest.com/js/pinit_main.js` itself, not `pinit.js`, which only adds `pinit_main.js` with a random query (D51). A host's own `pinit.js` or `pinit_main.js` is recognised, and the loader waits for its `PinUtils` instead of adding a second script. Ready means `PinUtils.build` is a function.
+- **Markup:** `<a href="{canonical pin url}">` with `data-pin-width`, `data-pin-lang` and `data-pin-terse` from the embed code, and no `data-pin-do`.
+- **Render:** the driver adds `data-pin-do="embedPin"` to the link, then calls `PinUtils.build(container)`. This is the D39 pattern: `pinit_main.js` builds every link with that attribute on the page when it loads. The pin has rendered when `span[data-pin-id]` appears in the container. Without `PinUtils.build` the driver throws, and the embed retries (§6.2).
+- **Width:** the pin has a fixed width per `data-pin-width`, and the default `maxWidth` is that width: 236 (default and `small`), 345 (`medium`), 600 (`large`). The prop is `pinWidth`, because `width` is the wrapper's (D33). The skeleton is 270 px tall, close to a landscape pin at 236 px.
+- **No fallback content:** the embed code's link has no text.
+
+Checked in Chrome on 2026-11-18, on a temporary playground page with three pins from their URLs (default, `large`, and `medium` 3000 px below), `lazy` on:
+
+- The two pins in view rendered at 236×278 and 600×550 and called `onLoad`.
+- The third stayed an unbuilt link with its skeleton until it was scrolled near, then rendered at 345×360.
+- `pinit_main.js` was on the page once.
+
 ## Open VERIFY items
 
 | ID  | Item                                            | Milestone | Status                                          |

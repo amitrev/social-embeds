@@ -29,6 +29,7 @@ type Globals = {
     init?: (options: { xfbml: boolean; version: string }) => void;
     XFBML?: { parse?: (element: Element, callback?: () => void) => void };
   };
+  PinUtils?: { build?: (element: Element) => void };
 };
 
 const globals = () => window as unknown as Globals;
@@ -167,3 +168,24 @@ export function facebookDriver(locale: string): Driver {
   }
   return driver;
 }
+
+export const pinterestDriver: Driver = {
+  load: () => loadPlatformScript('pinterest'),
+  render(container, done) {
+    const build = globals().PinUtils?.build;
+    if (!build) throw new Error('social-embeds: PinUtils.build is missing');
+    // pinit_main.js replaces the link with a span that carries the pin id.
+    const stop = watch(
+      container,
+      (element) => element.querySelector('span[data-pin-id]') !== null,
+      done,
+    );
+    // pinit_main.js builds every link with data-pin-do on the page when it loads, so the
+    // attribute is added only when this embed renders (docs/decisions.md D39, D51).
+    const link = container.querySelector('a');
+    if (link && !link.hasAttribute('data-pin-do'))
+      link.setAttribute('data-pin-do', 'embedPin');
+    build(container);
+    return stop;
+  },
+};

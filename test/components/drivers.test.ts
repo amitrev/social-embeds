@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   facebookDriver,
   instagramDriver,
+  pinterestDriver,
   threadsDriver,
   xDriver,
 } from '../../src/components/drivers';
@@ -15,7 +16,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  for (const name of ['twttr', 'instgrm', 'FB'])
+  for (const name of ['twttr', 'instgrm', 'FB', 'PinUtils'])
     Reflect.deleteProperty(window, name);
   document.body.replaceChildren();
 });
@@ -176,5 +177,36 @@ describe('facebookDriver', () => {
       'boom',
     );
     expect(facebookDriver('bg_BG')).toBe(facebookDriver('bg_BG'));
+  });
+});
+
+describe('pinterestDriver', () => {
+  it('adds data-pin-do just before building the container, and finishes on the drawn pin (D39, D51)', async () => {
+    const anchor = document.createElement('a');
+    anchor.href = 'https://www.pinterest.com/pin/99360735500167749/';
+    container.append(anchor);
+    const build = vi.fn((element: Element) => {
+      expect(element).toBe(container);
+      expect(anchor.getAttribute('data-pin-do')).toBe('embedPin');
+    });
+    page.PinUtils = { build };
+    const done = vi.fn();
+    const stop = pinterestDriver.render(container, done);
+    expect(build).toHaveBeenCalledTimes(1);
+    expect(done).not.toHaveBeenCalled();
+
+    const pin = document.createElement('span');
+    pin.setAttribute('data-pin-id', '99360735500167749');
+    anchor.replaceWith(pin);
+    await vi.waitFor(() => {
+      expect(done).toHaveBeenCalled();
+    });
+    stop();
+  });
+
+  it('throws when PinUtils.build is missing, so the embed retries', () => {
+    expect(() => pinterestDriver.render(container, vi.fn())).toThrow(
+      'social-embeds: PinUtils.build is missing',
+    );
   });
 });
