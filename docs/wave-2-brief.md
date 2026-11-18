@@ -57,7 +57,7 @@ Milestone 1 resolved the VERIFY items below in `docs/decisions.md` D49–D53; wh
 - **Rendering:** `width: 100%`, `maxWidth` = the embed code's width (504 when absent). Height, first match wins:
   1. the `height` prop;
   2. the embed code's `height`;
-  3. a default height (maintainer decision, 2026-11-18), used for URL input.
+  3. a default height of 670 (maintainer decision, 2026-11-18, D53), used for URL input.
 - **URL input:** `https://www.linkedin.com/feed/update/urn:li:{activity|share|ugcPost}:{id}` and `https://www.linkedin.com/posts/{slug}-activity-{id}-{suffix}`, the latter mapped to `urn:li:activity:{id}`.
 - **Limitation to document:** a default height can never fit every post. A short post leaves empty space below it, and a long one is cut or scrolls inside the frame. Hosts that know the height pass `height`, or use embed code.
 - **VERIFY:**
@@ -65,7 +65,6 @@ Milestone 1 resolved the VERIFY items below in `docs/decisions.md` D49–D53; wh
   - whether `/embed/feed/update/urn:li:activity:{id}` renders, since post URLs carry an activity id;
   - what happens to the content when the iframe is narrower than the width it was built for;
   - whether content taller than the iframe is cut or scrolls;
-  - the default height: measure the embed code heights of 10 or more real posts (text only, one image, a link card, a video) and pick one that fits the common image post without much empty space.
 
 ### 2.4 Reddit — iframe sized by messages
 

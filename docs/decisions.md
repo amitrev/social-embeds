@@ -563,7 +563,7 @@ The VERIFY items of [wave-2-brief.md](./wave-2-brief.md), checked on 2026-11-18.
 - **Activity URNs:** each embed page names its post's activity URN (`urn:li:activity:7527261038006697984` for share `7527261037016817664`). `/embed/feed/update/urn:li:activity:{id}` renders the same post, so post URLs (`/posts/{slug}-activity-{id}-…`) map to it. A share id under `ugcPost` is a 404.
 - **Consent banner:** from Bulgaria, every frame opens with "LinkedIn respects your privacy" and Accept/Reject buttons, about 210 px tall, over the top of the post until the visitor answers. Not ours to hide; the README states it.
 - **Headers:** `frame-ancestors *`.
-- **Default height — open:** two samples (670 collapsed, 879 full) are too few for the brief's measurement. The maintainer picks a value or adds samples (text only, link card, video).
+- **Default height: 670** (maintainer decision, 2026-11-18), LinkedIn's own height for the collapsed image post. Two samples (670 collapsed, 879 full) were too few for the brief's measurement. A taller post scrolls inside the frame; a shorter one leaves space below it.
 
 ## Open VERIFY items
 
