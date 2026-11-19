@@ -734,6 +734,16 @@ The VERIFY items of [wave-3-brief.md](./wave-3-brief.md). Frames were probed in 
 - **Spotify URLs** render the audio player: a page URL cannot tell a video show from an audio one. Only embed code with `/video` is a `video`.
 - **Dailymotion:** a Player ID in the iframe (`/player/{id}.html`) becomes the `playerId` option; `player.html` and `www.dailymotion.com/embed/video/{id}` parse without one (D63). Playlists return `null`.
 
+## Twitch's parent (Milestone 3, 2026-11-19)
+
+### D65. `IframeEmbed` adds the page's host to the `src`
+
+Twitch plays only when `parent` names the page's host (D62), which is not known on the server. `IframeEmbed` gains `hostParam`: when it creates the iframe, it appends `{hostParam}={location.hostname}` to the `src` (`&`, or `?` when the `src` has no query). The iframe is never in the server HTML (D28), so the host is read only in the browser, and the server and client renders still match. Only `TwitchEmbed` uses it.
+
+Not covered: a page that is itself framed by another site. Twitch then needs that site's host as a second `parent`, which the package cannot know; a host page in that situation passes Twitch's embed code through `fallback`.
+
+Tests: the parameter is added with `&` and with `?`, and the server HTML has no iframe. Not yet checked in a browser: that comes with `TwitchEmbed` (Milestone 4).
+
 ## Open VERIFY items
 
 | ID  | Item                                            | Milestone | Status                                          |

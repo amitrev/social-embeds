@@ -30,6 +30,8 @@ type IframeEmbedProps = FrameProps & {
   messageHeight?: MessageHeight;
   /** With `messageHeight`: the height until the first message. */
   startHeight?: number;
+  /** Query parameter that gets the page's host when the iframe is created (Twitch's `parent`). */
+  hostParam?: string;
 };
 
 const FILL: CSSProperties = { position: 'absolute', inset: 0 };
@@ -49,6 +51,7 @@ export function IframeEmbed({
   size,
   messageHeight,
   startHeight,
+  hostParam,
   width = '100%',
   maxWidth,
   height,
@@ -144,7 +147,7 @@ export function IframeEmbed({
         {near && (
           <iframe
             ref={iframe}
-            src={src}
+            src={hostParam ? withHost(src, hostParam) : src}
             title={title}
             allow={allow}
             allowFullScreen
@@ -168,6 +171,12 @@ export function IframeEmbed({
       </div>
     </div>
   );
+}
+
+// Runs only once the iframe is created, which is never on the server (docs/decisions.md D28).
+function withHost(src: string, name: string): string {
+  const separator = src.includes('?') ? '&' : '?';
+  return `${src}${separator}${encodeURIComponent(name)}=${encodeURIComponent(window.location.hostname)}`;
 }
 
 export function Skeleton({ minHeight }: { minHeight?: number }) {
