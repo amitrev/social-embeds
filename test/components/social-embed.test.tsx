@@ -1,6 +1,7 @@
 import { cleanup, render } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { SocialEmbed } from '../../src';
+import dailymotionOembed from '../fixtures/dailymotion/oembed.html?raw';
 import dailymotion from '../fixtures/dailymotion/player-id-docs.html?raw';
 import fbVideo from '../fixtures/facebook/video-sdk-docs.html?raw';
 import instagram from '../fixtures/instagram/post-captioned.html?raw';
@@ -220,6 +221,27 @@ describe('SocialEmbed with Dailymotion', () => {
         lazy={false}
       />,
     );
+    expect(container.innerHTML).toBe('');
+    expect(onError).toHaveBeenCalledWith(
+      new Error(
+        'social-embeds: a Dailymotion embed needs a Player ID: pass playerId to DailymotionEmbed',
+      ),
+    );
+  });
+
+  // Dailymotion answers code without a Player ID with 403, so it never reaches fallback.
+  it('reports embed code without a Player ID, even with a fallback', () => {
+    const onError = vi.fn();
+    const fallback = vi.fn();
+    const { container } = render(
+      <SocialEmbed
+        html={dailymotionOembed}
+        fallback={fallback}
+        onError={onError}
+        lazy={false}
+      />,
+    );
+    expect(fallback).not.toHaveBeenCalled();
     expect(container.innerHTML).toBe('');
     expect(onError).toHaveBeenCalledWith(
       new Error(
