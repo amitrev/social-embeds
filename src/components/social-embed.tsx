@@ -1,5 +1,6 @@
 import { type ReactNode, useMemo } from 'react';
 import { matchUrl, parseEmbed } from '../parser';
+import { DailymotionEmbed, type DailymotionOptions } from './dailymotion-embed';
 import { FacebookEmbed, type FacebookOptions } from './facebook-embed';
 import { useReportError } from './hooks';
 import { InstagramEmbed, type InstagramOptions } from './instagram-embed';
@@ -8,20 +9,24 @@ import { PinterestEmbed, type PinterestOptions } from './pinterest-embed';
 import { RedditEmbed, type RedditOptions } from './reddit-embed';
 import type { FrameProps } from './shared';
 import { SnapchatEmbed } from './snapchat-embed';
+import { SpotifyEmbed } from './spotify-embed';
 import { TelegramEmbed, type TelegramOptions } from './telegram-embed';
 import { ThreadsEmbed, type ThreadsOptions } from './threads-embed';
 import { TikTokEmbed, type TikTokOptions } from './tiktok-embed';
+import { TwitchEmbed, type TwitchOptions } from './twitch-embed';
+import { VimeoEmbed, type VimeoOptions } from './vimeo-embed';
 import { XEmbed, type XOptions } from './x-embed';
 import { YouTubeEmbed, type YouTubeOptions } from './youtube-embed';
 
 export type SocialEmbedSource =
   { html: string; url?: never } | { url: string; html?: never };
 
-// Div attributes that share a name with a platform option (`lang`, `color`, `rel`) are
-// left out, because each platform reads that name its own way.
+// Div attributes that share a name with a platform option (`lang`, `color`, `rel`, `title`)
+// are left out, because each platform reads that name its own way.
 type PlatformOption =
   | keyof XOptions
   | keyof InstagramOptions
+  // Also Spotify's only option, `theme`.
   | keyof ThreadsOptions
   | keyof FacebookOptions
   | keyof TikTokOptions
@@ -29,7 +34,10 @@ type PlatformOption =
   | keyof TelegramOptions
   | keyof RedditOptions
   | keyof LinkedInOptions
-  | keyof PinterestOptions;
+  | keyof PinterestOptions
+  | keyof VimeoOptions
+  | keyof TwitchOptions
+  | keyof DailymotionOptions;
 
 export type SocialEmbedProps = SocialEmbedSource &
   Omit<FrameProps, PlatformOption> & {
@@ -95,5 +103,27 @@ export function SocialEmbed(props: SocialEmbedProps) {
       return <RedditEmbed {...shared} onError={onError} embed={embed} />;
     case 'pinterest':
       return <PinterestEmbed {...shared} onError={onError} embed={embed} />;
+    case 'spotify':
+      return (
+        <SpotifyEmbed {...shared} {...frame} onError={onError} embed={embed} />
+      );
+    case 'vimeo':
+      return (
+        <VimeoEmbed {...shared} {...frame} onError={onError} embed={embed} />
+      );
+    case 'twitch':
+      return (
+        <TwitchEmbed {...shared} {...frame} onError={onError} embed={embed} />
+      );
+    case 'dailymotion':
+      // No Player ID prop here: only embed code that carries one renders (D63).
+      return (
+        <DailymotionEmbed
+          {...shared}
+          {...frame}
+          onError={onError}
+          embed={embed}
+        />
+      );
   }
 }

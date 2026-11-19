@@ -4,7 +4,7 @@ Turn social media embed code or post URLs into working React components.
 
 Pasting a platform's embed code into `dangerouslySetInnerHTML` does not work in React: the `<script>` tag never runs, every embed adds the same script again, and nothing initialises after client-side navigation. `social-embeds` recognises the platform, reads the post and its options from the embed code, drops the `<script>` tag, loads each platform script once per page and asks the platform to render the post. Iframe-based platforms get a responsive `<iframe>` instead.
 
-- X, Instagram, Threads, Facebook, TikTok, YouTube, Telegram, Snapchat, LinkedIn, Reddit and Pinterest
+- X, Instagram, Threads, Facebook, TikTok, YouTube, Telegram, Snapchat, LinkedIn, Reddit, Pinterest, Spotify, Vimeo, Twitch and Dailymotion
 - React 19, Next.js App Router (Server Components, client navigation), or plain React
 - Zero runtime dependencies, ESM only, typed
 - No styling and no defaults beyond what the embed code or your props ask for
@@ -34,9 +34,9 @@ import { SocialEmbed } from 'social-embeds';
 There are two inputs, and they lead to the same component:
 
 - **`html`**: the embed code from the platform's Embed dialog, stored as-is (for example in your CMS). It carries the post's options (theme, caption, start time, and so on), and for X, Instagram, Threads and some Facebook code it also carries **fallback content**: the post text, author and link inside the `<blockquote>`. That content is rendered on the server, so crawlers and visitors without JavaScript see it, and the platform script upgrades it in place.
-- **`url`**: the post's address. A URL has no fallback content, so until the post has loaded the component shows a placeholder. This is a property of the input, not a limitation of the package. A URL carries no options either, except a YouTube start time (`t` or `start`), the privacy-enhanced host, and Telegram's `single` and `comment`.
+- **`url`**: the post's address. A URL has no fallback content, so until the post has loaded the component shows a placeholder. This is a property of the input, not a limitation of the package. A URL carries no options either, except a YouTube start time (`t` or `start`), the privacy-enhanced host, Telegram's `single` and `comment`, a Vimeo start time (`#t=`) and a Twitch video's `t`.
 
-Embed code is matched strictly: it must be one platform's own snippet, as the platform produced it. Extra wrappers, other markup or unknown scripts make it unrecognised (see [`fallback`](#unrecognised-embed-code)).
+Embed code is matched strictly: it must be one platform's own snippet, as the platform produced it. Extra wrappers, other markup or unknown scripts make it unrecognised (see [`fallback`](#unrecognised-embed-code)). The exceptions are Vimeo's and Dailymotion's own responsive wrappers, which hold the video's aspect ratio.
 
 ## Usage
 
@@ -59,7 +59,7 @@ export function Embed({ code }: { code: string }) {
 }
 ```
 
-It accepts the [shared props](#shared-props); `height` reaches only the iframe-based platforms. Platform options come from the embed code. To set them with props, use a platform component.
+It accepts the [shared props](#shared-props); `height` reaches only the iframe-based platforms. Platform options come from the embed code. To set them with props, use a platform component. `<SocialEmbed>` takes no Dailymotion Player ID, so it renders Dailymotion only from embed code that carries one (see [Dailymotion](#dailymotion)).
 
 #### Unrecognised embed code
 
@@ -83,15 +83,19 @@ Each platform component takes a `url`, or an `embed` already parsed by [`social-
 
 ```tsx
 import {
+  DailymotionEmbed,
   FacebookEmbed,
   InstagramEmbed,
   LinkedInEmbed,
   PinterestEmbed,
   RedditEmbed,
   SnapchatEmbed,
+  SpotifyEmbed,
   TelegramEmbed,
   ThreadsEmbed,
   TikTokEmbed,
+  TwitchEmbed,
+  VimeoEmbed,
   XEmbed,
   YouTubeEmbed,
 } from 'social-embeds';
@@ -133,23 +137,39 @@ import {
 />
 
 <PinterestEmbed url="https://www.pinterest.com/pin/99360735500167749/" pinWidth="large" />
+
+<SpotifyEmbed url="https://open.spotify.com/track/4uLU6hMCjMI75M1A2tKUQC" theme={0} />
+
+<VimeoEmbed url="https://vimeo.com/76979871" muted title={false} t="1m2s" />
+
+<TwitchEmbed url="https://www.twitch.tv/videos/40464143" autoplay={false} time="1h2m3s" />
+
+<DailymotionEmbed
+  url="https://www.dailymotion.com/video/x84sh87"
+  playerId={process.env.NEXT_PUBLIC_DAILYMOTION_PLAYER_ID}
+  mute
+/>
 ```
 
-| Component        | Option props                                                                                                                                                                                                                                                                                                                                                        |
-| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `XEmbed`         | `theme` (`'light'` \| `'dark'`), `conversation` (`'none'`), `cards` (`'hidden'`), `align` (`'left'` \| `'center'` \| `'right'`), `lang`, `dnt`                                                                                                                                                                                                                      |
-| `InstagramEmbed` | `captioned`                                                                                                                                                                                                                                                                                                                                                         |
-| `ThreadsEmbed`   | `theme` (`'light'` \| `'dark'` \| `'auto'`)                                                                                                                                                                                                                                                                                                                         |
-| `FacebookEmbed`  | `locale` (SDK locale, default `'en_US'`), `showText`; videos also `allowfullscreen`, `autoplay`, `showCaptions`                                                                                                                                                                                                                                                     |
-| `TikTokEmbed`    | the [Embed Player](https://developers.tiktok.com/doc/embed-player) parameters: `controls`, `progressBar`, `playButton`, `volumeControl`, `fullscreenButton`, `timestamp`, `loop`, `autoplay`, `musicInfo`, `description`, `rel`, `nativeContextMenu`, `closedCaption`, `forceMuted`                                                                                 |
-| `YouTubeEmbed`   | the [player parameters](https://developers.google.com/youtube/player_parameters): `autoplay`, `ccLangPref`, `ccLoadPolicy`, `color`, `controls`, `disablekb`, `enablejsapi`, `end`, `fs`, `hl`, `ivLoadPolicy`, `list`, `listType`, `loop`, `origin`, `playlist`, `playsinline`, `rel`, `start`, `widgetReferrer`; plus `nocookie` (play from youtube-nocookie.com) |
-| `TelegramEmbed`  | the widget configurator's options: `userpic`, `color` (hex, no `#`), `dark`, `darkColor`                                                                                                                                                                                                                                                                            |
-| `SnapchatEmbed`  | none                                                                                                                                                                                                                                                                                                                                                                |
-| `LinkedInEmbed`  | `collapsed` (the Embed dialog's "less text")                                                                                                                                                                                                                                                                                                                        |
-| `RedditEmbed`    | `theme` (`'light'` \| `'dark'`), `showMedia`, `showTitle`, `showUsername`, `locale`, `depth` (replies under a comment)                                                                                                                                                                                                                                              |
-| `PinterestEmbed` | `pinWidth` (`'small'` \| `'medium'` \| `'large'`): `data-pin-width`, since `width` is the wrapper's                                                                                                                                                                                                                                                                 |
+| Component          | Option props                                                                                                                                                                                                                                                                                                                                                        |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `XEmbed`           | `theme` (`'light'` \| `'dark'`), `conversation` (`'none'`), `cards` (`'hidden'`), `align` (`'left'` \| `'center'` \| `'right'`), `lang`, `dnt`                                                                                                                                                                                                                      |
+| `InstagramEmbed`   | `captioned`                                                                                                                                                                                                                                                                                                                                                         |
+| `ThreadsEmbed`     | `theme` (`'light'` \| `'dark'` \| `'auto'`)                                                                                                                                                                                                                                                                                                                         |
+| `FacebookEmbed`    | `locale` (SDK locale, default `'en_US'`), `showText`; videos also `allowfullscreen`, `autoplay`, `showCaptions`                                                                                                                                                                                                                                                     |
+| `TikTokEmbed`      | the [Embed Player](https://developers.tiktok.com/doc/embed-player) parameters: `controls`, `progressBar`, `playButton`, `volumeControl`, `fullscreenButton`, `timestamp`, `loop`, `autoplay`, `musicInfo`, `description`, `rel`, `nativeContextMenu`, `closedCaption`, `forceMuted`                                                                                 |
+| `YouTubeEmbed`     | the [player parameters](https://developers.google.com/youtube/player_parameters): `autoplay`, `ccLangPref`, `ccLoadPolicy`, `color`, `controls`, `disablekb`, `enablejsapi`, `end`, `fs`, `hl`, `ivLoadPolicy`, `list`, `listType`, `loop`, `origin`, `playlist`, `playsinline`, `rel`, `start`, `widgetReferrer`; plus `nocookie` (play from youtube-nocookie.com) |
+| `TelegramEmbed`    | the widget configurator's options: `userpic`, `color` (hex, no `#`), `dark`, `darkColor`                                                                                                                                                                                                                                                                            |
+| `SnapchatEmbed`    | none                                                                                                                                                                                                                                                                                                                                                                |
+| `LinkedInEmbed`    | `collapsed` (the Embed dialog's "less text")                                                                                                                                                                                                                                                                                                                        |
+| `RedditEmbed`      | `theme` (`'light'` \| `'dark'`), `showMedia`, `showTitle`, `showUsername`, `locale`, `depth` (replies under a comment)                                                                                                                                                                                                                                              |
+| `PinterestEmbed`   | `pinWidth` (`'small'` \| `'medium'` \| `'large'`): `data-pin-width`, since `width` is the wrapper's                                                                                                                                                                                                                                                                 |
+| `SpotifyEmbed`     | `theme` (`0`, the dark player)                                                                                                                                                                                                                                                                                                                                      |
+| `VimeoEmbed`       | Vimeo's player parameters: `autopause`, `autoplay`, `background`, `byline`, `color` (hex, no `#`), `controls`, `dnt`, `keyboard`, `loop`, `muted`, `pip`, `playsinline`, `portrait`, `quality`, `speed`, `title`, `transparent`; plus `t` (start time, seconds or `1m2s`)                                                                                           |
+| `TwitchEmbed`      | `autoplay`, `muted`, `time` (a video's start, `1h2m3s`)                                                                                                                                                                                                                                                                                                             |
+| `DailymotionEmbed` | `playerId` (your Player ID; required unless the embed code has one), `mute`, `startTime` (seconds), `loop`                                                                                                                                                                                                                                                          |
 
-Boolean player parameters are written as `1`/`0`; Telegram's and Reddit's options are written the way their own scripts write them.
+Boolean player parameters are written as `1`/`0`; Telegram's, Reddit's, Twitch's and Dailymotion's options are written the way their own embed code writes them.
 
 ### Parser
 
@@ -208,38 +228,42 @@ A component checks an `embed` before using it: its `url` must be the exact URL `
 
 ## Shared props
 
-| Prop          | Type                     | Default      | Notes                                                                                                                                                                                                            |
-| ------------- | ------------------------ | ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `url`         | `string`                 |              | Post URL. Platform components take `url` or `embed`; `<SocialEmbed>` takes `url` or `html`.                                                                                                                      |
-| `embed`       | `ParsedEmbed`            |              | Platform components only.                                                                                                                                                                                        |
-| `html`        | `string`                 |              | `<SocialEmbed>` only.                                                                                                                                                                                            |
-| `width`       | `number \| string`       | `'100%'`     | Wrapper width.                                                                                                                                                                                                   |
-| `maxWidth`    | `number`                 | per platform | The embed fills its container up to this width, in pixels. See [Platforms](#platforms).                                                                                                                          |
-| `height`      | `number`                 |              | Fixed-size iframe embeds only (YouTube, TikTok, Facebook video embed code, Snapchat, LinkedIn): a fixed height instead of the aspect ratio, or instead of LinkedIn's default 670 px. The others size themselves. |
-| `maxHeight`   | `number`                 |              | Fixed-size iframe embeds only: the embed is at most this tall, in pixels. It narrows to keep its aspect ratio, so a vertical video does not fill the column.                                                     |
-| `placeholder` | `ReactNode`              | a skeleton   | Shown until the post has loaded. The default skeleton has a per-platform minimum height to limit layout shift.                                                                                                   |
-| `lazy`        | `boolean`                | `true`       | Load the embed only when it comes within 200 px of the viewport.                                                                                                                                                 |
-| `onLoad`      | `() => void`             |              | Called once the platform has rendered the post (iframe embeds: when the iframe has loaded; Telegram and Reddit: when the frame first reports its height).                                                        |
-| `onError`     | `(error: Error) => void` |              | Called on invalid input, a script that fails to load, or a post that does not render. Components never throw.                                                                                                    |
-| `...rest`     | `ComponentProps<'div'>`  |              | Passed to the wrapper `div` (`className`, `style`, `data-*`, …).                                                                                                                                                 |
+| Prop          | Type                     | Default      | Notes                                                                                                                                                                                                                                                                            |
+| ------------- | ------------------------ | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `url`         | `string`                 |              | Post URL. Platform components take `url` or `embed`; `<SocialEmbed>` takes `url` or `html`.                                                                                                                                                                                      |
+| `embed`       | `ParsedEmbed`            |              | Platform components only.                                                                                                                                                                                                                                                        |
+| `html`        | `string`                 |              | `<SocialEmbed>` only.                                                                                                                                                                                                                                                            |
+| `width`       | `number \| string`       | `'100%'`     | Wrapper width.                                                                                                                                                                                                                                                                   |
+| `maxWidth`    | `number`                 | per platform | The embed fills its container up to this width, in pixels. See [Platforms](#platforms).                                                                                                                                                                                          |
+| `height`      | `number`                 |              | Fixed-size iframe embeds only (YouTube, TikTok, Facebook video embed code, Snapchat, LinkedIn, Spotify, Vimeo, Twitch, Dailymotion): a fixed height instead of the aspect ratio, or instead of LinkedIn's default 670 px or Spotify's 152 or 352 px. The others size themselves. |
+| `maxHeight`   | `number`                 |              | Fixed-size iframe embeds only: the embed is at most this tall, in pixels. It narrows to keep its aspect ratio, so a vertical video does not fill the column.                                                                                                                     |
+| `placeholder` | `ReactNode`              | a skeleton   | Shown until the post has loaded. The default skeleton has a per-platform minimum height to limit layout shift.                                                                                                                                                                   |
+| `lazy`        | `boolean`                | `true`       | Load the embed only when it comes within 200 px of the viewport.                                                                                                                                                                                                                 |
+| `onLoad`      | `() => void`             |              | Called once the platform has rendered the post (iframe embeds: when the iframe has loaded; Telegram and Reddit: when the frame first reports its height).                                                                                                                        |
+| `onError`     | `(error: Error) => void` |              | Called on invalid input, a script that fails to load, or a post that does not render. Components never throw.                                                                                                                                                                    |
+| `...rest`     | `ComponentProps<'div'>`  |              | Passed to the wrapper `div` (`className`, `style`, `data-*`, …).                                                                                                                                                                                                                 |
 
 Script-based embeds try to render three times, waiting 15 s each time, 1 s and then 2 s apart, before `onError` reports the failure. Telegram and Reddit frames that report no height within 15 s show at their starting height, and `onError` reports it.
 
 ## Platforms
 
-| Platform  | Mechanism                                                                        | URL formats                                                                                                                                           | Options read from embed code                                                                                                                                   | Default `maxWidth`               |
-| --------- | -------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------- |
-| X         | script (`widgets.js`), `twttr.widgets.load`                                      | `x.com/{user}/status/{id}`, `twitter.com/…` (also `www.` and `mobile.`)                                                                               | `data-theme`, `data-conversation`, `data-cards`, `data-align` or `align`, `data-lang`, `data-dnt`, `data-width`                                                | 550                              |
-| Instagram | script (`embed.js`), `instgrm.Embeds.process`                                    | `instagram.com/p/{code}/`, `/reel/`, `/reels/`, `/tv/`, `/{user}/p/{code}/`, `/{user}/reel/{code}/`                                                   | `data-instgrm-captioned`, `data-instgrm-version`                                                                                                               | 540                              |
-| Threads   | script (`embed.js`), `instgrm.Embeds.process`                                    | `threads.com/@{user}/post/{code}`, `threads.com/t/{code}` (and `threads.net`)                                                                         | `data-theme`, `data-text-post-version`                                                                                                                         | 658                              |
-| Facebook  | posts and video URLs: SDK (`sdk.js`), `FB.XFBML.parse`; video embed code: iframe | see [Facebook](#facebook)                                                                                                                             | `data-width`, `data-show-text`, `data-lazy`, `data-allowfullscreen`, `data-autoplay`, `data-show-captions`; iframe query (`show_text`, `width`, …); SDK locale | posts 750, videos none           |
-| TikTok    | iframe ([Embed Player](https://developers.tiktok.com/doc/embed-player))          | `tiktok.com/@{user}/video/{id}`                                                                                                                       | every player query parameter                                                                                                                                   | 325                              |
-| YouTube   | iframe                                                                           | `youtube.com/watch?v={id}`, `youtu.be/{id}`, `/shorts/{id}`, `/embed/{id}`, `/live/{id}`, `youtube-nocookie.com/embed/{id}`; `t` and `start` are kept | every player query parameter; the youtube-nocookie.com host                                                                                                    | none                             |
-| Telegram  | iframe (`t.me/{post}?embed=1`), height from the frame                            | `t.me/{channel}/{id}`, `t.me/s/{channel}/{id}`, `telegram.me/…`; `single` and `comment` are kept                                                      | `data-width`, `data-userpic`, `data-color`, `data-dark`, `data-dark-color`, `data-comment`, `data-mode`, `data-single`                                         | 500                              |
-| Snapchat  | iframe (`{url}/embed`)                                                           | see [Snapchat](#snapchat)                                                                                                                             | `data-snapchat-embed-width`, `data-snapchat-embed-height`, `data-snapchat-embed-title`                                                                         | 416                              |
-| LinkedIn  | iframe, fixed height                                                             | `linkedin.com/feed/update/urn:li:{activity\|share\|ugcPost}:{id}`, `linkedin.com/posts/{slug}-activity-{id}-…` (also country hosts such as `bg.`)     | iframe query (`collapsed`), `width`, `height`                                                                                                                  | embed code width, else 504       |
-| Reddit    | iframe (`embed.reddit.com`), height from the frame                               | `reddit.com/r/{sub}/comments/{id}/…`, comments `…/comments/{id}/comment/{commentId}/` (also `old.` and `new.`)                                        | `data-embed-height`, `data-embed-theme`, `data-embed-showmedia`, `data-embed-showtitle`, `data-embed-locale`, `data-embed-depth` and the other `data-embed-*`  | 640                              |
-| Pinterest | script (`pinit_main.js`), `PinUtils.build`                                       | `pinterest.com/pin/{id}/`, `/pin/{slug}--{id}/`, country hosts (`bg.pinterest.com`, `pinterest.co.uk`, …)                                             | `data-pin-width`, `data-pin-lang`, `data-pin-terse`                                                                                                            | the pin's width: 236, 345 or 600 |
+| Platform    | Mechanism                                                                         | URL formats                                                                                                                                                                            | Options read from embed code                                                                                                                                   | Default `maxWidth`               |
+| ----------- | --------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------- |
+| X           | script (`widgets.js`), `twttr.widgets.load`                                       | `x.com/{user}/status/{id}`, `twitter.com/…` (also `www.` and `mobile.`)                                                                                                                | `data-theme`, `data-conversation`, `data-cards`, `data-align` or `align`, `data-lang`, `data-dnt`, `data-width`                                                | 550                              |
+| Instagram   | script (`embed.js`), `instgrm.Embeds.process`                                     | `instagram.com/p/{code}/`, `/reel/`, `/reels/`, `/tv/`, `/{user}/p/{code}/`, `/{user}/reel/{code}/`                                                                                    | `data-instgrm-captioned`, `data-instgrm-version`                                                                                                               | 540                              |
+| Threads     | script (`embed.js`), `instgrm.Embeds.process`                                     | `threads.com/@{user}/post/{code}`, `threads.com/t/{code}` (and `threads.net`)                                                                                                          | `data-theme`, `data-text-post-version`                                                                                                                         | 658                              |
+| Facebook    | posts and video URLs: SDK (`sdk.js`), `FB.XFBML.parse`; video embed code: iframe  | see [Facebook](#facebook)                                                                                                                                                              | `data-width`, `data-show-text`, `data-lazy`, `data-allowfullscreen`, `data-autoplay`, `data-show-captions`; iframe query (`show_text`, `width`, …); SDK locale | posts 750, videos none           |
+| TikTok      | iframe ([Embed Player](https://developers.tiktok.com/doc/embed-player))           | `tiktok.com/@{user}/video/{id}`                                                                                                                                                        | every player query parameter                                                                                                                                   | 325                              |
+| YouTube     | iframe                                                                            | `youtube.com/watch?v={id}`, `youtu.be/{id}`, `/shorts/{id}`, `/embed/{id}`, `/live/{id}`, `youtube-nocookie.com/embed/{id}`; `t` and `start` are kept                                  | every player query parameter; the youtube-nocookie.com host                                                                                                    | none                             |
+| Telegram    | iframe (`t.me/{post}?embed=1`), height from the frame                             | `t.me/{channel}/{id}`, `t.me/s/{channel}/{id}`, `telegram.me/…`; `single` and `comment` are kept                                                                                       | `data-width`, `data-userpic`, `data-color`, `data-dark`, `data-dark-color`, `data-comment`, `data-mode`, `data-single`                                         | 500                              |
+| Snapchat    | iframe (`{url}/embed`)                                                            | see [Snapchat](#snapchat)                                                                                                                                                              | `data-snapchat-embed-width`, `data-snapchat-embed-height`, `data-snapchat-embed-title`                                                                         | 416                              |
+| LinkedIn    | iframe, fixed height                                                              | `linkedin.com/feed/update/urn:li:{activity\|share\|ugcPost}:{id}`, `linkedin.com/posts/{slug}-activity-{id}-…` (also country hosts such as `bg.`)                                      | iframe query (`collapsed`), `width`, `height`                                                                                                                  | embed code width, else 504       |
+| Reddit      | iframe (`embed.reddit.com`), height from the frame                                | `reddit.com/r/{sub}/comments/{id}/…`, comments `…/comments/{id}/comment/{commentId}/` (also `old.` and `new.`)                                                                         | `data-embed-height`, `data-embed-theme`, `data-embed-showmedia`, `data-embed-showtitle`, `data-embed-locale`, `data-embed-depth` and the other `data-embed-*`  | 640                              |
+| Pinterest   | script (`pinit_main.js`), `PinUtils.build`                                        | `pinterest.com/pin/{id}/`, `/pin/{slug}--{id}/`, country hosts (`bg.pinterest.com`, `pinterest.co.uk`, …)                                                                              | `data-pin-width`, `data-pin-lang`, `data-pin-terse`                                                                                                            | the pin's width: 236, 345 or 600 |
+| Spotify     | iframe (`open.spotify.com/embed/…`), fixed height                                 | `open.spotify.com/{track\|album\|playlist\|artist\|episode\|show\|audiobook\|chapter}/{id}`, also with an `intl-{lang}/` prefix                                                        | iframe query (`theme`, …; `utm_source` and `si` dropped), `height`; `/video` for a video show                                                                  | none                             |
+| Vimeo       | iframe (`player.vimeo.com/video/{id}`)                                            | `vimeo.com/{id}`, `vimeo.com/{id}/{hash}` (unlisted), `/channels/{name}/{id}`, `/groups/{name}/videos/{id}`, `/showcase/{id}/video/{id}`, `player.vimeo.com/video/{id}`; `#t=` is kept | every player query parameter (`app_id` and `player_id` dropped); `width` and `height`, or the responsive wrapper's ratio                                       | none                             |
+| Twitch      | iframe (`player.twitch.tv`, `clips.twitch.tv/embed`), `parent` set in the browser | `twitch.tv/{channel}`, `/videos/{id}` (`t` is kept), `/collections/{id}`, `/{channel}/clip/{slug}`, `clips.twitch.tv/{slug}` (also `www.` and `m.`)                                    | `autoplay`, `muted`, `time`, `width`, `height`; `parent` is dropped                                                                                            | none                             |
+| Dailymotion | iframe (`geo.dailymotion.com/player/{playerId}.html`), Player ID required         | `dailymotion.com/video/{id}`, `dailymotion.com/embed/video/{id}`, `dai.ly/{id}`                                                                                                        | the Player ID, every player query parameter; `width` and `height`, or the responsive wrapper's ratio                                                           | none                             |
 
 URLs must be absolute `http(s)` URLs. Hosts may have `www.`; YouTube also `m.`, Facebook also `m.`.
 
@@ -333,9 +357,35 @@ URL shapes, each tested against Facebook's plugins on `www.facebook.com`, `faceb
 - A host page that already loaded `pinit.js` or `pinit_main.js` is reused.
 - Boards and profiles are not supported.
 
+### Spotify
+
+- Every input renders Spotify's player across the column at a fixed height: the embed code's, else 152 px for a track or episode (the compact player) and 352 px for the rest. `height` replaces it.
+- Embed code for a video podcast (its iframe address ends in `/video`) renders the video player at its aspect ratio. A URL cannot tell a video show from an audio one, so it renders the audio player.
+- The wrapper has Spotify's rounded corners (`border-radius: 12px`); `style` replaces them.
+
+### Vimeo
+
+- Vimeo's responsive embed code (a `div` with `padding:56.25% 0 0 0;position:relative;` around the iframe, then `player.js`) is recognised, and the padding is read as the video's aspect ratio. `player.js` is not loaded: the package sizes the frame itself.
+- An unlisted video keeps its hash, from the URL or from the iframe's `h`.
+
+### Twitch
+
+- Twitch plays only when its `parent` parameter names the domain of the embedding page. The package drops every `parent` from the embed code and adds `parent={location.hostname}` when it creates the iframe in the browser, so the same code works on every domain and environment. Twitch's docs require HTTPS for the embedding page; `localhost` works.
+- A page that is itself shown in another site's frame also needs that site as a `parent`, which the package cannot know. Render Twitch's iframe yourself there.
+- Autoplay is Twitch's default (channels and videos play, clips do not) unless the embed code or `autoplay` says otherwise.
+- Twitch's interactive JavaScript embed (`Twitch.Player`) is not supported.
+
+### Dailymotion
+
+- Dailymotion serves embeds only through a publisher's player, identified by a Player ID made in Dailymotion Studio. Its oEmbed code (`geo.dailymotion.com/player.html?video=…`) and the old `www.dailymotion.com/embed/video/{id}` have none, and Dailymotion answers them with 403.
+- Embed code from Dailymotion Studio carries the Player ID (`geo.dailymotion.com/player/{playerId}.html?video={id}`) and renders as given, also inside Dailymotion's responsive wrapper `div`.
+- URLs, and code without a Player ID, render only through `DailymotionEmbed` with your `playerId`. A `playerId` prop also replaces the one in the embed code. `<SocialEmbed>` takes none: for that input it renders nothing and calls `onError`.
+- The package never uses a Player ID you did not give it.
+- Playlists are not supported.
+
 ### Not supported
 
-- Redirecting short links: `fb.watch/…`, Facebook share links (`/share/p/…`, `/share/v/…`), `vm.tiktok.com/…`, `vt.tiktok.com/…`, `redd.it/…`, Reddit share links (`/r/{sub}/s/…`), `pin.it/…`, `lnkd.in/…` and `t.snapchat.com/…`. A redirect cannot be followed without a network request, and the package makes none. `matchUrl` returns `null`.
+- Redirecting short links: `fb.watch/…`, Facebook share links (`/share/p/…`, `/share/v/…`), `vm.tiktok.com/…`, `vt.tiktok.com/…`, `redd.it/…`, Reddit share links (`/r/{sub}/s/…`), `pin.it/…`, `lnkd.in/…`, `t.snapchat.com/…`, `spotify.link/…` and `spotify.app.link/…`. A redirect cannot be followed without a network request, and the package makes none. `matchUrl` returns `null`.
 - Facebook group posts.
 - Fetching embed code from oEmbed endpoints, consent gating and HTML sanitising: these stay with the host.
 
@@ -378,7 +428,7 @@ Client navigation needs nothing extra: each platform script loads once per page,
 
 - **Embed code with fallback content** (X, Instagram, Threads, Facebook SDK code with a blockquote): the server HTML contains the platform's blockquote with its whitelisted content, such as the post text, author and link. No placeholder is shown. On the client, the platform script turns it into the post.
 - **URLs and embed code without fallback content**: the server HTML contains the sized wrapper and the placeholder.
-- **Iframe embeds** (YouTube, TikTok, Facebook video embed code, Telegram, Snapchat, LinkedIn, Reddit): the iframe is added on the client, so `onLoad` can never be missed. Without JavaScript only the placeholder shows.
+- **Iframe embeds** (YouTube, TikTok, Facebook video embed code, Telegram, Snapchat, LinkedIn, Reddit, Spotify, Vimeo, Twitch, Dailymotion): the iframe is added on the client, so `onLoad` can never be missed. Without JavaScript only the placeholder shows.
 - **Pinterest**: the server HTML contains the pin's empty link and the placeholder.
 - The server HTML never contains a platform `<script>`.
 
@@ -391,7 +441,7 @@ The host does nothing to make embeds responsive:
 - **Script-based embeds** (X, Instagram, Threads, Facebook SDK) get a wrapper of `width: 100%` (or `width`) and `max-width: {maxWidth}px`, and the platform widget fills it. Their height is the platform's own.
 - **Iframe embeds** get a wrapper with `aspect-ratio` taken from the embed code's `width` and `height` (16:9 without them; 9:16 for TikTok and YouTube Shorts URLs; 416:692 for Snapchat), and the iframe fills it. `height` replaces the aspect ratio with a fixed height. `maxHeight` keeps the aspect ratio and lowers the wrapper's `max-width` to the widest box that is at most that tall.
 - **Telegram and Reddit** get a wrapper of `width: 100%` and `max-width: {maxWidth}px` whose height follows the height the frame reports.
-- **LinkedIn** has a fixed height (see [LinkedIn](#linkedin)).
+- **LinkedIn** and **Spotify** have a fixed height (see [LinkedIn](#linkedin) and [Spotify](#spotify)).
 - **Pinterest** pins have a fixed width; the wrapper's `max-width` defaults to it.
 
 ## License

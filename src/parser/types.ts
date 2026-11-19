@@ -9,11 +9,15 @@ export type Platform =
   | 'snapchat'
   | 'linkedin'
   | 'reddit'
-  | 'pinterest';
+  | 'pinterest'
+  | 'spotify'
+  | 'vimeo'
+  | 'twitch'
+  | 'dailymotion';
 
 export type ParsedEmbed = {
   platform: Platform;
-  kind: 'post' | 'video'; // Facebook and Snapchat have both; others are fixed
+  kind: 'post' | 'video'; // Facebook, Snapchat and Spotify have both; others are fixed
   url: string; // canonical post URL
   id: string;
   variant: 'sdk' | 'iframe';

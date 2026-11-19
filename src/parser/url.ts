@@ -4,16 +4,17 @@ export type ParsedUrl = {
   host: string; // lower-cased, may include a port
   path: string; // as written, without query or fragment
   query: ReadonlyMap<string, string>; // decoded; first occurrence of a key wins
+  fragment?: string; // as written, without `#`
 };
 
 const URL_PATTERN =
-  /^(?:https?:)?\/\/([^/?#\s@]+)((?:\/[^?#\s]*)?)(?:\?([^#\s]*))?(?:#\S*)?$/i;
+  /^(?:https?:)?\/\/([^/?#\s@]+)((?:\/[^?#\s]*)?)(?:\?([^#\s]*))?(?:#(\S*))?$/i;
 
 /** Absolute or protocol-relative http(s) URLs only. */
 export function parseUrl(input: string): ParsedUrl | null {
   const match = URL_PATTERN.exec(input.trim());
   if (!match) return null;
-  const [, host = '', path = '', search = ''] = match;
+  const [, host = '', path = '', search = '', fragment] = match;
 
   const query = new Map<string, string>();
   for (const pair of search.split('&')) {
@@ -24,7 +25,12 @@ export function parseUrl(input: string): ParsedUrl | null {
     if (key === null || value === null) return null;
     if (!query.has(key)) query.set(key, value);
   }
-  return { host: host.toLowerCase(), path, query };
+  return {
+    host: host.toLowerCase(),
+    path,
+    query,
+    ...(fragment ? { fragment } : {}),
+  };
 }
 
 function decodeComponent(component: string): string | null {

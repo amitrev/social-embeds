@@ -134,3 +134,52 @@ describe('IframeEmbed sized by messages', () => {
     expect(onError).not.toHaveBeenCalled();
   });
 });
+
+describe('IframeEmbed with the page host in its src', () => {
+  // Twitch plays only when `parent` names the embedding page (docs/decisions.md D62).
+  it('adds the host as the named parameter when it creates the iframe', () => {
+    const { container } = render(
+      <IframeEmbed
+        src="https://player.twitch.tv/?channel=dallas"
+        title="Twitch"
+        allow=""
+        ratio={{ width: 16, height: 9 }}
+        hostParam="parent"
+        lazy={false}
+      />,
+    );
+    expect(container.querySelector('iframe')?.getAttribute('src')).toBe(
+      `https://player.twitch.tv/?channel=dallas&parent=${window.location.hostname}`,
+    );
+  });
+
+  it('starts the query when the src has none', () => {
+    const { container } = render(
+      <IframeEmbed
+        src="https://clips.twitch.tv/embed"
+        title="Twitch"
+        allow=""
+        ratio={{ width: 16, height: 9 }}
+        hostParam="parent"
+        lazy={false}
+      />,
+    );
+    expect(container.querySelector('iframe')?.getAttribute('src')).toBe(
+      `https://clips.twitch.tv/embed?parent=${window.location.hostname}`,
+    );
+  });
+
+  it('has no iframe in the server HTML, so the host is never needed there', async () => {
+    const { renderToString } = await import('react-dom/server');
+    const html = renderToString(
+      <IframeEmbed
+        src="https://player.twitch.tv/?channel=dallas"
+        title="Twitch"
+        allow=""
+        ratio={{ width: 16, height: 9 }}
+        hostParam="parent"
+      />,
+    );
+    expect(html).not.toContain('<iframe');
+  });
+});

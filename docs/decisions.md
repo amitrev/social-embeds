@@ -669,6 +669,135 @@ Checked in Chrome on 2026-11-18, `next build` passing first:
 
   In one run Instagram's script skipped itself beside the loading SDK and was added again, as D46 designed. The loader removes a tag only after the browser reports that it failed to load, or after it skipped itself (D46), and a skipped tag is added again. So the first run's missing Threads tag means `threads.com/embed.js` failed three times in a row, or no Threads embed came near the viewport. With Instagram's posts not rendering in the same run, this points to Meta's servers not answering that browser for a while, not to the package; that stays unproven. Forcing `threads.com/embed.js` to fail on `/many` gives the same picture: the Threads embed keeps its skeleton, the bar counts Threads 0, and after the retries `onError` reports `social-embeds: could not load https://www.threads.com/embed.js`. `/many` now shows each embed's `onError` message under it, so a repeat names its cause.
 
+## Wave 3 research (Milestone 1, 2026-11-19)
+
+The VERIFY items of [wave-3-brief.md](./wave-3-brief.md). Frames were probed in Chrome on a static page on `localhost:4173` with a `message` listener, as in wave 2.
+
+### D60. Spotify: fixed-height iframe, video shows at 16:9
+
+- **Embed code** (`spotify/oembed-*.html`, from `open.spotify.com/oembed?url=…`): `<iframe style="border-radius: 12px" width="100%" height="…" title="Spotify Embed: …" frameborder="0" allowfullscreen allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy" src="https://open.spotify.com/embed/{type}/{id}?utm_source=oembed">`.
+- **Heights by type:** track 152, episode 152, album 352, artist 352, playlist 352, all `width="100%"`. An audiobook's oEmbed failed (the id tried may not exist). These are the defaults for URL input (maintainer decision, brief §2.1).
+- **A video show** (`show/4rOoJ6Egrf8K2IrywzwOMk`) comes back as `/embed/show/{id}/video` at `width="624" height="351"`: a 16:9 player, so it renders with that aspect ratio, not a fixed height. Its title names the latest episode.
+- **No height messages:** every Spotify frame posted only `{"type":"ready"}` from `https://open.spotify.com`.
+- **Not seen:** the Embed dialog itself (it needs a signed-in account); `theme=0` loaded without error.
+
+### D61. Vimeo: aspect ratio from `width`/`height` or from the wrapper's padding
+
+- **oEmbed code** (`vimeo/oembed.html`): `<iframe src="https://player.vimeo.com/video/76979871?app_id=122963" width="480" height="270" … referrerpolicy="strict-origin-when-cross-origin" title="…">`. The frame posted `{"event":"ready"}` from `https://player.vimeo.com` and no height.
+- **Responsive code** (`vimeo/responsive-docs.html`), from [Vimeo's help center](https://help.vimeo.com/hc/en-us/articles/12426486963857): `<div style="padding:56.25% 0 0 0;position:relative;"><iframe src="https://player.vimeo.com/video/{id}?badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479" frameborder="0" allow="…" style="position:absolute;top:0;left:0;width:100%;height:100%;" title="…"></iframe></div><script src="https://player.vimeo.com/api/player.js"></script>`.
+  - The help page's own example appends autoplay parameters with a second `?`, a malformed URL. The fixture drops them; it is derived.
+  - The iframe has **no `width` or `height`**: the video's ratio is only in the wrapper's top padding (56.25% is 16:9). The parser reads that percentage as the aspect ratio, and accepts exactly this wrapper and `player.js` (maintainer decision, brief §2.2).
+- **Not seen:** the Share → Embed dialog, which logged-out visitors do not get on vimeo.com.
+
+### D62. Twitch: `parent` must be the page's host
+
+- **Embed code** (`twitch/docs-*.html`): the channel, VOD and collection examples of [Twitch's embed docs](https://dev.twitch.tv/docs/embed/video-and-clips/), with `parent=streamernews.example.com`.
+- **On `localhost`:**
+  - `parent=localhost` played: the frame posted `UPDATE_STATE`, `video.ready`, `ready` and, for an offline channel, `offline` events from `https://player.twitch.tv`.
+  - With `parent=example.com`, or no `parent`, the frame loaded and posted nothing.
+- **So** the package drops every `parent` from the input and sets `parent={location.hostname}` (brief §2.3).
+- **Not checked:** a host on plain HTTP other than `localhost`, and subdomains.
+
+### D63. Dailymotion: every embed needs a Player ID
+
+- **oEmbed code** (`dailymotion/oembed.html`): `<iframe frameborder="0" width="480" height="269" src="https://geo.dailymotion.com/player.html?video=xbxskia&" allowfullscreen allow="autoplay; fullscreen; picture-in-picture; web-share">`. The size is the video's own ratio (a vertical video gave 480×847).
+- **That URL returns 403 `Forbidden`**, in Chrome and with curl, for every video tried and with any referrer. `www.dailymotion.com/embed/video/{id}` redirects (301) to it.
+- **Dailymotion's [migration guide](https://developers.dailymotion.com/reference/migration-guide-new-embed-endpoint):** every embed needs a Player ID, created in the publisher's Dailymotion Studio. URLs without one may be rejected with 403. The legacy endpoint has been retired step by step since 2024-09-16.
+- `geo.dailymotion.com/player/{playerId}.html?video={id}` returned 200; dailymotion.com itself uses its own player `xtv3w`.
+- **Consequences:**
+  - Embed code from a publisher's Studio carries the Player ID and can render.
+  - Dailymotion's own oEmbed code and every URL have none.
+  - The package must not borrow another account's Player ID.
+- **Maintainer decision, 2026-11-19: Player ID only.**
+  - Embed code whose iframe carries a Player ID (`geo.dailymotion.com/player/{playerId}.html?video={id}`) renders as given.
+  - Embed code without one, Dailymotion's oEmbed code included, and every URL render only when the host passes its own `playerId` prop; otherwise `onError`.
+  - The package never uses a Player ID the host did not give it.
+- **Documented snippet** (`dailymotion/player-id-docs.html`, from [Dailymotion's iframe docs](https://developers.dailymotion.com/docs/iframe-web)): a `div` with `position:relative;padding-bottom:56.25%;height:0;overflow:hidden;` around the iframe, whose `width` and `height` are `100%`. As with Vimeo (D61), the ratio is only in the wrapper's padding, and the wrapper is accepted as Dailymotion's own.
+- **Playlists** (`?playlist={id}`, alone or after a video) are left out of wave 3.
+
+## Wave 3 parser (Milestone 2, 2026-11-19)
+
+### D64. What the parser returns for the wave 3 platforms
+
+| Platform    | `kind` / `variant`                                 | `id`                                                              | Canonical `url`                                                                                            |
+| ----------- | -------------------------------------------------- | ----------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| Spotify     | post / iframe; video / iframe for `/embed/…/video` | the 22-character id                                               | `https://open.spotify.com/{type}/{id}`                                                                     |
+| Vimeo       | video / iframe                                     | the video number                                                  | `https://vimeo.com/{id}`, or `https://vimeo.com/{id}/{hash}` for an unlisted video                         |
+| Twitch      | video / iframe                                     | channel name (lower case), VOD number, collection id or clip slug | `https://www.twitch.tv/{channel}`, `…/videos/{id}`, `…/collections/{id}`, `https://clips.twitch.tv/{slug}` |
+| Dailymotion | video / iframe                                     | the video id (`x…`)                                               | `https://www.dailymotion.com/video/{id}`                                                                   |
+
+- **Platform wrappers (D14 extended):** Vimeo's and Dailymotion's documented responsive snippets are accepted. The wrapper `div` must have only a `style` attribute, in exactly the form each platform writes (`padding:{n}% 0 0 0;position:relative;` for Vimeo, `position:relative;padding-bottom:{n}%;height:0;overflow:hidden;` for Dailymotion), around exactly one iframe. Anything else around the iframe is still rejected.
+- **Ratio from padding:** the wrapper's percentage becomes `size`, reduced to the smallest whole numbers: 56.25% is `{ width: 16, height: 9 }`, 177.78% is `{ width: 5000, height: 8889 }`. For these two platforms `size` is then a ratio, not pixels; the components use it as an aspect ratio either way.
+- **Fragments:** `parseUrl` now also returns the fragment, for Vimeo's `#t=` start time, kept as the `t` option.
+- **Options dropped as tracking or ids:** Spotify `utm_source` and `si`; Vimeo `h` (kept in the URL instead), `app_id`, `player_id`; Twitch every `parent` (D62). Twitch keeps only `autoplay`, `muted` and `time`.
+- **Twitch's precedence** follows its player: `channel`, then `video`, then `collection`. A `twitch.tv/{name}` URL is a channel unless the name is one of Twitch's own top-level pages (`directory`, `videos`, `settings`, …).
+- **Spotify URLs** render the audio player: a page URL cannot tell a video show from an audio one. Only embed code with `/video` is a `video`.
+- **Dailymotion:** a Player ID in the iframe (`/player/{id}.html`) becomes the `playerId` option; `player.html` and `www.dailymotion.com/embed/video/{id}` parse without one (D63). Playlists return `null`.
+
+## Twitch's parent (Milestone 3, 2026-11-19)
+
+### D65. `IframeEmbed` adds the page's host to the `src`
+
+Twitch plays only when `parent` names the page's host (D62), which is not known on the server. `IframeEmbed` gains `hostParam`: when it creates the iframe, it appends `{hostParam}={location.hostname}` to the `src` (`&`, or `?` when the `src` has no query). The iframe is never in the server HTML (D28), so the host is read only in the browser, and the server and client renders still match. Only `TwitchEmbed` uses it.
+
+Not covered: a page that is itself framed by another site. Twitch then needs that site's host as a second `parent`, which the package cannot know; a host page in that situation passes Twitch's embed code through `fallback`.
+
+Tests: the parameter is added with `&` and with `?`, and the server HTML has no iframe. Checked in a browser with `TwitchEmbed` (D66).
+
+## Wave 3 components (Milestone 4, 2026-11-19)
+
+### D66. `SpotifyEmbed`, `VimeoEmbed`, `TwitchEmbed` and `DailymotionEmbed`
+
+All four are `IframeEmbed`s. Each takes the platform's own player parameters as props; a prop replaces the same option from the embed code.
+
+- **Spotify:** a fixed height, as LinkedIn (D53): the `height` prop, else the embed code's, else 152px for a track or episode and 352px for the rest (D60). Chapters and audiobooks get 352px until their oEmbed height is measured. A video show (`/embed/show/{id}/video`) keeps its aspect ratio instead. The wrapper gets Spotify's `border-radius: 12px` with `overflow: hidden`; the `style` prop replaces it. Option: `theme` (`0` for the dark player).
+- **Vimeo:** 16:9, or the embed code's ratio. An unlisted video's hash goes back in as `h`, and the start time as `#t=` (prop `t`). Booleans become `1`/`0`. `player.js` is not loaded: the package sizes the frame itself.
+- **Twitch:** 16:9, or the embed code's ratio, with `hostParam="parent"` (D65). `autoplay` and `muted` are sent as `true`/`false`, which is what Twitch reads; `time` as given. No `allow` list, as in Twitch's own code.
+- **Dailymotion:** the Player ID is the `playerId` prop, else the embed code's (D63). With neither, or with one that is not `x` and 3 to 12 lowercase letters or digits, the component renders nothing and calls `onError`; the check also keeps the id from changing the iframe path. The `src` is always `geo.dailymotion.com/player/{playerId}.html?video={id}`. Options: `mute`, `startTime`, `loop`.
+
+**Browser check** (Chrome, playground dev server on `localhost`, 2026-11-19):
+
+- Spotify track 152px and playlist 352px high, both rounded; `theme=0` gave the dark player. Vimeo played at 16:9.
+- Twitch: the iframe got `parent=localhost`, and the channel and VOD frames posted `UPDATE_STATE` events, which they do only for an accepted `parent` (D62). The channel showed its offline screen. The docs' VOD (`v40464143`) showed Twitch's "Failed to determine content classification" notice, a property of that old video.
+- Dailymotion: `geo.dailymotion.com/player/x8lr5.html?video=x84sh87&mute=true` returned 200 and loaded the player, which then showed "Playback error". The same URL opened on its own showed the same error, so it comes from the docs' sample player and video, not from the component. A publisher's own Player ID and video are still to be tried.
+- Without a Player ID, `onError` got the expected message and nothing rendered. In development it was called twice: React's Strict Mode runs effects twice.
+- Every `onLoad` fired.
+
+## Wave 3 dispatcher and playground (Milestone 5, 2026-11-19)
+
+### D67. `<SocialEmbed>` routes the wave 3 platforms
+
+- **Routing:** `spotify`, `vimeo`, `twitch` and `dailymotion` go to their components. All four are iframes, so `height` and `maxHeight` reach them.
+- **No Player ID on the dispatcher** (maintainer decision, 2026-11-19): D36 holds, and `<SocialEmbed>` takes no `playerId`. It renders Dailymotion only from embed code that carries a Player ID; a Dailymotion URL, or code without one, renders nothing and `onError` reports `social-embeds: a Dailymotion embed needs a Player ID: pass playerId to DailymotionEmbed`. A host that has a Player ID and URLs uses `DailymotionEmbed`.
+- **Props left off the dispatcher:** the new option names join the D36 list: Vimeo's (`autopause`, `background`, `byline`, `dnt`, `keyboard`, `muted`, `pip`, `portrait`, `quality`, `speed`, `title`, `transparent`, `t`, …), Twitch's (`time`) and Dailymotion's (`playerId`, `mute`, `startTime`). `title` is new to the list, so the dispatcher no longer takes a `title` attribute for its wrapper `div`. Spotify's `theme` was already there.
+- **Playground:**
+  - One page per new platform, with every wave 3 fixture except Twitch's collection example (its id is a placeholder) and the URL samples. The Dailymotion page adds `DailymotionEmbed` with the Player ID from Dailymotion's docs.
+  - Embed code and URL samples on the platform pages now show their `onError` message, as `/many` does (D59). `ReportedEmbed` takes `html` as well as `url`.
+  - `/many` has a Spotify track, a Vimeo video and a Twitch channel before the X posts. Dailymotion is left out: a URL cannot render through `<SocialEmbed>`.
+
+Checked in Chrome on 2026-11-19, against `next build` and `next start`:
+
+- **Client navigation** from the home page through `/spotify`, `/vimeo`, `/twitch` and `/dailymotion`, with every section scrolled into view: the same document stayed loaded, and no skeleton was left.
+  - Spotify: track and episode 760×152, playlist and album 760×352, the video show 760×427.
+  - Vimeo: five frames at 760×427. Twitch: four frames at 760×427, each with `parent`.
+  - Dailymotion: the three frames with Player ID `x8lr5` at 760×427. The oEmbed code and the URL showed the Player ID message. The players show Dailymotion's "Playback error" for the docs' sample video, as in D66.
+- **`/many`**, loaded directly and scrolled twice: 31 embeds, no `onError` message and no skeleton. Spotify 760×152, Vimeo and Twitch 760×427. Each script was on the page once.
+
+## Wave 3 security review (2026-11-19)
+
+### D68. Options never replace the verified content
+
+`verifyEmbed` checks an `embed`'s `url`, `id` and shape (D35, D57), not its `options`. A host-built embed could therefore carry options named like the content parameters, and `query` keeps the first position of a key but the last value. So `{ options: { channel: 'other' } }` on a verified Twitch channel turned into `?channel=other`, and the same held for Dailymotion's `video` and Vimeo's `h`.
+
+- Components drop those keys from the options with `optionsWithout`, as `FacebookVideoIframe` already drops `href`:
+  - Twitch: `channel`, `video`, `collection`, `clip`, and `parent`, which `IframeEmbed` adds itself (D65).
+  - Dailymotion: `video` and `playlist` (playlists are left out, D63). The Player ID was already taken out of the options.
+  - Vimeo: `h`, which comes only from the verified URL.
+- The iframe host stays fixed in every case, so the impact was other content from the same platform, not another origin.
+- Not changed: YouTube's `list` and `playlist` are documented options that the embed code and props set on purpose. Reddit's `embed` and the other components take their content from the URL path.
+
+Tests: a host-built embed with each reserved key renders the verified content, and Twitch gets exactly one `parent`.
+
 ## Open VERIFY items
 
 | ID  | Item                                            | Milestone | Status                                          |

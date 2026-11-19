@@ -8,6 +8,11 @@ import instagram from '../fixtures/instagram/post-captioned.html?raw';
 import linkedin from '../fixtures/linkedin/post-collapsed.html?raw';
 import pinterestIframe from '../fixtures/pinterest/oembed-iframe.html?raw';
 import pinterest from '../fixtures/pinterest/widget-docs.html?raw';
+import dailymotion from '../fixtures/dailymotion/player-id-docs.html?raw';
+import spotifyShow from '../fixtures/spotify/oembed-show-video.html?raw';
+import spotify from '../fixtures/spotify/oembed-track.html?raw';
+import twitch from '../fixtures/twitch/docs-video.html?raw';
+import vimeo from '../fixtures/vimeo/responsive-docs.html?raw';
 import redditComment from '../fixtures/reddit/comment-share.html?raw';
 import reddit from '../fixtures/reddit/post-share.html?raw';
 import snapchatLens from '../fixtures/snapchat/lens-share.html?raw';
@@ -37,6 +42,11 @@ const fixtures = {
   redditComment,
   pinterest,
   pinterestIframe,
+  spotify,
+  spotifyShow,
+  vimeo,
+  twitch,
+  dailymotion,
 };
 
 describe('verifyEmbed', () => {

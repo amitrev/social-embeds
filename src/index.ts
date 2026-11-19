@@ -7,6 +7,11 @@ export {
   type SocialEmbedSource,
 } from './components/social-embed';
 export {
+  DailymotionEmbed,
+  type DailymotionEmbedProps,
+  type DailymotionOptions,
+} from './components/dailymotion-embed';
+export {
   FacebookEmbed,
   type FacebookEmbedProps,
   type FacebookOptions,
@@ -36,6 +41,11 @@ export {
   type SnapchatEmbedProps,
 } from './components/snapchat-embed';
 export {
+  SpotifyEmbed,
+  type SpotifyEmbedProps,
+  type SpotifyOptions,
+} from './components/spotify-embed';
+export {
   TelegramEmbed,
   type TelegramEmbedProps,
   type TelegramOptions,
@@ -46,10 +56,20 @@ export {
   type ThreadsOptions,
 } from './components/threads-embed';
 export {
+  TwitchEmbed,
+  type TwitchEmbedProps,
+  type TwitchOptions,
+} from './components/twitch-embed';
+export {
   TikTokEmbed,
   type TikTokEmbedProps,
   type TikTokOptions,
 } from './components/tiktok-embed';
+export {
+  VimeoEmbed,
+  type VimeoEmbedProps,
+  type VimeoOptions,
+} from './components/vimeo-embed';
 export { XEmbed, type XEmbedProps, type XOptions } from './components/x-embed';
 export {
   YouTubeEmbed,

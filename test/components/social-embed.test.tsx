@@ -1,15 +1,19 @@
 import { cleanup, render } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { SocialEmbed } from '../../src';
+import dailymotion from '../fixtures/dailymotion/player-id-docs.html?raw';
 import fbVideo from '../fixtures/facebook/video-sdk-docs.html?raw';
 import instagram from '../fixtures/instagram/post-captioned.html?raw';
 import linkedin from '../fixtures/linkedin/post-full.html?raw';
 import pinterest from '../fixtures/pinterest/widget-docs.html?raw';
 import reddit from '../fixtures/reddit/post-share.html?raw';
 import snapchat from '../fixtures/snapchat/profile-share.html?raw';
+import spotify from '../fixtures/spotify/oembed-track.html?raw';
 import telegram from '../fixtures/telegram/widget-configurator.html?raw';
 import threads from '../fixtures/threads/oembed.html?raw';
 import tiktok from '../fixtures/tiktok/oembed-player.html?raw';
+import twitch from '../fixtures/twitch/docs-channel.html?raw';
+import vimeo from '../fixtures/vimeo/responsive-docs.html?raw';
 import x from '../fixtures/x/oembed-basic.html?raw';
 import youtube from '../fixtures/youtube/share.html?raw';
 import { installObserver } from './helpers';
@@ -81,6 +85,26 @@ describe('SocialEmbed with embed code', () => {
       'iframe https://embed.reddit.com/r/bulgaria/comments/1xz8iq4/?embed=true',
     ],
     ['Pinterest', pinterest, 'a www.pinterest.com'],
+    [
+      'Spotify',
+      spotify,
+      'iframe https://open.spotify.com/embed/track/4uLU6hMCjMI75M1A2tKUQC',
+    ],
+    [
+      'Vimeo',
+      vimeo,
+      'iframe https://player.vimeo.com/video/76979871?badge=0&autopause=0',
+    ],
+    [
+      'Twitch',
+      twitch,
+      `iframe https://player.twitch.tv/?channel=dallas&muted=true&parent=${window.location.hostname}`,
+    ],
+    [
+      'Dailymotion',
+      dailymotion,
+      'iframe https://geo.dailymotion.com/player/x8lr5.html?video=x84sh87&mute=true',
+    ],
   ])('routes %s embed code to its component', (_, html, expected) => {
     const { container } = render(<SocialEmbed html={html} lazy={false} />);
     expect(rendered(container)).toBe(expected);
@@ -148,6 +172,18 @@ describe('SocialEmbed with a URL', () => {
       'iframe https://embed.reddit.com/r/bulgaria/comments/1xz8iq4/comment/19st69pk12h39/?embed=true',
     ],
     ['https://bg.pinterest.com/pin/99360735500167749/', 'a www.pinterest.com'],
+    [
+      'https://open.spotify.com/intl-de/playlist/37i9dQZF1DXcBWIGoYBM5M',
+      'iframe https://open.spotify.com/embed/playlist/37i9dQZF1DXcBWIGoYBM5M',
+    ],
+    [
+      'https://vimeo.com/76979871/abcdef1234',
+      'iframe https://player.vimeo.com/video/76979871?h=abcdef1234',
+    ],
+    [
+      'https://clips.twitch.tv/AwkwardHelplessSalamanderSwiftRage',
+      `iframe https://clips.twitch.tv/embed?clip=AwkwardHelplessSalamanderSwiftRage&parent=${window.location.hostname}`,
+    ],
   ])('routes %s', (url, expected) => {
     const { container } = render(<SocialEmbed url={url} lazy={false} />);
     expect(rendered(container)).toBe(expected);
@@ -168,6 +204,26 @@ describe('SocialEmbed with a URL', () => {
     expect(onError).toHaveBeenCalledWith(
       new Error(
         'social-embeds: not a supported post URL: https://fb.watch/abc123/',
+      ),
+    );
+  });
+});
+
+describe('SocialEmbed with Dailymotion', () => {
+  // The dispatcher takes no Player ID: only embed code that carries one renders (D63).
+  it('reports a URL, which carries no Player ID', () => {
+    const onError = vi.fn();
+    const { container } = render(
+      <SocialEmbed
+        url="https://www.dailymotion.com/video/x84sh87"
+        onError={onError}
+        lazy={false}
+      />,
+    );
+    expect(container.innerHTML).toBe('');
+    expect(onError).toHaveBeenCalledWith(
+      new Error(
+        'social-embeds: a Dailymotion embed needs a Player ID: pass playerId to DailymotionEmbed',
       ),
     );
   });
@@ -227,6 +283,20 @@ describe('SocialEmbed props', () => {
     expect(
       (sized.container.firstElementChild as HTMLElement).style.height,
     ).toBe('300px');
+  });
+
+  it('forwards height to the wave 3 iframes', () => {
+    for (const url of [
+      'https://open.spotify.com/track/4uLU6hMCjMI75M1A2tKUQC',
+      'https://vimeo.com/76979871',
+      'https://www.twitch.tv/dallas',
+    ]) {
+      const { container } = render(<SocialEmbed url={url} height={400} />);
+      expect((container.firstElementChild as HTMLElement).style.height).toBe(
+        '400px',
+      );
+      cleanup();
+    }
   });
 
   it('accepts html or url, never both or neither', () => {

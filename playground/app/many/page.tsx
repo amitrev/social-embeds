@@ -17,6 +17,9 @@ const LINKEDIN =
   'https://www.linkedin.com/feed/update/urn:li:activity:7527261038006697984/';
 const REDDIT = 'https://www.reddit.com/r/bulgaria/comments/1xz8iq4/';
 const PINTEREST = 'https://www.pinterest.com/pin/99360735500167749/';
+const SPOTIFY = 'https://open.spotify.com/track/4uLU6hMCjMI75M1A2tKUQC';
+const VIMEO = 'https://vimeo.com/76979871';
+const TWITCH = 'https://www.twitch.tv/twitch';
 
 // X comes last, so its script loads only once you scroll down to it.
 const EMBEDS = [
@@ -40,6 +43,9 @@ const EMBEDS = [
   TELEGRAM,
   PINTEREST,
   REDDIT,
+  SPOTIFY,
+  VIMEO,
+  TWITCH,
   X_1,
   X_2,
   X_3,
