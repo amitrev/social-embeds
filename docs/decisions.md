@@ -763,6 +763,26 @@ All four are `IframeEmbed`s. Each takes the platform's own player parameters as 
 - Without a Player ID, `onError` got the expected message and nothing rendered. In development it was called twice: React's Strict Mode runs effects twice.
 - Every `onLoad` fired.
 
+## Wave 3 dispatcher and playground (Milestone 5, 2026-11-19)
+
+### D67. `<SocialEmbed>` routes the wave 3 platforms
+
+- **Routing:** `spotify`, `vimeo`, `twitch` and `dailymotion` go to their components. All four are iframes, so `height` and `maxHeight` reach them.
+- **No Player ID on the dispatcher** (maintainer decision, 2026-11-19): D36 holds, and `<SocialEmbed>` takes no `playerId`. It renders Dailymotion only from embed code that carries a Player ID; a Dailymotion URL, or code without one, renders nothing and `onError` reports `social-embeds: a Dailymotion embed needs a Player ID: pass playerId to DailymotionEmbed`. A host that has a Player ID and URLs uses `DailymotionEmbed`.
+- **Props left off the dispatcher:** the new option names join the D36 list: Vimeo's (`autopause`, `background`, `byline`, `dnt`, `keyboard`, `muted`, `pip`, `portrait`, `quality`, `speed`, `title`, `transparent`, `t`, …), Twitch's (`time`) and Dailymotion's (`playerId`, `mute`, `startTime`). `title` is new to the list, so the dispatcher no longer takes a `title` attribute for its wrapper `div`. Spotify's `theme` was already there.
+- **Playground:**
+  - One page per new platform, with every wave 3 fixture except Twitch's collection example (its id is a placeholder) and the URL samples. The Dailymotion page adds `DailymotionEmbed` with the Player ID from Dailymotion's docs.
+  - Embed code and URL samples on the platform pages now show their `onError` message, as `/many` does (D59). `ReportedEmbed` takes `html` as well as `url`.
+  - `/many` has a Spotify track, a Vimeo video and a Twitch channel before the X posts. Dailymotion is left out: a URL cannot render through `<SocialEmbed>`.
+
+Checked in Chrome on 2026-11-19, against `next build` and `next start`:
+
+- **Client navigation** from the home page through `/spotify`, `/vimeo`, `/twitch` and `/dailymotion`, with every section scrolled into view: the same document stayed loaded, and no skeleton was left.
+  - Spotify: track and episode 760×152, playlist and album 760×352, the video show 760×427.
+  - Vimeo: five frames at 760×427. Twitch: four frames at 760×427, each with `parent`.
+  - Dailymotion: the three frames with Player ID `x8lr5` at 760×427. The oEmbed code and the URL showed the Player ID message. The players show Dailymotion's "Playback error" for the docs' sample video, as in D66.
+- **`/many`**, loaded directly and scrolled twice: 31 embeds, no `onError` message and no skeleton. Spotify 760×152, Vimeo and Twitch 760×427. Each script was on the page once.
+
 ## Open VERIFY items
 
 | ID  | Item                                            | Milestone | Status                                          |

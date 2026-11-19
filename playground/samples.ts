@@ -13,6 +13,10 @@ export const PLATFORMS = {
   linkedin: 'LinkedIn',
   reddit: 'Reddit',
   pinterest: 'Pinterest',
+  spotify: 'Spotify',
+  vimeo: 'Vimeo',
+  twitch: 'Twitch',
+  dailymotion: 'Dailymotion',
 } as const;
 
 export type PlatformKey = keyof typeof PLATFORMS;
@@ -35,6 +39,9 @@ const FACEBOOK_POST =
 const SNAPCHAT_SPOTLIGHT =
   'https://www.snapchat.com/@yang_sixiang/spotlight/W7_EDlXWTBiXAEEniNoMPwAAYaGxkaHh3Y2xiAZ0qvNuuAZ0qvBmIAAAAAQ';
 const PINTEREST_PIN = '99360735500167749';
+export const DAILYMOTION_VIDEO = 'https://www.dailymotion.com/video/x84sh87';
+// The Player ID in Dailymotion's own iframe docs (test/fixtures/dailymotion/player-id-docs.html).
+export const DAILYMOTION_DOCS_PLAYER = 'x8lr5';
 
 export function facebookReel(): string {
   return fixture('facebook/video-iframe-reel.html');
@@ -171,6 +178,52 @@ export function embedCodes(platform: PlatformKey): Sample[] {
           ),
         },
       ];
+    case 'spotify':
+      return [
+        { label: 'oEmbed, track', value: fixture('spotify/oembed-track.html') },
+        {
+          label: 'oEmbed, podcast episode',
+          value: fixture('spotify/oembed-episode.html'),
+        },
+        {
+          label: 'oEmbed, playlist',
+          value: fixture('spotify/oembed-playlist.html'),
+        },
+        {
+          label: 'oEmbed, video show',
+          value: fixture('spotify/oembed-show-video.html'),
+        },
+      ];
+    case 'vimeo':
+      return [
+        { label: 'oEmbed', value: fixture('vimeo/oembed.html') },
+        {
+          label: 'Responsive snippet from Vimeo’s help center (derived)',
+          value: fixture('vimeo/responsive-docs.html'),
+        },
+      ];
+    case 'twitch':
+      return [
+        {
+          label: 'Live channel, from Twitch’s docs (parent replaced)',
+          value: fixture('twitch/docs-channel.html'),
+        },
+        {
+          label: 'Past broadcast, from Twitch’s docs (parent replaced)',
+          value: fixture('twitch/docs-video.html'),
+        },
+      ];
+    case 'dailymotion':
+      return [
+        {
+          label: 'Responsive snippet with a Player ID, from Dailymotion’s docs',
+          value: fixture('dailymotion/player-id-docs.html'),
+        },
+        {
+          label: 'oEmbed, no Player ID: reports an error',
+          value: fixture('dailymotion/oembed.html'),
+        },
+      ];
   }
 }
 
@@ -247,6 +300,30 @@ export const URLS: Record<PlatformKey, Sample[]> = {
     {
       label: 'Pin',
       value: `https://www.pinterest.com/pin/${PINTEREST_PIN}/`,
+    },
+  ],
+  spotify: [
+    {
+      label: 'Track, compact player',
+      value: 'https://open.spotify.com/track/4uLU6hMCjMI75M1A2tKUQC',
+    },
+    {
+      label: 'Album',
+      value: 'https://open.spotify.com/intl-de/album/4aawyAB9vmqN3uQ7FjRGTy',
+    },
+  ],
+  vimeo: [
+    { label: 'Video', value: 'https://vimeo.com/76979871' },
+    {
+      label: 'Video, start at 0:30',
+      value: 'https://vimeo.com/76979871#t=30s',
+    },
+  ],
+  twitch: [{ label: 'Channel', value: 'https://www.twitch.tv/twitch' }],
+  dailymotion: [
+    {
+      label: 'Video, no Player ID: reports an error',
+      value: DAILYMOTION_VIDEO,
     },
   ],
 };

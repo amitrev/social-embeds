@@ -1,21 +1,27 @@
 import { notFound } from 'next/navigation';
 import {
+  DailymotionEmbed,
   FacebookEmbed,
   InstagramEmbed,
   LinkedInEmbed,
   PinterestEmbed,
   RedditEmbed,
   SnapchatEmbed,
-  SocialEmbed,
+  SpotifyEmbed,
   TelegramEmbed,
   ThreadsEmbed,
   TikTokEmbed,
+  TwitchEmbed,
+  VimeoEmbed,
   XEmbed,
   YouTubeEmbed,
 } from 'social-embeds';
 import { type ParsedEmbed, parseEmbed } from 'social-embeds/parser';
+import { ReportedEmbed } from '../../components/reported-embed';
 import { TryEmbed } from '../../components/try-embed';
 import {
+  DAILYMOTION_DOCS_PLAYER,
+  DAILYMOTION_VIDEO,
   embedCodes,
   facebookReel,
   PLATFORMS,
@@ -57,7 +63,34 @@ function ParsedOnServer({ embed }: { embed: ParsedEmbed }) {
       return <RedditEmbed embed={embed} />;
     case 'pinterest':
       return <PinterestEmbed embed={embed} />;
+    case 'spotify':
+      return <SpotifyEmbed embed={embed} />;
+    case 'vimeo':
+      return <VimeoEmbed embed={embed} />;
+    case 'twitch':
+      return <TwitchEmbed embed={embed} />;
+    case 'dailymotion':
+      return <DailymotionEmbed embed={embed} />;
   }
+}
+
+function DailymotionWithPlayerId() {
+  return (
+    <section>
+      <h2>URL with a Player ID</h2>
+      <p>
+        <code>DailymotionEmbed</code> with{' '}
+        <code>playerId=&quot;{DAILYMOTION_DOCS_PLAYER}&quot;</code>, the Player
+        ID in Dailymotion’s docs. A site passes its own, from Dailymotion
+        Studio. <code>SocialEmbed</code> takes none, so it renders Dailymotion
+        only from embed code that carries one.
+      </p>
+      <DailymotionEmbed
+        url={DAILYMOTION_VIDEO}
+        playerId={DAILYMOTION_DOCS_PLAYER}
+      />
+    </section>
+  );
 }
 
 function ReelWithoutText() {
@@ -96,7 +129,7 @@ export default async function PlatformPage({
         {codes.map((sample) => (
           <article key={sample.label}>
             <h3>{sample.label}</h3>
-            <SocialEmbed html={sample.value} />
+            <ReportedEmbed html={sample.value} />
             <details>
               <summary>Embed code and parseEmbed result</summary>
               <pre>{sample.value}</pre>
@@ -113,7 +146,7 @@ export default async function PlatformPage({
             <h3>
               {sample.label}: <code>{sample.value}</code>
             </h3>
-            <SocialEmbed url={sample.value} />
+            <ReportedEmbed url={sample.value} />
           </article>
         ))}
       </section>
@@ -131,6 +164,7 @@ export default async function PlatformPage({
       )}
 
       {platform === 'facebook' && <ReelWithoutText />}
+      {platform === 'dailymotion' && <DailymotionWithPlayerId />}
 
       <section>
         <h2>Your own embed code or URL</h2>

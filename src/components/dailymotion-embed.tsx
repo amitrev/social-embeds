@@ -45,7 +45,7 @@ export function DailymotionEmbed(props: DailymotionEmbedProps) {
   const error =
     resolved.error ??
     (player === undefined
-      ? 'social-embeds: a Dailymotion embed needs a Player ID: pass the playerId prop'
+      ? 'social-embeds: a Dailymotion embed needs a Player ID: pass playerId to DailymotionEmbed'
       : typeof player !== 'string' || !PLAYER_ID.test(player)
         ? `social-embeds: not a Dailymotion Player ID: ${String(player)}`
         : undefined);

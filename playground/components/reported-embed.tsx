@@ -1,15 +1,15 @@
 'use client';
 
 import { useState } from 'react';
-import { SocialEmbed } from 'social-embeds';
+import { SocialEmbed, type SocialEmbedSource } from 'social-embeds';
 
-/** A URL embed that shows its `onError` message, so a failed load explains itself. */
-export function ReportedEmbed({ url }: { url: string }) {
+/** An embed that shows its `onError` message, so a failed load explains itself. */
+export function ReportedEmbed(source: SocialEmbedSource) {
   const [error, setError] = useState('');
   return (
     <>
       <SocialEmbed
-        url={url}
+        {...source}
         onError={(reported) => {
           setError(reported.message);
         }}

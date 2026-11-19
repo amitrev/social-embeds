@@ -273,7 +273,7 @@ describe('DailymotionEmbed', () => {
     expect(container.innerHTML).toBe('');
     expect(onError).toHaveBeenCalledWith(
       new Error(
-        'social-embeds: a Dailymotion embed needs a Player ID: pass the playerId prop',
+        'social-embeds: a Dailymotion embed needs a Player ID: pass playerId to DailymotionEmbed',
       ),
     );
   });
