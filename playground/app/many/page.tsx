@@ -1,4 +1,4 @@
-import { SocialEmbed } from 'social-embeds';
+import { ReportedEmbed } from '../../components/reported-embed';
 
 const YOUTUBE = 'https://www.youtube.com/watch?v=jNQXAC9IVRw';
 const TIKTOK = 'https://www.tiktok.com/@scout2015/video/6718335390845095173';
@@ -59,14 +59,15 @@ export default function ManyEmbeds() {
         default <code>lazy</code> loading. An embed loads when it comes within
         200 px of the viewport, and each platform script loads once, with the
         first embed that needs it. The X posts are last, so the X script appears
-        in the bar only after you scroll to them.
+        in the bar only after you scroll to them. An embed that fails shows its{' '}
+        <code>onError</code> message below it.
       </p>
       {EMBEDS.map((url, index) => (
         <article key={index}>
           <h3>
             {index + 1}. <code>{url}</code>
           </h3>
-          <SocialEmbed url={url} />
+          <ReportedEmbed url={url} />
         </article>
       ))}
     </>

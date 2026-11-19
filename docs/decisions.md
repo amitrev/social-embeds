@@ -661,6 +661,13 @@ Checked in Chrome on 2026-11-18, `next build` passing first:
   - `pinit_main.js` was added once and kept across navigation.
 - **`/many` and `/eager`:** both rendered every embed, loaded directly and reached by client navigation. Each script was on the page once.
 - **Not reproduced:** on the first run of `/many` after that tour, five Instagram and Threads embeds kept their skeletons, and Threads' script was never added. That run overlapped a script of mine that froze the tab for 45 s. Three later runs passed: the same tour, `/pinterest` then `/many`, and `/many` loaded directly. The cause was not found.
+- **Investigated on 2026-11-19, not reproduced:** five more runs in Chrome, on temporary pages that logged every script tag added, loaded, failed or removed, and every `onLoad` and `onError`. All embeds rendered every time.
+  - `/many` loaded directly and scrolled at 200 ms per embed.
+  - The first run's two tours of the new pages, then client navigation to the page, from a fresh document.
+  - The same with every script already on the page.
+  - Instagram, Threads and Facebook embeds mounted with `lazy` off while the tab was hidden: all five rendered within 0.8 s, still hidden.
+
+  In one run Instagram's script skipped itself beside the loading SDK and was added again, as D46 designed. The loader removes a tag only after the browser reports that it failed to load, or after it skipped itself (D46), and a skipped tag is added again. So the first run's missing Threads tag means `threads.com/embed.js` failed three times in a row, or no Threads embed came near the viewport. With Instagram's posts not rendering in the same run, this points to Meta's servers not answering that browser for a while, not to the package; that stays unproven. Forcing `threads.com/embed.js` to fail on `/many` gives the same picture: the Threads embed keeps its skeleton, the bar counts Threads 0, and after the retries `onError` reports `social-embeds: could not load https://www.threads.com/embed.js`. `/many` now shows each embed's `onError` message under it, so a repeat names its cause.
 
 ## Open VERIFY items
 
