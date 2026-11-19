@@ -669,6 +669,47 @@ Checked in Chrome on 2026-11-18, `next build` passing first:
 
   In one run Instagram's script skipped itself beside the loading SDK and was added again, as D46 designed. The loader removes a tag only after the browser reports that it failed to load, or after it skipped itself (D46), and a skipped tag is added again. So the first run's missing Threads tag means `threads.com/embed.js` failed three times in a row, or no Threads embed came near the viewport. With Instagram's posts not rendering in the same run, this points to Meta's servers not answering that browser for a while, not to the package; that stays unproven. Forcing `threads.com/embed.js` to fail on `/many` gives the same picture: the Threads embed keeps its skeleton, the bar counts Threads 0, and after the retries `onError` reports `social-embeds: could not load https://www.threads.com/embed.js`. `/many` now shows each embed's `onError` message under it, so a repeat names its cause.
 
+## Wave 3 research (Milestone 1, 2026-11-19)
+
+The VERIFY items of [wave-3-brief.md](./wave-3-brief.md). Frames were probed in Chrome on a static page on `localhost:4173` with a `message` listener, as in wave 2.
+
+### D60. Spotify: fixed-height iframe, video shows at 16:9
+
+- **Embed code** (`spotify/oembed-*.html`, from `open.spotify.com/oembed?url=…`): `<iframe style="border-radius: 12px" width="100%" height="…" title="Spotify Embed: …" frameborder="0" allowfullscreen allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy" src="https://open.spotify.com/embed/{type}/{id}?utm_source=oembed">`.
+- **Heights by type:** track 152, episode 152, album 352, artist 352, playlist 352, all `width="100%"`. An audiobook's oEmbed failed (the id tried may not exist). These are the defaults for URL input (maintainer decision, brief §2.1).
+- **A video show** (`show/4rOoJ6Egrf8K2IrywzwOMk`) comes back as `/embed/show/{id}/video` at `width="624" height="351"`: a 16:9 player, so it renders with that aspect ratio, not a fixed height. Its title names the latest episode.
+- **No height messages:** every Spotify frame posted only `{"type":"ready"}` from `https://open.spotify.com`.
+- **Not seen:** the Embed dialog itself (it needs a signed-in account); `theme=0` loaded without error.
+
+### D61. Vimeo: aspect ratio from `width`/`height` or from the wrapper's padding
+
+- **oEmbed code** (`vimeo/oembed.html`): `<iframe src="https://player.vimeo.com/video/76979871?app_id=122963" width="480" height="270" … referrerpolicy="strict-origin-when-cross-origin" title="…">`. The frame posted `{"event":"ready"}` from `https://player.vimeo.com` and no height.
+- **Responsive code** (`vimeo/responsive-docs.html`), from [Vimeo's help center](https://help.vimeo.com/hc/en-us/articles/12426486963857): `<div style="padding:56.25% 0 0 0;position:relative;"><iframe src="https://player.vimeo.com/video/{id}?badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479" frameborder="0" allow="…" style="position:absolute;top:0;left:0;width:100%;height:100%;" title="…"></iframe></div><script src="https://player.vimeo.com/api/player.js"></script>`.
+  - The help page's own example appends autoplay parameters with a second `?`, a malformed URL. The fixture drops them; it is derived.
+  - The iframe has **no `width` or `height`**: the video's ratio is only in the wrapper's top padding (56.25% is 16:9). The parser reads that percentage as the aspect ratio, and accepts exactly this wrapper and `player.js` (maintainer decision, brief §2.2).
+- **Not seen:** the Share → Embed dialog, which logged-out visitors do not get on vimeo.com.
+
+### D62. Twitch: `parent` must be the page's host
+
+- **Embed code** (`twitch/docs-*.html`): the channel, VOD and collection examples of [Twitch's embed docs](https://dev.twitch.tv/docs/embed/video-and-clips/), with `parent=streamernews.example.com`.
+- **On `localhost`:**
+  - `parent=localhost` played: the frame posted `UPDATE_STATE`, `video.ready`, `ready` and, for an offline channel, `offline` events from `https://player.twitch.tv`.
+  - With `parent=example.com`, or no `parent`, the frame loaded and posted nothing.
+- **So** the package drops every `parent` from the input and sets `parent={location.hostname}` (brief §2.3).
+- **Not checked:** a host on plain HTTP other than `localhost`, and subdomains.
+
+### D63. Dailymotion: every embed needs a Player ID
+
+- **oEmbed code** (`dailymotion/oembed.html`): `<iframe frameborder="0" width="480" height="269" src="https://geo.dailymotion.com/player.html?video=xbxskia&" allowfullscreen allow="autoplay; fullscreen; picture-in-picture; web-share">`. The size is the video's own ratio (a vertical video gave 480×847).
+- **That URL returns 403 `Forbidden`**, in Chrome and with curl, for every video tried and with any referrer. `www.dailymotion.com/embed/video/{id}` redirects (301) to it.
+- **Dailymotion's [migration guide](https://developers.dailymotion.com/reference/migration-guide-new-embed-endpoint):** every embed needs a Player ID, created in the publisher's Dailymotion Studio. URLs without one may be rejected with 403. The legacy endpoint has been retired step by step since 2024-09-16.
+- `geo.dailymotion.com/player/{playerId}.html?video={id}` returned 200; dailymotion.com itself uses its own player `xtv3w`.
+- **Consequences:**
+  - Embed code from a publisher's Studio carries the Player ID and can render.
+  - Dailymotion's own oEmbed code and every URL have none.
+  - The package must not borrow another account's Player ID.
+- **Open:** the maintainer decides whether Dailymotion stays in wave 3, and on what terms.
+
 ## Open VERIFY items
 
 | ID  | Item                                            | Milestone | Status                                          |
