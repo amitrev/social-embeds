@@ -3,6 +3,7 @@ import { IframeEmbed } from './iframe-embed';
 import {
   type EmbedSource,
   type FrameProps,
+  optionsWithout,
   playerParams,
   query,
   resolveEmbed,
@@ -121,7 +122,7 @@ export function VimeoEmbed(props: VimeoEmbedProps) {
       {...frame}
       src={`https://player.vimeo.com/video/${embed.id}${query(
         hash ? [['h', hash]] : undefined,
-        Object.entries(parsed),
+        optionsWithout(parsed, ['h']),
         params,
       )}${start === undefined ? '' : `#t=${encodeURIComponent(String(start))}`}`}
       title="Vimeo video player"

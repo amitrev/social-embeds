@@ -783,6 +783,21 @@ Checked in Chrome on 2026-11-19, against `next build` and `next start`:
   - Dailymotion: the three frames with Player ID `x8lr5` at 760×427. The oEmbed code and the URL showed the Player ID message. The players show Dailymotion's "Playback error" for the docs' sample video, as in D66.
 - **`/many`**, loaded directly and scrolled twice: 31 embeds, no `onError` message and no skeleton. Spotify 760×152, Vimeo and Twitch 760×427. Each script was on the page once.
 
+## Wave 3 security review (2026-11-19)
+
+### D68. Options never replace the verified content
+
+`verifyEmbed` checks an `embed`'s `url`, `id` and shape (D35, D57), not its `options`. A host-built embed could therefore carry options named like the content parameters, and `query` keeps the first position of a key but the last value. So `{ options: { channel: 'other' } }` on a verified Twitch channel turned into `?channel=other`, and the same held for Dailymotion's `video` and Vimeo's `h`.
+
+- Components drop those keys from the options with `optionsWithout`, as `FacebookVideoIframe` already drops `href`:
+  - Twitch: `channel`, `video`, `collection`, `clip`, and `parent`, which `IframeEmbed` adds itself (D65).
+  - Dailymotion: `video` and `playlist` (playlists are left out, D63). The Player ID was already taken out of the options.
+  - Vimeo: `h`, which comes only from the verified URL.
+- The iframe host stays fixed in every case, so the impact was other content from the same platform, not another origin.
+- Not changed: YouTube's `list` and `playlist` are documented options that the embed code and props set on purpose. Reddit's `embed` and the other components take their content from the URL path.
+
+Tests: a host-built embed with each reserved key renders the verified content, and Twitch gets exactly one `parent`.
+
 ## Open VERIFY items
 
 | ID  | Item                                            | Milestone | Status                                          |

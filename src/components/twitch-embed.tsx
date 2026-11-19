@@ -3,6 +3,7 @@ import { IframeEmbed } from './iframe-embed';
 import {
   type EmbedSource,
   type FrameProps,
+  optionsWithout,
   query,
   resolveEmbed,
 } from './shared';
@@ -18,6 +19,9 @@ export type TwitchOptions = {
 export type TwitchEmbedProps = EmbedSource &
   Omit<FrameProps, keyof TwitchOptions> &
   TwitchOptions;
+
+// The content parameters, and `parent`, which IframeEmbed adds (docs/decisions.md D65).
+const RESERVED = ['channel', 'video', 'collection', 'clip', 'parent'];
 
 /** The player and its content parameter for the embed's canonical URL (docs/decisions.md D64). */
 function player(url: string, id: string): [string, [string, string]] {
@@ -52,7 +56,7 @@ export function TwitchEmbed(props: TwitchEmbedProps) {
   return (
     <IframeEmbed
       {...frame}
-      src={`${base}${query([content], Object.entries(embed.options), params)}`}
+      src={`${base}${query([content], optionsWithout(embed.options, RESERVED), params)}`}
       title="Twitch player"
       allow=""
       ratio={{ width: 16, height: 9 }}

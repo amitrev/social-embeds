@@ -336,3 +336,47 @@ describe('DailymotionEmbed', () => {
     );
   });
 });
+
+// Security: options are not verified, so they must not replace the verified content (D68).
+describe('a host-built embed whose options name other content', () => {
+  it('keeps the verified Twitch channel and drops every parent', () => {
+    const embed = {
+      ...parsed(twitchChannel),
+      options: {
+        channel: 'other',
+        video: 'v1',
+        clip: 'x',
+        parent: 'evil.test',
+      },
+    };
+    const { container } = render(<TwitchEmbed embed={embed} lazy={false} />);
+    expect(parts(container).iframe.getAttribute('src')).toBe(
+      `https://player.twitch.tv/?channel=dallas&parent=${host()}`,
+    );
+  });
+
+  it('keeps the verified Dailymotion video', () => {
+    const embed = {
+      ...parsed(dailymotionPlayer),
+      options: { video: 'xevil1', playlist: 'x1', mute: true },
+    };
+    const { container } = render(
+      <DailymotionEmbed embed={embed} playerId="x8lr5" lazy={false} />,
+    );
+    expect(parts(container).iframe.getAttribute('src')).toBe(
+      'https://geo.dailymotion.com/player/x8lr5.html?video=x84sh87&mute=true',
+    );
+  });
+
+  it('keeps the verified Vimeo hash', () => {
+    const embed = {
+      ...parsed(vimeoResponsive),
+      url: 'https://vimeo.com/76979871/abcdef1234',
+      options: { h: '0000000000' },
+    };
+    const { container } = render(<VimeoEmbed embed={embed} lazy={false} />);
+    expect(parts(container).iframe.getAttribute('src')).toBe(
+      'https://player.vimeo.com/video/76979871?h=abcdef1234',
+    );
+  });
+});

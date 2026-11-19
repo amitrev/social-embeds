@@ -73,6 +73,17 @@ export function resolveEmbed(
   return { embed: verified };
 }
 
+/**
+ * Security: options are not verified (docs/decisions.md D68). Keys that choose the content
+ * come only from the verified url and id.
+ */
+export function optionsWithout(
+  options: ParsedEmbed['options'],
+  reserved: readonly string[],
+): [string, string | number | boolean][] {
+  return Object.entries(options).filter(([key]) => !reserved.includes(key));
+}
+
 /** Later entries replace earlier ones with the same name. */
 export function query(
   ...sources: (

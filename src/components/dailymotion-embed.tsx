@@ -3,6 +3,7 @@ import { IframeEmbed } from './iframe-embed';
 import {
   type EmbedSource,
   type FrameProps,
+  optionsWithout,
   query,
   resolveEmbed,
 } from './shared';
@@ -63,7 +64,7 @@ export function DailymotionEmbed(props: DailymotionEmbedProps) {
       {...frame}
       src={`https://geo.dailymotion.com/player/${String(player)}.html${query(
         [['video', embed.id]],
-        Object.entries(parsed),
+        optionsWithout(parsed, ['video', 'playlist']),
         params,
       )}`}
       title="Dailymotion video player"
