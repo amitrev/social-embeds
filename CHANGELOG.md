@@ -1,5 +1,11 @@
 # social-embeds
 
+## 0.4.1
+
+### Patch Changes
+
+- a100070: Add npm keywords for React, Next.js and each supported platform, so the package shows up in npm search.
+
 ## 0.4.0
 
 ### Minor Changes
