@@ -798,6 +798,19 @@ Checked in Chrome on 2026-11-19, against `next build` and `next start`:
 
 Tests: a host-built embed with each reserved key renders the verified content, and Twitch gets exactly one `parent`.
 
+## Dailymotion playback (2026-11-19, after 0.4.0)
+
+### D69. Dailymotion's "Playback error" comes from its stream CDN
+
+D66 and D67 saw the docs' player (`x8lr5`) show "Playback error" for its demo video. Checked again in Chrome on 2026-11-19:
+
+- `api.dailymotion.com/video/x84sh87` reports the demo video as published, public and not geoblocked.
+- On a static page on `localhost:4173`, `geo.dailymotion.com/player/x8lr5.html?video={id}&mute=true` played the demo video and two public news videos (`xby33jy`, `xby33ki`), muted, on the first load.
+- On `/dailymotion` in the playground, `DailymotionEmbed` played the demo video in the first player.
+- Every later load failed, on the static page, in the playground, and with the player URL opened on its own outside any embed. The player, its metadata and its recommendations loaded with 200. The video's stream manifest (`cdndirector.dailymotion.com/cdn/manifest/video/{id}.m3u8`) returned 403.
+
+So the component builds a working `src`, and the player loads and can play. The 403 comes from Dailymotion's stream CDN with or without the package. It looks like a limit on the docs' sample player after a few plays; that is not proven. Whether a publisher's own Player ID has the same limit still needs one of its own videos.
+
 ## Open VERIFY items
 
 | ID  | Item                                            | Milestone | Status                                          |
