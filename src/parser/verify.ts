@@ -16,6 +16,10 @@ const SHAPES: Record<Platform, readonly string[]> = {
   linkedin: ['post iframe'],
   reddit: ['post iframe'],
   pinterest: ['post sdk'],
+  spotify: ['post iframe', 'video iframe'],
+  vimeo: ['video iframe'],
+  twitch: ['video iframe'],
+  dailymotion: ['video iframe'],
 };
 
 /**

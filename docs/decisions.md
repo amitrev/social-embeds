@@ -715,6 +715,25 @@ The VERIFY items of [wave-3-brief.md](./wave-3-brief.md). Frames were probed in 
 - **Documented snippet** (`dailymotion/player-id-docs.html`, from [Dailymotion's iframe docs](https://developers.dailymotion.com/docs/iframe-web)): a `div` with `position:relative;padding-bottom:56.25%;height:0;overflow:hidden;` around the iframe, whose `width` and `height` are `100%`. As with Vimeo (D61), the ratio is only in the wrapper's padding, and the wrapper is accepted as Dailymotion's own.
 - **Playlists** (`?playlist={id}`, alone or after a video) are left out of wave 3.
 
+## Wave 3 parser (Milestone 2, 2026-11-19)
+
+### D64. What the parser returns for the wave 3 platforms
+
+| Platform    | `kind` / `variant`                                 | `id`                                                              | Canonical `url`                                                                                            |
+| ----------- | -------------------------------------------------- | ----------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| Spotify     | post / iframe; video / iframe for `/embed/…/video` | the 22-character id                                               | `https://open.spotify.com/{type}/{id}`                                                                     |
+| Vimeo       | video / iframe                                     | the video number                                                  | `https://vimeo.com/{id}`, or `https://vimeo.com/{id}/{hash}` for an unlisted video                         |
+| Twitch      | video / iframe                                     | channel name (lower case), VOD number, collection id or clip slug | `https://www.twitch.tv/{channel}`, `…/videos/{id}`, `…/collections/{id}`, `https://clips.twitch.tv/{slug}` |
+| Dailymotion | video / iframe                                     | the video id (`x…`)                                               | `https://www.dailymotion.com/video/{id}`                                                                   |
+
+- **Platform wrappers (D14 extended):** Vimeo's and Dailymotion's documented responsive snippets are accepted. The wrapper `div` must have only a `style` attribute, in exactly the form each platform writes (`padding:{n}% 0 0 0;position:relative;` for Vimeo, `position:relative;padding-bottom:{n}%;height:0;overflow:hidden;` for Dailymotion), around exactly one iframe. Anything else around the iframe is still rejected.
+- **Ratio from padding:** the wrapper's percentage becomes `size`, reduced to the smallest whole numbers: 56.25% is `{ width: 16, height: 9 }`, 177.78% is `{ width: 5000, height: 8889 }`. For these two platforms `size` is then a ratio, not pixels; the components use it as an aspect ratio either way.
+- **Fragments:** `parseUrl` now also returns the fragment, for Vimeo's `#t=` start time, kept as the `t` option.
+- **Options dropped as tracking or ids:** Spotify `utm_source` and `si`; Vimeo `h` (kept in the URL instead), `app_id`, `player_id`; Twitch every `parent` (D62). Twitch keeps only `autoplay`, `muted` and `time`.
+- **Twitch's precedence** follows its player: `channel`, then `video`, then `collection`. A `twitch.tv/{name}` URL is a channel unless the name is one of Twitch's own top-level pages (`directory`, `videos`, `settings`, …).
+- **Spotify URLs** render the audio player: a page URL cannot tell a video show from an audio one. Only embed code with `/video` is a `video`.
+- **Dailymotion:** a Player ID in the iframe (`/player/{id}.html`) becomes the `playerId` option; `player.html` and `www.dailymotion.com/embed/video/{id}` parse without one (D63). Playlists return `null`.
+
 ## Open VERIFY items
 
 | ID  | Item                                            | Milestone | Status                                          |

@@ -8,6 +8,7 @@ describe('parseUrl', () => {
     );
     expect(url?.host).toBe('www.example.com');
     expect(url?.path).toBe('/a/b');
+    expect(url?.fragment).toBe('frag');
     expect([...(url?.query ?? [])]).toEqual([
       ['x', '1'],
       ['y', 'a b c'],

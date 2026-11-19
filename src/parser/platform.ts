@@ -50,3 +50,34 @@ export function withSize(
 ): ParsedEmbed {
   return size ? { ...embed, size } : embed;
 }
+
+/**
+ * A platform's own responsive wrapper: a `div` whose only attribute is a `style` that `pattern`
+ * matches, around one iframe. The padding percentage it captures is the video's ratio.
+ */
+export function unwrapRatio(
+  root: HtmlElement,
+  pattern: RegExp,
+): { iframe: HtmlElement; size: { width: number; height: number } } | null {
+  if (root.tag !== 'div' || root.attrs.size !== 1) return null;
+  const [, percent] = pattern.exec(root.attrs.get('style') ?? '') ?? [];
+  if (percent === undefined) return null;
+  let iframe: HtmlElement | undefined;
+  for (const child of root.children) {
+    if (child.type === 'text' && /^\s*$/.test(child.raw)) continue;
+    if (child.type !== 'element' || child.tag !== 'iframe' || iframe)
+      return null;
+    iframe = child;
+  }
+  const height = Math.round(Number(percent) * 100);
+  if (!iframe || !(height > 0 && height <= 100_000)) return null;
+  const divisor = gcd(10_000, height);
+  return {
+    iframe,
+    size: { width: 10_000 / divisor, height: height / divisor },
+  };
+}
+
+function gcd(a: number, b: number): number {
+  return b === 0 ? a : gcd(b, a % b);
+}

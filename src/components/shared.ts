@@ -42,6 +42,10 @@ const NAMES: Record<Platform, string> = {
   linkedin: 'LinkedIn',
   reddit: 'Reddit',
   pinterest: 'Pinterest',
+  spotify: 'Spotify',
+  vimeo: 'Vimeo',
+  twitch: 'Twitch',
+  dailymotion: 'Dailymotion',
 };
 
 export function resolveEmbed(
