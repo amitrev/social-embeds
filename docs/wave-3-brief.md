@@ -66,7 +66,9 @@ Probed on 2026-11-19 with each platform's oEmbed endpoint or documentation. Real
   - the Embed dialog's code for each kind.
 - **Decided (maintainer, 2026-11-19):** autoplay follows the embed code, else Twitch's own default, else the `autoplay` prop. The package does not turn it off.
 
-### 2.4 Dailymotion — iframe with an aspect ratio
+### 2.4 Dailymotion — iframe with an aspect ratio, Player ID required
+
+- **Decided (maintainer, 2026-11-19), after D63:** every Dailymotion embed needs a publisher's Player ID. Embed code that carries one renders as given. Code without one, and URLs, render only with the host's own `playerId` prop; otherwise `onError`.
 
 - **Embed code** (oEmbed, `www.dailymotion.com/services/oembed?url=…`): `<iframe frameborder="0" width="480" height="847" src="https://geo.dailymotion.com/player.html?video=xby1a0e&" allowfullscreen allow="autoplay; fullscreen; picture-in-picture; web-share">`. The size is the video's own ratio: this one is vertical.
 - **Older embed code** uses `https://www.dailymotion.com/embed/video/{id}`, often inside a responsive wrapper `div`.

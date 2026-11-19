@@ -40,6 +40,7 @@ Real embed codes, stored byte for byte as the platform produced them. Prettier i
 | `twitch/docs-channel.html`                     | Twitch's [embed docs](https://dev.twitch.tv/docs/embed/video-and-clips/), live channel example   | 2026-11-19 |
 | `twitch/docs-video.html`                       | same, VOD example                                                                               | 2026-11-19 |
 | `twitch/docs-collection.html`                  | same, collection example                                                                        | 2026-11-19 |
+| `dailymotion/player-id-docs.html`             | Dailymotion's [iframe docs](https://developers.dailymotion.com/docs/iframe-web), the responsive example with Player ID `x8lr5` | 2026-11-19 |
 | `dailymotion/oembed.html`                      | `dailymotion.com/services/oembed?url=https://www.dailymotion.com/video/xbxskia`, the `html` field (no Player ID: 403, D63) | 2026-11-19 |
 
 Snapchat Spotlight embed code is derived from the profile and Lens codes (`docs/decisions.md` D50). Variants that no current source produces are derived inside the tests from these files: the legacy `twitter.com` hosts, X `data-conversation`/`data-align`, the Facebook video iframe without the post text, and Instagram permalink and caption variants. The TikTok blockquote tests use the structure from brief §3 (see `docs/decisions.md` D11).

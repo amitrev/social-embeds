@@ -708,7 +708,12 @@ The VERIFY items of [wave-3-brief.md](./wave-3-brief.md). Frames were probed in 
   - Embed code from a publisher's Studio carries the Player ID and can render.
   - Dailymotion's own oEmbed code and every URL have none.
   - The package must not borrow another account's Player ID.
-- **Open:** the maintainer decides whether Dailymotion stays in wave 3, and on what terms.
+- **Maintainer decision, 2026-11-19: Player ID only.**
+  - Embed code whose iframe carries a Player ID (`geo.dailymotion.com/player/{playerId}.html?video={id}`) renders as given.
+  - Embed code without one, Dailymotion's oEmbed code included, and every URL render only when the host passes its own `playerId` prop; otherwise `onError`.
+  - The package never uses a Player ID the host did not give it.
+- **Documented snippet** (`dailymotion/player-id-docs.html`, from [Dailymotion's iframe docs](https://developers.dailymotion.com/docs/iframe-web)): a `div` with `position:relative;padding-bottom:56.25%;height:0;overflow:hidden;` around the iframe, whose `width` and `height` are `100%`. As with Vimeo (D61), the ratio is only in the wrapper's padding, and the wrapper is accepted as Dailymotion's own.
+- **Playlists** (`?playlist={id}`, alone or after a video) are left out of wave 3.
 
 ## Open VERIFY items
 
