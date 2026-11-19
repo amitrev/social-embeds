@@ -742,7 +742,26 @@ Twitch plays only when `parent` names the page's host (D62), which is not known 
 
 Not covered: a page that is itself framed by another site. Twitch then needs that site's host as a second `parent`, which the package cannot know; a host page in that situation passes Twitch's embed code through `fallback`.
 
-Tests: the parameter is added with `&` and with `?`, and the server HTML has no iframe. Not yet checked in a browser: that comes with `TwitchEmbed` (Milestone 4).
+Tests: the parameter is added with `&` and with `?`, and the server HTML has no iframe. Checked in a browser with `TwitchEmbed` (D66).
+
+## Wave 3 components (Milestone 4, 2026-11-19)
+
+### D66. `SpotifyEmbed`, `VimeoEmbed`, `TwitchEmbed` and `DailymotionEmbed`
+
+All four are `IframeEmbed`s. Each takes the platform's own player parameters as props; a prop replaces the same option from the embed code.
+
+- **Spotify:** a fixed height, as LinkedIn (D53): the `height` prop, else the embed code's, else 152px for a track or episode and 352px for the rest (D60). Chapters and audiobooks get 352px until their oEmbed height is measured. A video show (`/embed/show/{id}/video`) keeps its aspect ratio instead. The wrapper gets Spotify's `border-radius: 12px` with `overflow: hidden`; the `style` prop replaces it. Option: `theme` (`0` for the dark player).
+- **Vimeo:** 16:9, or the embed code's ratio. An unlisted video's hash goes back in as `h`, and the start time as `#t=` (prop `t`). Booleans become `1`/`0`. `player.js` is not loaded: the package sizes the frame itself.
+- **Twitch:** 16:9, or the embed code's ratio, with `hostParam="parent"` (D65). `autoplay` and `muted` are sent as `true`/`false`, which is what Twitch reads; `time` as given. No `allow` list, as in Twitch's own code.
+- **Dailymotion:** the Player ID is the `playerId` prop, else the embed code's (D63). With neither, or with one that is not `x` and 3 to 12 lowercase letters or digits, the component renders nothing and calls `onError`; the check also keeps the id from changing the iframe path. The `src` is always `geo.dailymotion.com/player/{playerId}.html?video={id}`. Options: `mute`, `startTime`, `loop`.
+
+**Browser check** (Chrome, playground dev server on `localhost`, 2026-11-19):
+
+- Spotify track 152px and playlist 352px high, both rounded; `theme=0` gave the dark player. Vimeo played at 16:9.
+- Twitch: the iframe got `parent=localhost`, and the channel and VOD frames posted `UPDATE_STATE` events, which they do only for an accepted `parent` (D62). The channel showed its offline screen. The docs' VOD (`v40464143`) showed Twitch's "Failed to determine content classification" notice, a property of that old video.
+- Dailymotion: `geo.dailymotion.com/player/x8lr5.html?video=x84sh87&mute=true` returned 200 and loaded the player, which then showed "Playback error". The same URL opened on its own showed the same error, so it comes from the docs' sample player and video, not from the component. A publisher's own Player ID and video are still to be tried.
+- Without a Player ID, `onError` got the expected message and nothing rendered. In development it was called twice: React's Strict Mode runs effects twice.
+- Every `onLoad` fired.
 
 ## Open VERIFY items
 
