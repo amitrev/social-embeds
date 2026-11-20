@@ -7,7 +7,7 @@ import {
   type DetailedHTMLProps,
   type HTMLAttributes,
 } from 'react';
-import 'social-embeds/element';
+import type {} from 'social-embeds/element';
 
 declare module 'react' {
   // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -42,6 +42,7 @@ export function ElementEmbed({ url, code }: Props) {
     };
     element.addEventListener('load', onLoad);
     element.addEventListener('error', onError);
+    void import('social-embeds/element');
     return () => {
       element.removeEventListener('load', onLoad);
       element.removeEventListener('error', onError);

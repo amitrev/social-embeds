@@ -496,6 +496,8 @@ Child elements other than `<template>` are the placeholder until the embed loads
 
 It dispatches `load` (an `Event`) when the platform has rendered, and `error` (an `ErrorEvent`) when it cannot. `error.error` is an `Error` with the same message as React's `onError`. Neither event bubbles, both fire in a microtask, and only while the element is connected.
 
+Events dispatch in a microtask after the element connects or changes, so add `load` and `error` listeners before inserting the element, or in the same task. In React, attach them before the element module is imported (as the playground's `/element` page does), or use the React components.
+
 ```js
 const embed = document.querySelector('social-embed');
 embed.addEventListener('load', () => console.log('rendered'));
@@ -508,10 +510,13 @@ Platform defaults (maximum width, height, rounded corners, placeholder) are shar
 Tell Vue and Angular that `social-embed` is a custom element:
 
 ```ts
-// Vue: in the Vue plugin's template options (or on app.config)
-compilerOptions: { isCustomElement: (tag) => tag === 'social-embed' }
+// Vue, Vite plugin: vue({ template: { compilerOptions: { isCustomElement: (tag) => tag === 'social-embed' } } })
+// Vue, at runtime:
+app.config.compilerOptions.isCustomElement = (tag) => tag === 'social-embed';
 
 // Angular: add CUSTOM_ELEMENTS_SCHEMA to the component's (or module's) schemas
+import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+
 @Component({ schemas: [CUSTOM_ELEMENTS_SCHEMA] /* … */ })
 ```
 

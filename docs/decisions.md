@@ -969,7 +969,7 @@ The platform scripts (X, Instagram, Threads, Facebook, Pinterest) scan the page'
 
 ### D84. Input order and the template
 
-The `html` property wins over the first `<template>` child, which wins over the `url` attribute, mirroring `<SocialEmbed>`'s embed-code-first rule. A template keeps the embed code inert, so the platform's script tag never runs and the blockquote is never shown raw. The element builds markup only from a verified embed and escaped values (D68); unrecognised embed code renders nothing.
+The `html` property wins over the first `<template>` child, which wins over the `url` attribute, mirroring `<SocialEmbed>`'s embed-code-first rule. A template keeps the embed code inert, so the platform's script tag never runs and the blockquote is never shown raw. The element builds markup only from a verified embed and escaped values (D68); unrecognised embed code renders nothing and fires `error`.
 
 ### D85. Events
 
