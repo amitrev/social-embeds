@@ -76,3 +76,14 @@ export {
   type YouTubeEmbedProps,
   type YouTubeOptions,
 } from './components/youtube-embed';
+export {
+  SoundCloudEmbed,
+  type SoundCloudEmbedProps,
+  type SoundCloudOptions,
+} from './components/soundcloud-embed';
+export {
+  AppleMusicEmbed,
+  type AppleMusicEmbedProps,
+  ApplePodcastsEmbed,
+  type ApplePodcastsEmbedProps,
+} from './components/apple-embed';
