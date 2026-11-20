@@ -6,6 +6,7 @@ import {
   useState,
 } from 'react';
 import { HEIGHT_TIMEOUT_MS, MAX_REPORTED_HEIGHT } from '../core/timing';
+import { frameStyle } from '../core/layout';
 import type { MessageHeight } from '../core/plan';
 import { useNearViewport } from './hooks';
 import type { FrameProps } from './shared';
@@ -46,7 +47,7 @@ export function IframeEmbed({
   messageHeight,
   startHeight,
   hostParam,
-  width = '100%',
+  width,
   maxWidth,
   height,
   maxHeight,
@@ -122,25 +123,21 @@ export function IframeEmbed({
     };
   }, [near, inView, messageHeight, title]);
 
-  const aspectWidth = size?.width ?? ratio.width;
-  const aspectHeight = size?.height ?? ratio.height;
-  // With an aspect ratio, a height limit is a width limit: the widest box that fits it.
-  const widest =
-    maxHeight === undefined || height !== undefined
-      ? undefined
-      : Math.floor((maxHeight * aspectWidth) / aspectHeight);
   const wrapper: CSSProperties = {
-    position: 'relative',
-    width,
-    maxWidth:
-      widest === undefined || (maxWidth !== undefined && maxWidth < widest)
-        ? maxWidth
-        : widest,
-    ...(messageHeight
-      ? { height: reportedHeight ?? startHeight }
-      : height === undefined
-        ? { aspectRatio: `${String(aspectWidth)} / ${String(aspectHeight)}` }
-        : { height, maxHeight }),
+    ...frameStyle(
+      {
+        kind: 'iframe',
+        src,
+        title,
+        allow,
+        ratio,
+        size,
+        messageHeight,
+        startHeight,
+      },
+      { width, maxWidth, height, maxHeight },
+      reportedHeight,
+    ),
     ...style,
   };
 

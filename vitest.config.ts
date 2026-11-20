@@ -7,7 +7,7 @@ export default defineConfig({
         test: {
           name: 'parser',
           environment: 'node',
-          include: ['test/parser/**/*.test.ts'],
+          include: ['test/parser/**/*.test.ts', 'test/core/**/*.test.ts'],
         },
       },
       {
