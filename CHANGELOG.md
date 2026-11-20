@@ -1,5 +1,11 @@
 # social-embeds
 
+## 0.5.3
+
+### Patch Changes
+
+- 4339614: Telegram, Reddit, Bluesky and Tumblr embeds with `lazy={false}` no longer call `onError` for a missing height before they come near the viewport.
+
 ## 0.5.2
 
 ### Patch Changes
