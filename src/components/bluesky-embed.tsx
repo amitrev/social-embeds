@@ -32,11 +32,11 @@ export function BlueskyEmbed(props: BlueskyEmbedProps) {
   );
   if (plan?.kind !== 'iframe') return null;
 
-  const { fallbackHtml, ...frame } = planProps(plan);
+  const { fallbackHtml } = plan;
   return (
     <IframeEmbed
       {...shared}
-      {...frame}
+      {...planProps(plan)}
       onError={onError}
       maxWidth={maxWidth ?? plan.maxWidth}
       placeholder={

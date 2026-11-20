@@ -33,10 +33,12 @@ type IframeEmbedProps = FrameProps & {
 };
 
 /** The plan's fields as `IframeEmbed` props. */
-export function planProps(plan: IframePlan): Omit<IframePlan, 'kind'> {
-  const props: Partial<IframePlan> = { ...plan };
-  delete props.kind;
-  return props as Omit<IframePlan, 'kind'>;
+export function planProps(
+  plan: IframePlan,
+): Omit<IframePlan, 'kind' | 'fallbackHtml'> {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { kind, fallbackHtml, ...props } = plan;
+  return props;
 }
 
 const FILL: CSSProperties = { position: 'absolute', inset: 0 };
