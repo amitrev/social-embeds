@@ -56,7 +56,7 @@ export const tumblr: PlatformParser = {
     if (root.tag !== 'div' || !hasClass(root, 'tumblr-post')) return null;
     const frame = parseUrl(root.attrs.get('data-href') ?? '');
     if (frame?.host !== 'embed.tumblr.com') return null;
-    const [, , framePost] = FRAME_PATH.exec(frame.path) ?? [];
+    const [, frameBlog, framePost] = FRAME_PATH.exec(frame.path) ?? [];
     if (framePost === undefined) return null;
     const [link, ...rest] = root.children.filter(
       (node) => node.type !== 'text' || node.raw.trim() !== '',
@@ -65,6 +65,12 @@ export const tumblr: PlatformParser = {
       return null;
     const found = fromUrl(parseUrl(link.attrs.get('href') ?? ''));
     if (found?.id !== framePost) return null;
+    // A frame that names a blog must name the linked one; a token cannot be checked.
+    if (
+      frameBlog !== undefined &&
+      found.url !== `https://www.tumblr.com/${frameBlog}/${framePost}`
+    )
+      return null;
     return { ...found, options: {} };
   },
   isOwnScript: (src) => SCRIPT.test(src),

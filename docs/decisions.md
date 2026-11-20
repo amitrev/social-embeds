@@ -884,6 +884,16 @@ Checked in Chrome on 2026-11-20, against `next build` and `next start`. The brow
 - **`/many`:** the seven new embeds rendered at the sizes above, with no `onError` message.
 - A Bluesky frame that had not been painted for 15 s reported `social-embeds: Bluesky post did not report its height`, then still took its height when painted. Frames paint once on screen, and `lazy` creates them only near the viewport, so this needs a hidden page or `lazy={false}` far below the fold.
 
+## Wave 4 review follow-ups (2026-11-20)
+
+### D79. Minor findings from the wave 4 review
+
+- **Tumblr:** when `data-href` names a blog instead of a token, it must be the blog of the post link, else the code is rejected. A token still cannot be checked.
+- **SoundCloud:** a valid `secret_token` given as a player parameter, rather than inside `url`, is folded into the canonical URL; a malformed one rejects the code.
+- **Reserved option keys** are compared in lower case, so `URL` or `Secret_Token` cannot reach a player beside the verified content (D68).
+- **Bluesky lookup message:** only a profile that is a domain name counts as a handle. A malformed DID (`did:plc:` in upper case, `did:key:…`) now gets "not a supported post URL", not "needs a lookup". The dispatcher and the components build the message from one helper.
+- **Kick:** `kick.com/clips`, `/video` and `/videos` are not channels.
+
 ## Open VERIFY items
 
 | ID  | Item                                            | Milestone | Status                                          |

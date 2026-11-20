@@ -48,6 +48,9 @@ describe('Kick URLs', () => {
   it.each([
     'https://kick.com/',
     'https://kick.com/categories',
+    'https://kick.com/clips',
+    'https://kick.com/video',
+    'https://kick.com/videos',
     'https://kick.com/xqc/videos/abc',
     'https://kick.com/xqc/clips/clip_01',
   ])('does not match %s', (url) => {

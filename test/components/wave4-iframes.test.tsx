@@ -118,6 +118,22 @@ describe('SoundCloudEmbed', () => {
     );
     expect(src).not.toContain('evil');
   });
+
+  it('drops content keys in any letter case', () => {
+    const embed = parsed(soundcloudClassic);
+    const { container } = render(
+      <SoundCloudEmbed
+        embed={{
+          ...embed,
+          options: { URL: 'https://evil.example/', Secret_Token: 's-x' },
+        }}
+        lazy={false}
+      />,
+    );
+    const src = parts(container).iframe.getAttribute('src') ?? '';
+    expect(src).not.toContain('evil');
+    expect(src).not.toMatch(/secret_token/i);
+  });
 });
 
 describe('AppleMusicEmbed', () => {
@@ -174,6 +190,19 @@ describe('AppleMusicEmbed', () => {
         ).container,
       ).wrapper.style.height,
     ).toBe('300px');
+  });
+
+  it('keeps the verified song when options name another', () => {
+    const embed = parsed(appleAlbum);
+    const { container } = render(
+      <AppleMusicEmbed
+        embed={{ ...embed, options: { i: '1', path: '/evil' } }}
+        lazy={false}
+      />,
+    );
+    expect(parts(container).iframe.getAttribute('src')).toBe(
+      'https://embed.music.apple.com/us/album/1440857781',
+    );
   });
 
   it('never takes the sandbox from the embed code', () => {

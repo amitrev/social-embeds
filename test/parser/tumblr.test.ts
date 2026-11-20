@@ -18,6 +18,12 @@ describe('Tumblr embed code', () => {
     expect(parseEmbed(oembed)).toEqual(base);
   });
 
+  it('accepts a frame that names the same blog', () => {
+    expect(
+      parseEmbed(oembed.replace('t:0aY0xL2Fi1OFJg4YxpmegQ', 'staff')),
+    ).toEqual(base);
+  });
+
   it('accepts post.js with any cache key', () => {
     expect(parseEmbed(oembed.replace(/_v=[0-9a-f]+/, '_v=1'))).toEqual(base);
   });
@@ -35,6 +41,13 @@ describe('Tumblr embed code', () => {
     [
       'a frame for another post',
       oembed.replace('/832577330595643392/v2', '/1/v2'),
+    ],
+    [
+      'a frame for another blog',
+      oembed.replace(
+        't:0aY0xL2Fi1OFJg4YxpmegQ/832577330595643392',
+        'someoneelse/832577330595643392',
+      ),
     ],
     ['another frame host', oembed.replace('embed.tumblr.com', 'example.com')],
     ['a foreign script', oembed.replace('assets.tumblr.com', 'example.com')],

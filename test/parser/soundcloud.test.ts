@@ -75,6 +75,20 @@ describe('SoundCloud embed code', () => {
     expect(embed && verifyEmbed(embed)).toEqual(embed);
   });
 
+  it('folds a secret token given as a player parameter into the url', () => {
+    expect(
+      parseEmbed(
+        track.replace(
+          'show_artwork=true',
+          'show_artwork=true&secret_token=s-AbC12',
+        ),
+      ),
+    ).toMatchObject({
+      url: 'https://api.soundcloud.com/tracks/293?secret_token=s-AbC12',
+      options: { visual: true, show_artwork: true },
+    });
+  });
+
   it.each([
     ['the credit with a second extra', `${shareVisual}<p>more</p>`],
     [

@@ -56,6 +56,11 @@ const NAMES: Record<Platform, string> = {
   giphy: 'Giphy',
 };
 
+/** For a post URL that only a network lookup could resolve (docs/decisions.md D70). */
+export function lookupMessage(platform: Platform): string {
+  return `social-embeds: a ${NAMES[platform]} URL needs a lookup: use the embed code`;
+}
+
 export function resolveEmbed(
   url: string | undefined,
   given: ParsedEmbed | undefined,
@@ -64,7 +69,7 @@ export function resolveEmbed(
   const embed = given ?? (url === undefined ? null : matchUrl(url));
   if (!embed && url !== undefined && needsLookup(url) === platform) {
     return {
-      error: `social-embeds: a ${NAMES[platform]} URL needs a lookup: use the embed code`,
+      error: lookupMessage(platform),
     };
   }
   if (!embed) {
@@ -94,7 +99,10 @@ export function optionsWithout(
   options: ParsedEmbed['options'],
   reserved: readonly string[],
 ): [string, string | number | boolean][] {
-  return Object.entries(options).filter(([key]) => !reserved.includes(key));
+  // Lower-cased, so `URL` cannot slip past a reserved `url`.
+  return Object.entries(options).filter(
+    ([key]) => !reserved.includes(key.toLowerCase()),
+  );
 }
 
 /** Later entries replace earlier ones with the same name. */
