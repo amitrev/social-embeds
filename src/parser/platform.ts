@@ -15,6 +15,8 @@ export type PlatformParser = {
   isOwnScript: (src: string) => boolean;
   scriptOptions?: (src: string) => Options;
   allowsFbRoot?: boolean;
+  /** A sibling element after the embed that is the platform's own markup, such as a credit; it is dropped. */
+  isOwnExtra?: (element: HtmlElement, embed: ParsedEmbed) => boolean;
   match: (url: ParsedUrl) => ParsedEmbed | null;
 };
 

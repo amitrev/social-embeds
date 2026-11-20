@@ -20,6 +20,13 @@ const SHAPES: Record<Platform, readonly string[]> = {
   vimeo: ['video iframe'],
   twitch: ['video iframe'],
   dailymotion: ['video iframe'],
+  bluesky: ['post iframe'],
+  soundcloud: ['post iframe'],
+  applemusic: ['post iframe'],
+  applepodcasts: ['post iframe'],
+  tumblr: ['post iframe'],
+  kick: ['video iframe'],
+  giphy: ['video iframe'],
 };
 
 /**

@@ -42,5 +42,18 @@ Real embed codes, stored byte for byte as the platform produced them. Prettier i
 | `twitch/docs-collection.html`                  | same, collection example                                                                        | 2026-11-19 |
 | `dailymotion/player-id-docs.html`             | Dailymotion's [iframe docs](https://developers.dailymotion.com/docs/iframe-web), the responsive example with Player ID `x8lr5` | 2026-11-19 |
 | `dailymotion/oembed.html`                      | `dailymotion.com/services/oembed?url=https://www.dailymotion.com/video/xbxskia`, the `html` field (no Player ID: 403, D63) | 2026-11-19 |
+| `bluesky/oembed.html`                          | `embed.bsky.app/oembed?url=https://bsky.app/profile/bsky.app/post/3n2mkgfb4tk2d`, the `html` field | 2026-11-20 |
+| `soundcloud/oembed-track.html`                 | `soundcloud.com/oembed?format=json&url=https://soundcloud.com/forss/flickermood`, the `html` field | 2026-11-20 |
+| `soundcloud/oembed-playlist.html`              | same, `forss/sets/soulhack`                                                                     | 2026-11-20 |
+| `soundcloud/oembed-user.html`                  | same, `forss`                                                                                   | 2026-11-20 |
+| `soundcloud/share-visual.html`                 | soundcloud.com `forss/flickermood` → Share → Embed, visual player                              | 2026-11-20 |
+| `soundcloud/share-classic.html`                | same, classic player                                                                            | 2026-11-20 |
+| `applemusic/share-album.html`                  | music.apple.com album `1440857781` → … → Copy Embed Code                                        | 2026-11-20 |
+| `applemusic/share-song.html`                   | same album, track "Better Together" → … → Copy Embed Code                                      | 2026-11-20 |
+| `applepodcasts/share-episode.html`             | podcasts.apple.com episode `1000802907981` of `id1200361736` → … → Embed Episode → Copy Embed Code | 2026-11-20 |
+| `tumblr/oembed.html`                           | `www.tumblr.com/oembed/1.0?url=https://staff.tumblr.com/post/832577330595643392`, the `html` field | 2026-11-20 |
+| `kick/player-channel.html`                     | derived: Kick's player URL `player.kick.com/xqc` in an iframe; Kick has no embed dialog (D75)   | 2026-11-20 |
+| `giphy/embed-fixed.html`                       | giphy.com GIF `JIX9t2j0ZTN9S` → Embed, Responsive off                                           | 2026-11-20 |
+| `giphy/embed-responsive.html`                  | same, Responsive on                                                                             | 2026-11-20 |
 
 Snapchat Spotlight embed code is derived from the profile and Lens codes (`docs/decisions.md` D50). Variants that no current source produces are derived inside the tests from these files: the legacy `twitter.com` hosts, X `data-conversation`/`data-align`, the Facebook video iframe without the post text, and Instagram permalink and caption variants. The TikTok blockquote tests use the structure from brief §3 (see `docs/decisions.md` D11).

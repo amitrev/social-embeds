@@ -17,6 +17,13 @@ import twitch from '../fixtures/twitch/docs-channel.html?raw';
 import vimeo from '../fixtures/vimeo/responsive-docs.html?raw';
 import x from '../fixtures/x/oembed-basic.html?raw';
 import youtube from '../fixtures/youtube/share.html?raw';
+import appleMusic from '../fixtures/applemusic/share-song.html?raw';
+import applePodcasts from '../fixtures/applepodcasts/share-episode.html?raw';
+import bluesky from '../fixtures/bluesky/oembed.html?raw';
+import giphy from '../fixtures/giphy/embed-responsive.html?raw';
+import kick from '../fixtures/kick/player-channel.html?raw';
+import soundcloud from '../fixtures/soundcloud/share-visual.html?raw';
+import tumblr from '../fixtures/tumblr/oembed.html?raw';
 import { installObserver } from './helpers';
 
 vi.mock('../../src/loader/platform-scripts', () => ({
@@ -106,6 +113,33 @@ describe('SocialEmbed with embed code', () => {
       dailymotion,
       'iframe https://geo.dailymotion.com/player/x8lr5.html?video=x84sh87&mute=true',
     ],
+    [
+      'Bluesky',
+      bluesky,
+      'iframe https://embed.bsky.app/embed/did:plc:z72i7hdynmk6r22z27h6tvur/app.bsky.feed.post/3n2mkgfb4tk2d',
+    ],
+    [
+      'SoundCloud',
+      soundcloud,
+      'iframe https://w.soundcloud.com/player/?url=https%3A%2F%2Fapi.soundcloud.com%2Ftracks%2F293&color=%23ff5500&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true&visual=true',
+    ],
+    [
+      'Apple Music',
+      appleMusic,
+      'iframe https://embed.music.apple.com/us/song/1440857786',
+    ],
+    [
+      'Apple Podcasts',
+      applePodcasts,
+      'iframe https://embed.podcasts.apple.com/us/podcast/id1200361736?i=1000802907981',
+    ],
+    [
+      'Tumblr',
+      tumblr,
+      'iframe https://embed.tumblr.com/embed/post/staff/832577330595643392/v2',
+    ],
+    ['Kick', kick, 'iframe https://player.kick.com/xqc'],
+    ['Giphy', giphy, 'iframe https://giphy.com/embed/JIX9t2j0ZTN9S'],
   ])('routes %s embed code to its component', (_, html, expected) => {
     const { container } = render(<SocialEmbed html={html} lazy={false} />);
     expect(rendered(container)).toBe(expected);
@@ -247,6 +281,48 @@ describe('SocialEmbed with Dailymotion', () => {
       new Error(
         'social-embeds: a Dailymotion embed needs a Player ID: pass playerId to DailymotionEmbed',
       ),
+    );
+  });
+});
+
+describe('SocialEmbed with wave 4 URLs', () => {
+  it('reports a Bluesky handle URL as needing a lookup', () => {
+    const onError = vi.fn();
+    const { container } = render(
+      <SocialEmbed
+        url="https://bsky.app/profile/bsky.app/post/3n2mkgfb4tk2d"
+        onError={onError}
+      />,
+    );
+    expect(container.innerHTML).toBe('');
+    expect(onError).toHaveBeenCalledWith(
+      new Error(
+        'social-embeds: a Bluesky URL needs a lookup: use the embed code',
+      ),
+    );
+  });
+
+  it('renders a SoundCloud URL as the 400px visual player', () => {
+    const { container } = render(
+      <SocialEmbed
+        url="https://soundcloud.com/forss/flickermood"
+        lazy={false}
+      />,
+    );
+    expect(rendered(container)).toBe(
+      'iframe https://w.soundcloud.com/player/?url=https%3A%2F%2Fsoundcloud.com%2Fforss%2Fflickermood&visual=true',
+    );
+    expect((container.firstElementChild as HTMLElement).style.height).toBe(
+      '400px',
+    );
+  });
+
+  it('passes height to the wave 4 iframe embeds', () => {
+    const { container } = render(
+      <SocialEmbed url="https://kick.com/xqc" height={300} lazy={false} />,
+    );
+    expect((container.firstElementChild as HTMLElement).style.height).toBe(
+      '300px',
     );
   });
 });

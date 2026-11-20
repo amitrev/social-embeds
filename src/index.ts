@@ -76,3 +76,26 @@ export {
   type YouTubeEmbedProps,
   type YouTubeOptions,
 } from './components/youtube-embed';
+export {
+  SoundCloudEmbed,
+  type SoundCloudEmbedProps,
+  type SoundCloudOptions,
+} from './components/soundcloud-embed';
+export {
+  AppleMusicEmbed,
+  type AppleMusicEmbedProps,
+  ApplePodcastsEmbed,
+  type ApplePodcastsEmbedProps,
+} from './components/apple-embed';
+export {
+  KickEmbed,
+  type KickEmbedProps,
+  type KickOptions,
+} from './components/kick-embed';
+export { GiphyEmbed, type GiphyEmbedProps } from './components/giphy-embed';
+export {
+  BlueskyEmbed,
+  type BlueskyEmbedProps,
+  type BlueskyOptions,
+} from './components/bluesky-embed';
+export { TumblrEmbed, type TumblrEmbedProps } from './components/tumblr-embed';

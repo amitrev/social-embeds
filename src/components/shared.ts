@@ -1,5 +1,6 @@
 import type { ComponentProps, ReactNode } from 'react';
 import { matchUrl, type ParsedEmbed, type Platform } from '../parser';
+import { needsLookup } from '../parser/lookup';
 import { verifyEmbed } from '../parser/verify';
 
 export type EmbedSource =
@@ -46,6 +47,13 @@ const NAMES: Record<Platform, string> = {
   vimeo: 'Vimeo',
   twitch: 'Twitch',
   dailymotion: 'Dailymotion',
+  bluesky: 'Bluesky',
+  soundcloud: 'SoundCloud',
+  applemusic: 'Apple Music',
+  applepodcasts: 'Apple Podcasts',
+  tumblr: 'Tumblr',
+  kick: 'Kick',
+  giphy: 'Giphy',
 };
 
 export function resolveEmbed(
@@ -54,6 +62,11 @@ export function resolveEmbed(
   platform: Platform,
 ): { embed: ParsedEmbed; error?: never } | { embed?: never; error: string } {
   const embed = given ?? (url === undefined ? null : matchUrl(url));
+  if (!embed && url !== undefined && needsLookup(url) === platform) {
+    return {
+      error: `social-embeds: a ${NAMES[platform]} URL needs a lookup: use the embed code`,
+    };
+  }
   if (!embed) {
     return {
       error: `social-embeds: not a ${NAMES[platform]} post URL: ${String(url)}`,

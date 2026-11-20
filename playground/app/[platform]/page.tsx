@@ -1,16 +1,23 @@
 import { notFound } from 'next/navigation';
 import {
+  AppleMusicEmbed,
+  ApplePodcastsEmbed,
+  BlueskyEmbed,
   DailymotionEmbed,
   FacebookEmbed,
+  GiphyEmbed,
   InstagramEmbed,
+  KickEmbed,
   LinkedInEmbed,
   PinterestEmbed,
   RedditEmbed,
   SnapchatEmbed,
+  SoundCloudEmbed,
   SpotifyEmbed,
   TelegramEmbed,
   ThreadsEmbed,
   TikTokEmbed,
+  TumblrEmbed,
   TwitchEmbed,
   VimeoEmbed,
   XEmbed,
@@ -71,6 +78,20 @@ function ParsedOnServer({ embed }: { embed: ParsedEmbed }) {
       return <TwitchEmbed embed={embed} />;
     case 'dailymotion':
       return <DailymotionEmbed embed={embed} />;
+    case 'bluesky':
+      return <BlueskyEmbed embed={embed} />;
+    case 'soundcloud':
+      return <SoundCloudEmbed embed={embed} />;
+    case 'applemusic':
+      return <AppleMusicEmbed embed={embed} />;
+    case 'applepodcasts':
+      return <ApplePodcastsEmbed embed={embed} />;
+    case 'tumblr':
+      return <TumblrEmbed embed={embed} />;
+    case 'kick':
+      return <KickEmbed embed={embed} />;
+    case 'giphy':
+      return <GiphyEmbed embed={embed} />;
   }
 }
 

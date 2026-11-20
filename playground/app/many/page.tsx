@@ -20,6 +20,16 @@ const PINTEREST = 'https://www.pinterest.com/pin/99360735500167749/';
 const SPOTIFY = 'https://open.spotify.com/track/4uLU6hMCjMI75M1A2tKUQC';
 const VIMEO = 'https://vimeo.com/76979871';
 const TWITCH = 'https://www.twitch.tv/twitch';
+const BLUESKY =
+  'https://bsky.app/profile/did:plc:z72i7hdynmk6r22z27h6tvur/post/3n2mkgfb4tk2d';
+const SOUNDCLOUD = 'https://soundcloud.com/forss/flickermood';
+const APPLE_MUSIC =
+  'https://music.apple.com/us/album/better-together/1440857781?i=1440857786';
+const APPLE_PODCASTS =
+  'https://podcasts.apple.com/us/podcast/the-daily/id1200361736';
+const TUMBLR = 'https://staff.tumblr.com/post/832577330595643392';
+const KICK = 'https://kick.com/xqc';
+const GIPHY = 'https://giphy.com/gifs/cat-funny-JIX9t2j0ZTN9S';
 
 // X comes last, so its script loads only once you scroll down to it.
 const EMBEDS = [
@@ -46,6 +56,13 @@ const EMBEDS = [
   SPOTIFY,
   VIMEO,
   TWITCH,
+  BLUESKY,
+  SOUNDCLOUD,
+  APPLE_MUSIC,
+  APPLE_PODCASTS,
+  TUMBLR,
+  KICK,
+  GIPHY,
   X_1,
   X_2,
   X_3,

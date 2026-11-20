@@ -5,7 +5,8 @@ import type { ParsedEmbed } from './types';
 
 /**
  * Never throws. `null` unless the input is one embed element plus, at most, the platform's
- * own scripts, `<div id="fb-root">`, whitespace and comments (docs/decisions.md D14).
+ * own scripts, `<div id="fb-root">`, one platform-owned extra such as a credit, whitespace and
+ * comments (docs/decisions.md D14).
  */
 export function parseEmbed(html: string): ParsedEmbed | null {
   // Callers without type checking may pass anything.
@@ -14,6 +15,7 @@ export function parseEmbed(html: string): ParsedEmbed | null {
   if (!nodes) return null;
 
   let root: HtmlElement | undefined;
+  let extra: HtmlElement | undefined;
   const scripts: HtmlElement[] = [];
   let fbRoot = false;
   for (const node of nodes) {
@@ -27,14 +29,15 @@ export function parseEmbed(html: string): ParsedEmbed | null {
     } else if (isFbRoot(node)) {
       fbRoot = true;
     } else if (root) {
-      return null;
+      if (extra) return null;
+      extra = node;
     } else {
       root = node;
     }
   }
   if (!root) {
     const [script] = scripts;
-    if (fbRoot || scripts.length !== 1 || !script) return null;
+    if (fbRoot || extra || scripts.length !== 1 || !script) return null;
     if (script.children.length !== 0) return null;
     for (const platform of platforms) {
       const embed = platform.parseScript?.(script);
@@ -47,6 +50,7 @@ export function parseEmbed(html: string): ParsedEmbed | null {
     const embed = platform.parse(root);
     if (!embed) continue;
     if (fbRoot && !platform.allowsFbRoot) return null;
+    if (extra && !platform.isOwnExtra?.(extra, embed)) return null;
     const sources = scripts.map((script) =>
       script.children.length === 0 ? script.attrs.get('src') : undefined,
     );

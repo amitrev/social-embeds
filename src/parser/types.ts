@@ -13,7 +13,14 @@ export type Platform =
   | 'spotify'
   | 'vimeo'
   | 'twitch'
-  | 'dailymotion';
+  | 'dailymotion'
+  | 'bluesky'
+  | 'soundcloud'
+  | 'applemusic'
+  | 'applepodcasts'
+  | 'tumblr'
+  | 'kick'
+  | 'giphy';
 
 export type ParsedEmbed = {
   platform: Platform;

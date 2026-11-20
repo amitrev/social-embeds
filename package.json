@@ -24,7 +24,14 @@
     "spotify",
     "vimeo",
     "twitch",
-    "dailymotion"
+    "dailymotion",
+    "bluesky",
+    "soundcloud",
+    "apple-music",
+    "apple-podcasts",
+    "tumblr",
+    "kick",
+    "giphy"
   ],
   "license": "MIT",
   "author": "Atanas Mitrev",
