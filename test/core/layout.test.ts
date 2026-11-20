@@ -40,6 +40,20 @@ describe('frameStyle', () => {
     expect(plain).not.toHaveProperty('overflow');
   });
 
+  it('puts the radius last, where the components’ style once put it', () => {
+    expect(
+      Object.keys(frameStyle(plan({ borderRadius: 12, height: 152 }), {})),
+    ).toEqual([
+      'position',
+      'width',
+      'maxWidth',
+      'height',
+      'maxHeight',
+      'borderRadius',
+      'overflow',
+    ]);
+  });
+
   it('uses the ratio and full width by default', () => {
     expect(frameStyle(plan(), {})).toEqual({
       position: 'relative',

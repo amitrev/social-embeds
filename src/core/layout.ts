@@ -25,9 +25,6 @@ export function frameStyle(
       : Math.floor((maxHeight * aspectWidth) / aspectHeight);
   return {
     position: 'relative',
-    ...(plan.borderRadius === undefined
-      ? {}
-      : { borderRadius: plan.borderRadius, overflow: 'hidden' }),
     width,
     maxWidth:
       widest === undefined || (maxWidth !== undefined && maxWidth < widest)
@@ -38,5 +35,8 @@ export function frameStyle(
       : height === undefined
         ? { aspectRatio: `${String(aspectWidth)} / ${String(aspectHeight)}` }
         : { height, maxHeight }),
+    ...(plan.borderRadius === undefined
+      ? {}
+      : { borderRadius: plan.borderRadius, overflow: 'hidden' }),
   } as Record<string, string | number>;
 }
