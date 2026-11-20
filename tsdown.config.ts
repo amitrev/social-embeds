@@ -18,5 +18,6 @@ export default defineConfig([
     ...shared,
     entry: { element: 'src/element/index.ts' },
     clean: false,
+    minify: true,
   },
 ]);
