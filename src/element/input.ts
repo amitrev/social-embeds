@@ -14,6 +14,11 @@ function number(value: string | null): number | undefined {
   return Number.isFinite(parsed) && parsed >= 0 ? parsed : undefined;
 }
 
+/** A number, or a number with `px`. */
+function pixels(value: string | null): number | undefined {
+  return value === null ? undefined : number(value.trim().replace(/px$/i, ''));
+}
+
 function template(element: Element): HTMLTemplateElement | undefined {
   for (const child of element.children)
     if (child instanceof HTMLTemplateElement) return child;
@@ -30,9 +35,9 @@ export function readInput(element: Element, html: string | null): Input {
       content !== undefined ? { html: content } : url === null ? null : { url },
     layout: {
       width: number(width) ?? (width?.trim() ? width : undefined),
-      maxWidth: number(element.getAttribute('max-width')),
-      height: number(element.getAttribute('height')),
-      maxHeight: number(element.getAttribute('max-height')),
+      maxWidth: pixels(element.getAttribute('max-width')),
+      height: pixels(element.getAttribute('height')),
+      maxHeight: pixels(element.getAttribute('max-height')),
     },
     eager: element.hasAttribute('eager'),
   };

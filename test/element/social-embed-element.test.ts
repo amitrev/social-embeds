@@ -72,13 +72,13 @@ describe('<social-embed>', () => {
     if (plan.kind !== 'iframe') throw new Error('expected an iframe plan');
     expect(iframes(element)).toHaveLength(1);
     expect(element.querySelector('iframe')?.getAttribute('src')).toBe(plan.src);
-    expect(element.style.display).toBe('block');
   });
 
-  it('keeps a display the host set', () => {
-    const element = create({ url: YOUTUBE, style: 'display: inline-block' });
+  it('sets no inline display on itself', () => {
+    const element = create({ url: YOUTUBE });
     document.body.append(element);
-    expect(element.style.display).toBe('inline-block');
+    expect(element.style.display).toBe('');
+    expect(element.hasAttribute('style')).toBe(false);
   });
 
   it('renders embed code from a template, without its script', async () => {
@@ -129,6 +129,85 @@ describe('<social-embed>', () => {
     expect(iframes(element)).toHaveLength(1);
     expect(element.querySelector('iframe')?.getAttribute('src')).toContain(
       'player.vimeo.com',
+    );
+  });
+
+  it('re-renders when the template’s content changes in place', async () => {
+    const element = create(
+      { eager: '' },
+      `<template>${youtubeCode}</template>`,
+    );
+    document.body.append(element);
+    await flush();
+    const template = element.querySelector('template');
+    if (!template) throw new Error('no template');
+    template.innerHTML = vimeoCode;
+    await flush();
+    expect(iframes(element)).toHaveLength(1);
+    expect(element.querySelector('iframe')?.getAttribute('src')).toContain(
+      'player.vimeo.com',
+    );
+  });
+
+  it('watches the content of a template added later', async () => {
+    const element = create({ url: TELEGRAM, eager: '' });
+    document.body.append(element);
+    const template = document.createElement('template');
+    template.innerHTML = youtubeCode;
+    element.append(template);
+    await flush();
+    template.innerHTML = vimeoCode;
+    await flush();
+    expect(iframes(element)).toHaveLength(1);
+    expect(element.querySelector('iframe')?.getAttribute('src')).toContain(
+      'player.vimeo.com',
+    );
+  });
+
+  it('reflects its properties to attributes', () => {
+    const element = create();
+    document.body.append(element);
+    expect(element.url).toBeNull();
+    expect(element.eager).toBe(false);
+    element.eager = true;
+    element.url = YOUTUBE;
+    expect(element.getAttribute('url')).toBe(YOUTUBE);
+    expect(element.hasAttribute('eager')).toBe(true);
+    expect(element.querySelector('iframe')?.getAttribute('src')).toContain(
+      'youtube',
+    );
+    element.width = '300';
+    element.maxWidth = '400';
+    element.height = '200';
+    element.maxHeight = '500';
+    expect(element.getAttribute('width')).toBe('300');
+    expect(element.getAttribute('max-width')).toBe('400');
+    expect(element.getAttribute('height')).toBe('200');
+    expect(element.getAttribute('max-height')).toBe('500');
+    expect([
+      element.width,
+      element.maxWidth,
+      element.height,
+      element.maxHeight,
+    ]).toEqual(['300', '400', '200', '500']);
+    element.setAttribute('url', TELEGRAM);
+    expect(element.url).toBe(TELEGRAM);
+    element.url = null;
+    element.maxWidth = null;
+    element.eager = false;
+    expect(element.hasAttribute('url')).toBe(false);
+    expect(element.hasAttribute('max-width')).toBe(false);
+    expect(element.hasAttribute('eager')).toBe(false);
+    expect(element.childElementCount).toBe(0);
+  });
+
+  it('ignores an html property that is not a string', () => {
+    const element = create({ url: YOUTUBE, eager: '' });
+    (element as unknown as { html: unknown }).html = 42;
+    document.body.append(element);
+    expect(element.html).toBeNull();
+    expect(element.querySelector('iframe')?.getAttribute('src')).toContain(
+      'youtube',
     );
   });
 
@@ -197,6 +276,27 @@ describe('<social-embed>', () => {
     expect(element.childElementCount).toBe(1);
   });
 
+  it('reads px in the pixel attributes and ignores other units', () => {
+    const element = create({
+      url: YOUTUBE,
+      'max-width': '400px',
+      height: '300px',
+      'max-height': '500px',
+    });
+    document.body.append(element);
+    const wrapper = element.firstElementChild as HTMLElement;
+    expect(wrapper.style.maxWidth).toBe('400px');
+    expect(wrapper.style.height).toBe('300px');
+    expect(wrapper.style.maxHeight).toBe('500px');
+    element.setAttribute('max-width', '20em');
+    element.setAttribute('height', '50%');
+    element.setAttribute('max-height', '2in');
+    const next = element.firstElementChild as HTMLElement;
+    expect(next.style.maxWidth).toBe('');
+    expect(next.style.height).toBe('');
+    expect(next.style.aspectRatio).toBe('16 / 9');
+  });
+
   it('replaces the embed when url changes during load', async () => {
     const element = create({ url: YOUTUBE, eager: '' });
     document.body.append(element);
@@ -222,11 +322,21 @@ describe('<social-embed>', () => {
     document.body.append(element, other);
     element.remove();
     other.append(element);
+    const { loads } = listen(element);
     await flush();
     expect(iframes(element)).toHaveLength(1);
     expect(add.mock.calls.filter(([type]) => type === 'message')).toHaveLength(
       1,
     );
+    window.dispatchEvent(
+      new MessageEvent('message', {
+        data: JSON.stringify({ event: 'resize', height: 400 }),
+        origin: 'https://t.me',
+        source: element.querySelector('iframe')?.contentWindow ?? null,
+      }),
+    );
+    await flush();
+    expect(loads).toHaveBeenCalledOnce();
   });
 
   it('cleans up once removed, and renders again when re-added', async () => {
@@ -265,6 +375,27 @@ describe('<social-embed>', () => {
     expect(element.html).toBe(vimeoCode);
     expect(element.querySelector('iframe')?.getAttribute('src')).toContain(
       'player.vimeo.com',
+    );
+  });
+
+  it('picks up url and eager properties set before define', () => {
+    const element = document.createElement(
+      'social-embed-reflect',
+    ) as Element & {
+      url?: string;
+      eager?: boolean;
+    };
+    element.url = YOUTUBE;
+    element.eager = true;
+    document.body.append(element);
+    class Reflecting extends SocialEmbedElement {}
+    customElements.define('social-embed-reflect', Reflecting);
+    expect(Object.hasOwn(element, 'url')).toBe(false);
+    expect(Object.hasOwn(element, 'eager')).toBe(false);
+    expect(element.getAttribute('url')).toBe(YOUTUBE);
+    expect(element.hasAttribute('eager')).toBe(true);
+    expect(element.querySelector('iframe')?.getAttribute('src')).toContain(
+      'youtube',
     );
   });
 

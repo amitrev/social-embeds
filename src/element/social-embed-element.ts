@@ -28,6 +28,16 @@ function capture(host: Element): Node[] {
   return kept;
 }
 
+const UPGRADED = [
+  'html',
+  'url',
+  'width',
+  'maxWidth',
+  'height',
+  'maxHeight',
+  'eager',
+] as const;
+
 export class SocialEmbedElement extends Base {
   static observedAttributes = [
     'url',
@@ -49,10 +59,11 @@ export class SocialEmbedElement extends Base {
   constructor() {
     super();
     // A value set before the upgrade is an own property that hides the setter.
-    if (Object.hasOwn(this, 'html')) {
-      const value = (this as { html?: string | null }).html ?? null;
-      Reflect.deleteProperty(this, 'html');
-      this.html = value;
+    for (const name of UPGRADED) {
+      if (!Object.hasOwn(this, name)) continue;
+      const value: unknown = this[name];
+      Reflect.deleteProperty(this, name);
+      Reflect.set(this, name, value);
     }
   }
 
@@ -61,12 +72,59 @@ export class SocialEmbedElement extends Base {
   }
 
   set html(value: string | null) {
-    this.#html = value ?? null;
+    this.#html = typeof value === 'string' ? value : null;
     this.#update();
   }
 
+  get url(): string | null {
+    return this.getAttribute('url');
+  }
+
+  set url(value: string | null) {
+    this.#reflect('url', value);
+  }
+
+  get width(): string | null {
+    return this.getAttribute('width');
+  }
+
+  set width(value: string | null) {
+    this.#reflect('width', value);
+  }
+
+  get maxWidth(): string | null {
+    return this.getAttribute('max-width');
+  }
+
+  set maxWidth(value: string | null) {
+    this.#reflect('max-width', value);
+  }
+
+  get height(): string | null {
+    return this.getAttribute('height');
+  }
+
+  set height(value: string | null) {
+    this.#reflect('height', value);
+  }
+
+  get maxHeight(): string | null {
+    return this.getAttribute('max-height');
+  }
+
+  set maxHeight(value: string | null) {
+    this.#reflect('max-height', value);
+  }
+
+  get eager(): boolean {
+    return this.hasAttribute('eager');
+  }
+
+  set eager(value: boolean) {
+    this.toggleAttribute('eager', value);
+  }
+
   connectedCallback(): void {
-    if (this.style.display === '') this.style.display = 'block';
     // While the parser streams, the children after the open tag do not exist yet.
     if (this.#placeholder === undefined && document.readyState === 'loading') {
       if (!this.#waiting) {
@@ -84,9 +142,10 @@ export class SocialEmbedElement extends Base {
     }
     this.#placeholder ??= capture(this);
     this.#observer ??= new MutationObserver(() => {
+      this.#observe();
       this.#update();
     });
-    this.#observer.observe(this, { childList: true });
+    this.#observe();
     this.#update();
   }
 
@@ -102,6 +161,26 @@ export class SocialEmbedElement extends Base {
 
   attributeChangedCallback(): void {
     this.#update();
+  }
+
+  // Setting a template's innerHTML (as React does) changes only its content fragment.
+  #observe(): void {
+    const observer = this.#observer;
+    if (!observer) return;
+    observer.disconnect();
+    observer.observe(this, { childList: true });
+    for (const child of this.children)
+      if (child instanceof HTMLTemplateElement)
+        observer.observe(child.content, {
+          childList: true,
+          subtree: true,
+          characterData: true,
+        });
+  }
+
+  #reflect(name: string, value: string | null | undefined): void {
+    if (value === null || value === undefined) this.removeAttribute(name);
+    else this.setAttribute(name, value);
   }
 
   #update(): void {
