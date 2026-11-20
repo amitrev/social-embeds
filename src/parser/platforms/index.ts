@@ -3,7 +3,9 @@ import { applemusic } from './applemusic';
 import { applepodcasts } from './applepodcasts';
 import { dailymotion } from './dailymotion';
 import { facebook } from './facebook';
+import { giphy } from './giphy';
 import { instagram } from './instagram';
+import { kick } from './kick';
 import { linkedin } from './linkedin';
 import { pinterest } from './pinterest';
 import { reddit } from './reddit';
@@ -37,4 +39,6 @@ export const platforms: readonly PlatformParser[] = [
   soundcloud,
   applemusic,
   applepodcasts,
+  kick,
+  giphy,
 ];
