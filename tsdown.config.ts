@@ -1,11 +1,22 @@
 import { defineConfig } from 'tsdown';
 
-export default defineConfig({
-  entry: { index: 'src/index.ts', parser: 'src/parser/index.ts' },
+const shared = {
   format: 'esm',
   platform: 'neutral',
   target: 'es2022',
   dts: true,
   fixedExtension: false,
-  clean: true,
-});
+} as const;
+
+export default defineConfig([
+  {
+    ...shared,
+    entry: { index: 'src/index.ts', parser: 'src/parser/index.ts' },
+    clean: true,
+  },
+  {
+    ...shared,
+    entry: { element: 'src/element/index.ts' },
+    clean: false,
+  },
+]);
