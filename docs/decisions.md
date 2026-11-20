@@ -991,6 +991,27 @@ A component that sets a default `maxWidth`, a fixed `height` or a `borderRadius`
 
 An element in the HTML can connect while the parser is still reading, before its children and `<template>` exist. If the document is still loading when it connects, it waits for `DOMContentLoaded` before capturing its children and starting, so a template or placeholder written inside it is never missed.
 
+### D90. Script embeds measure a box the host cannot lay out
+
+The wrapper of a script embed takes the host's `className` and `style`. Up to 0.6.0 the platform container and the skeleton were its direct children, so the host's layout classes applied to them. novini.bg gives every embed block `flex items-center justify-center`. In that flex row the container shrank to fit its content and was 0 px wide when the Facebook SDK read it, beside a `width:100%` skeleton. The SDK sent `container_width=0`, Facebook drew its default 552 px post, and at 375 px the iframe sat at x = -88, cut off on both sides (2026-11-20, live article, `data-width="500"` from iframe embed code). D33's fluid-width check had used a block box only.
+
+The same post rendered in the live page at 375 px, in four boxes:
+
+| Wrapper                         | Container    | `container_width` | iframe            |
+| ------------------------------- | ------------ | ----------------- | ----------------- |
+| flex row, `justify-center`      | as before    | 0                 | 552 px at x = -88 |
+| block                           | as before    | 375               | 375 px            |
+| flex column, children stretched | as before    | 375               | 375 px            |
+| flex row, `justify-center`      | `width:100%` | 188               | 350 px            |
+
+The container and the skeleton now sit in one package-owned `<div style="width:100%">` inside the wrapper. As the wrapper's only child, it takes the wrapper's full width in a block wrapper and in a flex row or column, so the container is as wide as the wrapper when the script reads it.
+
+Evidence (playground, 375 px viewport, 343 px column, wrapper `display:flex; align-items:center; justify-content:center`): the old structure rebuilt in the page got `container_width=0` and a 552 px iframe at x = -88; `FacebookEmbed` and `<social-embed>` both got `container_width=343` and a 350 px iframe at x = 16. 350 px is the smallest post Facebook draws, so a column narrower than that still overflows on the right, as in a block box.
+
+- **Not `display:block` on the wrapper:** an inline `display` overrides the host's `hidden` attribute and responsive classes such as `hidden md:block`.
+- **Not `width:100%` on the container alone:** in a flex row it shares the row with the skeleton, so it was 188 px and Facebook drew its 350 px minimum (last row).
+- **The element has the same box.** Its wrapper is package-owned and the host's classes land on `<social-embed>`, so it never had the bug; the box keeps one DOM for both, which the parity test compares.
+
 ## Open VERIFY items
 
 | ID  | Item                                            | Milestone | Status                                          |

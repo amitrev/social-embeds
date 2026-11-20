@@ -35,7 +35,8 @@ function rendered(container: HTMLElement): string {
   const iframe = container.querySelector('iframe');
   if (iframe) return `iframe ${iframe.getAttribute('src') ?? ''}`;
   const root =
-    container.firstElementChild?.firstElementChild?.firstElementChild;
+    container.firstElementChild?.firstElementChild?.firstElementChild
+      ?.firstElementChild;
   if (!root) return 'nothing';
   // X, Instagram and Threads blockquotes get their class only when the post renders
   // (docs/decisions.md D39), so the host of the post's link tells them apart.

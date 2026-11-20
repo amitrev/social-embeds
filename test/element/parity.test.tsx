@@ -88,11 +88,12 @@ function placeholderKind(layer: Element | null | undefined): string {
 function describeDom(wrapper: Element | null, error: string | null): Rendered {
   const iframe = wrapper?.querySelector('iframe') ?? null;
   const frame = wrapper?.firstElementChild;
-  const container = iframe || !wrapper ? null : frame;
-  // Iframe embeds: the frame's child that is not the iframe. Script embeds: the wrapper's second child.
+  const container =
+    iframe || !wrapper ? null : (frame?.firstElementChild ?? null);
+  // Iframe embeds: the frame's child that is not the iframe. Script embeds: the frame's second child.
   const layer = iframe
     ? ([...(frame?.children ?? [])].find((child) => child !== iframe) ?? null)
-    : (wrapper?.children[1] ?? null);
+    : (frame?.children[1] ?? null);
   const styles: Record<string, string> = {};
   if (wrapper instanceof HTMLElement)
     for (const name of WRAPPER_STYLES)
