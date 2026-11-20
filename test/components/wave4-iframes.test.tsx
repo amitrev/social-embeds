@@ -3,12 +3,16 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
   AppleMusicEmbed,
   ApplePodcastsEmbed,
+  GiphyEmbed,
+  KickEmbed,
   SoundCloudEmbed,
 } from '../../src';
 import { parseEmbed, type ParsedEmbed } from '../../src/parser';
 import appleAlbum from '../fixtures/applemusic/share-album.html?raw';
 import appleSong from '../fixtures/applemusic/share-song.html?raw';
 import podcastEpisode from '../fixtures/applepodcasts/share-episode.html?raw';
+import giphyFixed from '../fixtures/giphy/embed-fixed.html?raw';
+import kickChannel from '../fixtures/kick/player-channel.html?raw';
 import soundcloudClassic from '../fixtures/soundcloud/share-classic.html?raw';
 import { installObserver } from './helpers';
 
@@ -219,5 +223,76 @@ describe('ApplePodcastsEmbed', () => {
         ).container,
       ).wrapper.style.height,
     ).toBe('160px');
+  });
+});
+
+describe('KickEmbed', () => {
+  it('renders a channel URL at 16:9', () => {
+    const { container } = render(
+      <KickEmbed url="https://kick.com/xqc" lazy={false} />,
+    );
+    const { wrapper, iframe } = parts(container);
+    expect(iframe.getAttribute('src')).toBe('https://player.kick.com/xqc');
+    expect(iframe.getAttribute('allow')).toBe('autoplay; fullscreen');
+    expect(wrapper.style.aspectRatio).toBe('16 / 9');
+  });
+
+  it('passes autoplay and muted, props over the embed code', () => {
+    const embed = parsed(
+      kickChannel.replace('/xqc"', '/xqc?autoplay=true&muted=false"'),
+    );
+    const { container } = render(
+      <KickEmbed embed={embed} muted lazy={false} />,
+    );
+    expect(parts(container).iframe.getAttribute('src')).toBe(
+      'https://player.kick.com/xqc?autoplay=true&muted=true',
+    );
+  });
+
+  it('keeps the verified channel when options name another', () => {
+    const embed = parsed(kickChannel);
+    const { container } = render(
+      <KickEmbed
+        embed={{ ...embed, options: { channel: 'other', video: '1' } }}
+        lazy={false}
+      />,
+    );
+    expect(parts(container).iframe.getAttribute('src')).toBe(
+      'https://player.kick.com/xqc',
+    );
+  });
+
+  it('narrows to a maxHeight', () => {
+    const { container } = render(
+      <KickEmbed url="https://kick.com/xqc" maxHeight={360} lazy={false} />,
+    );
+    expect(parts(container).wrapper.style.maxWidth).toBe('640px');
+  });
+});
+
+describe('GiphyEmbed', () => {
+  it('renders a URL at 1:1', () => {
+    const { container } = render(
+      <GiphyEmbed
+        url="https://giphy.com/gifs/cat-funny-JIX9t2j0ZTN9S"
+        lazy={false}
+      />,
+    );
+    const { wrapper, iframe } = parts(container);
+    expect(iframe.getAttribute('src')).toBe(
+      'https://giphy.com/embed/JIX9t2j0ZTN9S',
+    );
+    expect(wrapper.style.aspectRatio).toBe('1 / 1');
+  });
+
+  it('renders embed code at its size, without the credit', () => {
+    const { container } = render(
+      <GiphyEmbed
+        embed={parsed(giphyFixed.replace('height="480"', 'height="270"'))}
+        lazy={false}
+      />,
+    );
+    expect(parts(container).wrapper.style.aspectRatio).toBe('480 / 270');
+    expect(container.textContent).not.toContain('via GIPHY');
   });
 });

@@ -87,3 +87,9 @@ export {
   ApplePodcastsEmbed,
   type ApplePodcastsEmbedProps,
 } from './components/apple-embed';
+export {
+  KickEmbed,
+  type KickEmbedProps,
+  type KickOptions,
+} from './components/kick-embed';
+export { GiphyEmbed, type GiphyEmbedProps } from './components/giphy-embed';
