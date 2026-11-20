@@ -32,7 +32,7 @@ To drop a staged version instead, reject it (`npm stage reject <stage-id>` or **
 
 ## The demo
 
-`.github/workflows/pages.yml` publishes the playground as a static site at <https://amitrev.github.io/social-embeds/>. It runs when a GitHub release is published, and builds that release's tag, so the demo matches the version on npm. To redeploy by hand, run the **Pages** workflow from the Actions tab.
+`.github/workflows/pages.yml` publishes the playground as a static site at <https://amitrev.github.io/social-embeds/>. It runs when a GitHub release is published, and builds that release's tag, so the demo matches the version on npm. To redeploy by hand, run the **Pages** workflow from the Actions tab. It builds the latest published release; its `ref` input takes another release tag, or `main`. Releases before 0.5.2 have no demo build, so the first deploy, before the next release, is a run with `ref` set to `main`.
 
 The playground becomes a static export only when `PAGES_BASE_PATH` is set (`playground/next.config.ts`); `next dev`, `next start` and CI build it as usual.
 
