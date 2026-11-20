@@ -183,7 +183,7 @@ describe('facebookDriver', () => {
 describe('pinterestDriver', () => {
   it('adds data-pin-do just before building the container, and finishes on the drawn pin (D39, D51)', async () => {
     const anchor = document.createElement('a');
-    anchor.href = 'https://www.pinterest.com/pin/99360735500167749/';
+    anchor.href = 'https://www.pinterest.com/pin/424605071145752542/';
     container.append(anchor);
     const build = vi.fn((element: Element) => {
       expect(element).toBe(container);
@@ -196,7 +196,7 @@ describe('pinterestDriver', () => {
     expect(done).not.toHaveBeenCalled();
 
     const pin = document.createElement('span');
-    pin.setAttribute('data-pin-id', '99360735500167749');
+    pin.setAttribute('data-pin-id', '424605071145752542');
     anchor.replaceWith(pin);
     await vi.waitFor(() => {
       expect(done).toHaveBeenCalled();

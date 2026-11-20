@@ -451,18 +451,18 @@ describe('PinterestEmbed', () => {
     cleanup();
 
     const view = render(
-      <PinterestEmbed url="https://www.pinterest.com/pin/99360735500167749/" />,
+      <PinterestEmbed url="https://www.pinterest.com/pin/424605071145752542/" />,
     );
     const wrapper = view.container.firstElementChild as HTMLElement;
     expect(wrapper.style.maxWidth).toBe('236px');
     expect(markupOf(view.container)).toBe(
-      '<a href="https://www.pinterest.com/pin/99360735500167749/"></a>',
+      '<a href="https://www.pinterest.com/pin/424605071145752542/"></a>',
     );
     await enter();
     expect(load).toHaveBeenCalledWith('pinterest');
     expect(build).toHaveBeenCalledWith(wrapper.firstElementChild);
     expect(markupOf(view.container)).toBe(
-      '<a href="https://www.pinterest.com/pin/99360735500167749/" data-pin-do="embedPin"></a>',
+      '<a href="https://www.pinterest.com/pin/424605071145752542/" data-pin-do="embedPin"></a>',
     );
   });
 
@@ -471,7 +471,7 @@ describe('PinterestEmbed', () => {
       <PinterestEmbed embed={parsed(pinterestIframe)} pinWidth="large" />,
     );
     expect(markupOf(container)).toBe(
-      '<a href="https://www.pinterest.com/pin/99360735500167749/" data-pin-width="large"></a>',
+      '<a href="https://www.pinterest.com/pin/424605071145752542/" data-pin-width="large"></a>',
     );
     expect((container.firstElementChild as HTMLElement).style.maxWidth).toBe(
       '600px',

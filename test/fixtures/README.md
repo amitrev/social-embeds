@@ -14,8 +14,8 @@ Real embed codes, stored byte for byte as the platform produced them. Prettier i
 | `youtube/oembed.html`                          | `youtube.com/oembed?url=https://www.youtube.com/watch?v=jNQXAC9IVRw&format=json`                | 2026-11-03 |
 | `threads/oembed.html`                          | `graph.threads.net/v1.0/oembed?url=https://www.threads.com/@instagram/post/DfQSavwEs5C`         | 2026-11-03 |
 | `threads/oembed-maxwidth.html`                 | same, with `maxwidth=400`                                                                      | 2026-11-03 |
-| `tiktok/oembed-player.html`                    | `tiktok.com/oembed?url=https://www.tiktok.com/@scout2015/video/6718335390845095173`             | 2026-11-03 |
-| `tiktok/webapp-share-player.html`              | TikTok website share dialog → Embed, pasted by the maintainer                                  | 2026-11-03 |
+| `tiktok/oembed-player.html` | `tiktok.com/oembed?url=https://www.tiktok.com/@tiktok/video/7704834703446117662` | 2026-11-20 |
+| `tiktok/webapp-share-player.html` | TikTok website share dialog → Embed, `@tiktok` video `7704834703446117662`, pasted by the maintainer | 2026-11-20 |
 | `instagram/post-captioned.html`                | `instagram.com/api/v1/oembed/?url=https://www.instagram.com/p/DfPQchkG1tg/&maxwidth=540`, the `html` field | 2026-11-11 |
 | `facebook/post-iframe.html`                    | Facebook post menu → Embed, pasted by the maintainer                                           | 2026-11-03 |
 | `facebook/video-iframe-reel.html`              | Facebook reel menu → Embed, "Include full post" ticked, as published in a news article        | 2026-11-11 |
@@ -24,13 +24,13 @@ Real embed codes, stored byte for byte as the platform produced them. Prettier i
 | `telegram/widget-configurator.html`            | `core.telegram.org/widgets/post` configurator, post `telegram/83`, defaults                    | 2026-11-18 |
 | `telegram/widget-configurator-options.html`    | same, "Always hide" author photo, red accent, dark theme                                       | 2026-11-18 |
 | `snapchat/profile-share.html`                  | snapchat.com profile `@teamsnapchat` → Share → Embed                                           | 2026-11-18 |
-| `snapchat/lens-share.html`                     | snapchat.com Lens `61141491143` → Share → Embed                                                | 2026-11-18 |
-| `pinterest/widget-docs.html`                   | Pinterest [widgets](https://developers.pinterest.com/docs/web-features/widgets/) docs: the `pinit.js` tag and the Pin widget anchor, joined | 2026-11-18 |
-| `pinterest/oembed-iframe.html`                 | `pinterest.com/oembed.json?url=https://www.pinterest.com/pin/99360735500167749/`, the `html` field | 2026-11-18 |
-| `reddit/post-share.html`                       | Reddit post → Share → Embed, r/bulgaria `1xz8iq4`, pasted by the maintainer                    | 2026-11-18 |
-| `reddit/comment-share.html`                    | Reddit comment → Share → Embed, same post, pasted by the maintainer                            | 2026-11-18 |
-| `linkedin/post-collapsed.html`                 | LinkedIn post → Embed this post, "less text", pasted by the maintainer                         | 2026-11-18 |
-| `linkedin/post-full.html`                      | LinkedIn post → Embed this post, full post, pasted by the maintainer                           | 2026-11-18 |
+| `snapchat/lens-share.html` | snapchat.com Lens `6451403405463552` "Dog Lens" by Snapchat → Share → Embed | 2026-11-20 |
+| `pinterest/widget-docs.html` | derived: Pinterest [widgets](https://developers.pinterest.com/docs/web-features/widgets/) docs' `pinit.js` tag and Pin widget anchor, with Pinterest's own pin `424605071145752542` | 2026-11-20 |
+| `pinterest/oembed-iframe.html` | `pinterest.com/oembed.json?url=https://www.pinterest.com/pin/424605071145752542/`, the `html` field | 2026-11-20 |
+| `reddit/post-share.html` | Reddit post → Share → Embed, r/reddit `11zso11` by an admin, pasted by the maintainer | 2026-11-20 |
+| `reddit/comment-share.html` | Reddit comment → Share → Embed, `jde89cx` in r/reddit `11zso11`, pasted by the maintainer | 2026-11-20 |
+| `linkedin/post-collapsed.html` | LinkedIn company page post `urn:li:ugcPost:7528828146767409153` → Embed this post, "less text", pasted by the maintainer | 2026-11-20 |
+| `linkedin/post-full.html` | same post → Embed this post, full post, pasted by the maintainer | 2026-11-20 |
 | `spotify/oembed-track.html`                    | `open.spotify.com/oembed?url=https://open.spotify.com/track/4uLU6hMCjMI75M1A2tKUQC`, the `html` field | 2026-11-19 |
 | `spotify/oembed-episode.html`                  | same, `episode/7makk4oTQel546B0PZlDM5`                                                          | 2026-11-19 |
 | `spotify/oembed-playlist.html`                 | same, `playlist/37i9dQZF1DXcBWIGoYBM5M`                                                         | 2026-11-19 |

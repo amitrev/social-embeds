@@ -3,9 +3,9 @@ import { matchUrl, parseEmbed } from '../../src/parser';
 import comment from '../fixtures/reddit/comment-share.html?raw';
 import post from '../fixtures/reddit/post-share.html?raw';
 
-const POST_URL = 'https://www.reddit.com/r/bulgaria/comments/1xz8iq4/';
+const POST_URL = 'https://www.reddit.com/r/reddit/comments/11zso11/';
 const COMMENT_URL =
-  'https://www.reddit.com/r/bulgaria/comments/1xz8iq4/comment/19st69pk12h39/';
+  'https://www.reddit.com/r/reddit/comments/11zso11/comment/jde89cx/';
 
 describe('Reddit embed code', () => {
   it('parses a post', () => {
@@ -13,7 +13,7 @@ describe('Reddit embed code', () => {
       platform: 'reddit',
       kind: 'post',
       url: POST_URL,
-      id: '1xz8iq4',
+      id: '11zso11',
       variant: 'iframe',
       options: {},
       size: { height: 316 },
@@ -25,10 +25,10 @@ describe('Reddit embed code', () => {
       platform: 'reddit',
       kind: 'post',
       url: COMMENT_URL,
-      id: '19st69pk12h39',
+      id: 'jde89cx',
       variant: 'iframe',
       options: {},
-      size: { height: 240 },
+      size: { height: 552 },
     });
   });
 
@@ -46,7 +46,7 @@ describe('Reddit embed code', () => {
   it('rejects a blockquote without a post link', () => {
     expect(
       parseEmbed(
-        '<blockquote class="reddit-embed-bq"><a href="https://www.reddit.com/r/bulgaria/">bulgaria</a></blockquote>',
+        '<blockquote class="reddit-embed-bq"><a href="https://www.reddit.com/r/reddit/">reddit</a></blockquote>',
       ),
     ).toBeNull();
   });
@@ -65,17 +65,17 @@ describe('Reddit embed code', () => {
 
 describe('Reddit URLs', () => {
   it.each([
-    [POST_URL, '1xz8iq4', POST_URL],
+    [POST_URL, '11zso11', POST_URL],
     [
-      'https://reddit.com/r/bulgaria/comments/1xz8iq4/some_title/?utm_source=share',
-      '1xz8iq4',
+      'https://reddit.com/r/reddit/comments/11zso11/some_title/?utm_source=share',
+      '11zso11',
       POST_URL,
     ],
-    ['https://old.reddit.com/r/bulgaria/comments/1xz8iq4', '1xz8iq4', POST_URL],
-    [COMMENT_URL, '19st69pk12h39', COMMENT_URL],
+    ['https://old.reddit.com/r/reddit/comments/11zso11', '11zso11', POST_URL],
+    [COMMENT_URL, 'jde89cx', COMMENT_URL],
     [
-      'https://www.reddit.com/r/bulgaria/comments/1xz8iq4/some_title/19st69pk12h39/',
-      '19st69pk12h39',
+      'https://www.reddit.com/r/reddit/comments/11zso11/some_title/jde89cx/',
+      'jde89cx',
       COMMENT_URL,
     ],
   ])('%s', (input, id, url) => {
@@ -90,10 +90,10 @@ describe('Reddit URLs', () => {
   });
 
   it.each([
-    'https://redd.it/1xz8iq4',
-    'https://www.reddit.com/r/bulgaria/s/AbCdEf123',
-    'https://www.reddit.com/r/bulgaria/',
-    'https://www.reddit.com/user/TastyAd579/',
+    'https://redd.it/11zso11',
+    'https://www.reddit.com/r/reddit/s/AbCdEf123',
+    'https://www.reddit.com/r/reddit/',
+    'https://www.reddit.com/user/joyventure/',
   ])('rejects %s', (url) => {
     expect(matchUrl(url)).toBeNull();
   });

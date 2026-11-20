@@ -23,10 +23,10 @@ describe('Snapchat embed code', () => {
     expect(parseEmbed(lens)).toEqual({
       platform: 'snapchat',
       kind: 'post',
-      url: 'https://www.snapchat.com/lens/9c4b773c46ca43acba564858059f7d7a',
-      id: '9c4b773c46ca43acba564858059f7d7a',
+      url: 'https://www.snapchat.com/lens/41b1e6372aa44fb89f903ecd48a4ab8b',
+      id: '41b1e6372aa44fb89f903ecd48a4ab8b',
       variant: 'iframe',
-      options: { title: 'Pure Flame Lens' },
+      options: { title: 'Dog Lens' },
       size: { width: 416, height: 692 },
     });
   });

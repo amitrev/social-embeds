@@ -69,7 +69,7 @@ describe('SocialEmbed with embed code', () => {
     [
       'TikTok',
       tiktok,
-      'iframe https://www.tiktok.com/player/v1/6718335390845095173?embed_from=oembed&music_info=1&description=1&autoplay=1&muted=1',
+      'iframe https://www.tiktok.com/player/v1/7704834703446117662?embed_from=oembed&music_info=1&description=1&autoplay=1&muted=1',
     ],
     [
       'YouTube',
@@ -85,12 +85,12 @@ describe('SocialEmbed with embed code', () => {
     [
       'LinkedIn',
       linkedin,
-      'iframe https://www.linkedin.com/embed/feed/update/urn:li:share:7527261037016817664',
+      'iframe https://www.linkedin.com/embed/feed/update/urn:li:ugcPost:7528828146767409153',
     ],
     [
       'Reddit',
       reddit,
-      'iframe https://embed.reddit.com/r/bulgaria/comments/1xz8iq4/?embed=true',
+      'iframe https://embed.reddit.com/r/reddit/comments/11zso11/?embed=true',
     ],
     ['Pinterest', pinterest, 'a www.pinterest.com'],
     [
@@ -186,8 +186,8 @@ describe('SocialEmbed with a URL', () => {
       'div.fb-video www.facebook.com',
     ],
     [
-      'https://www.tiktok.com/@scout2015/video/6718335390845095173',
-      'iframe https://www.tiktok.com/player/v1/6718335390845095173',
+      'https://www.tiktok.com/@tiktok/video/7704834703446117662',
+      'iframe https://www.tiktok.com/player/v1/7704834703446117662',
     ],
     [
       'https://youtu.be/jNQXAC9IVRw?t=90',
@@ -199,14 +199,14 @@ describe('SocialEmbed with a URL', () => {
       'iframe https://www.snapchat.com/lens/61141491143/embed',
     ],
     [
-      'https://www.linkedin.com/feed/update/urn:li:activity:7527261038006697984/',
-      'iframe https://www.linkedin.com/embed/feed/update/urn:li:activity:7527261038006697984',
+      'https://www.linkedin.com/feed/update/urn:li:activity:7528828146767409153/',
+      'iframe https://www.linkedin.com/embed/feed/update/urn:li:activity:7528828146767409153',
     ],
     [
-      'https://old.reddit.com/r/bulgaria/comments/1xz8iq4/comment/19st69pk12h39/',
-      'iframe https://embed.reddit.com/r/bulgaria/comments/1xz8iq4/comment/19st69pk12h39/?embed=true',
+      'https://old.reddit.com/r/reddit/comments/11zso11/comment/jde89cx/',
+      'iframe https://embed.reddit.com/r/reddit/comments/11zso11/comment/jde89cx/?embed=true',
     ],
-    ['https://bg.pinterest.com/pin/99360735500167749/', 'a www.pinterest.com'],
+    ['https://bg.pinterest.com/pin/424605071145752542/', 'a www.pinterest.com'],
     [
       'https://open.spotify.com/intl-de/playlist/37i9dQZF1DXcBWIGoYBM5M',
       'iframe https://open.spotify.com/embed/playlist/37i9dQZF1DXcBWIGoYBM5M',
@@ -366,7 +366,7 @@ describe('SocialEmbed props', () => {
   it('forwards height to LinkedIn and Snapchat, not to Telegram or Reddit', () => {
     const fixed = render(
       <SocialEmbed
-        url="https://www.linkedin.com/feed/update/urn:li:share:7527261037016817664/"
+        url="https://www.linkedin.com/feed/update/urn:li:share:7528828146767409153/"
         height={900}
       />,
     );

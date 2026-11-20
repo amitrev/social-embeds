@@ -67,10 +67,10 @@ describe('verifyEmbed', () => {
 
   it('accepts what matchUrl produced', () => {
     const embed = matchUrl(
-      'https://www.tiktok.com/@/video/6718335390845095173',
+      'https://www.tiktok.com/@/video/7704834703446117662',
     );
     expect(embed?.url).toBe(
-      'https://www.tiktok.com/@/video/6718335390845095173',
+      'https://www.tiktok.com/@/video/7704834703446117662',
     );
     expect(verifyEmbed(embed as ParsedEmbed)).toEqual(embed);
   });
@@ -111,7 +111,7 @@ describe('verifyEmbed', () => {
       'a Reddit URL whose path would shift into the iframe host',
       {
         ...(parseEmbed(reddit) as ParsedEmbed),
-        url: 'https://reddit.com/r/ab/comments/1xz8iq4/',
+        url: 'https://reddit.com/r/ab/comments/11zso11/',
       },
     ],
     [
