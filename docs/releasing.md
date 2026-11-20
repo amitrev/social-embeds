@@ -10,7 +10,7 @@ Releases go out from GitHub Actions through [npm trusted publishing](https://doc
 2. **version** opens or updates the "Version Packages" pull request. It runs `changeset version`, which bumps `package.json`, writes `CHANGELOG.md` and deletes the changesets.
 3. When that pull request is merged, **pack** runs the CI checks, builds and packs the tarball. It has no publish rights, and it is skipped when the version is already staged.
 4. **stage** runs in the `npm` environment and is the only job that may request an OIDC token. `npm stage publish` exchanges GitHub's OIDC token for a short-lived npm token and stages the tarball with provenance. The job then pushes the `v{version}` tag and creates a draft GitHub release from the `CHANGELOG.md` entry. Its summary shows the stage id.
-5. **You approve** the staged version on npm. It goes live as `latest`. Then you publish the draft GitHub release.
+5. **You approve** the staged version on npm. It goes live as `latest`. Then you publish the draft GitHub release, which deploys the demo (see [The demo](#the-demo)).
 
 The stage job holds no npm token, and `setup-node` is not given a registry, so if the OIDC exchange fails there are no credentials to fall back on and the job fails. The short-lived token can stage but cannot approve: approval always needs a maintainer's two-factor authentication.
 
@@ -30,6 +30,12 @@ When the stage job has finished:
 
 To drop a staged version instead, reject it (`npm stage reject <stage-id>` or **Reject** on npmjs.com), then delete its draft release and its `v{version}` tag. Until the tag is gone, the workflow will not stage that version again.
 
+## The demo
+
+`.github/workflows/pages.yml` publishes the playground as a static site at <https://amitrev.github.io/social-embeds/>. It runs when a GitHub release is published, and builds that release's tag, so the demo matches the version on npm. To redeploy by hand, run the **Pages** workflow from the Actions tab. It builds the latest published release; its `ref` input takes another release tag, or `main`. Releases before 0.5.2 have no demo build, so the first deploy, before the next release, is a run with `ref` set to `main`.
+
+The playground becomes a static export only when `PAGES_BASE_PATH` is set (`playground/next.config.ts`); `next dev`, `next start` and CI build it as usual.
+
 ## One-time setup
 
 npm lets you add a trusted publisher only to a package that already exists, so the name is first claimed with a placeholder. Do the steps in this order.
@@ -38,6 +44,8 @@ npm lets you add a trusted publisher only to a package that already exists, so t
 
 1. **Settings → Actions → General → Workflow permissions:** turn on "Allow GitHub Actions to create and approve pull requests". The version job needs it to open the "Version Packages" pull request.
 2. **Settings → Environments → New environment:** name it `npm`. Under "Deployment branches and tags", allow only `main`.
+3. **Settings → Pages → Build and deployment:** set Source to "GitHub Actions". This creates the `github-pages` environment.
+4. **Settings → Environments → `github-pages` → Deployment branches and tags:** add the tag pattern `v*`. A release deploy runs from its tag, and by default this environment accepts only the default branch.
 
 ### 2. Placeholder `0.0.0` on npm
 

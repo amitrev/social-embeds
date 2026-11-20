@@ -102,9 +102,11 @@ function DailymotionWithPlayerId() {
       <p>
         <code>DailymotionEmbed</code> with{' '}
         <code>playerId=&quot;{DAILYMOTION_DOCS_PLAYER}&quot;</code>, the Player
-        ID in Dailymotion’s docs. A site passes its own, from Dailymotion
-        Studio. <code>SocialEmbed</code> takes none, so it renders Dailymotion
-        only from embed code that carries one.
+        ID in Dailymotion’s docs. Its stream may be refused after a few plays,
+        which shows as “Playback error” (docs/decisions.md D69). A site passes
+        its own Player ID, from Dailymotion Studio. <code>SocialEmbed</code>{' '}
+        takes none, so it renders Dailymotion only from embed code that carries
+        one.
       </p>
       <DailymotionEmbed
         url={DAILYMOTION_VIDEO}

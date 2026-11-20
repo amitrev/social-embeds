@@ -6,5 +6,6 @@ coverage
 .idea/
 .vscode/
 playground/.next
+playground/out
 .remember/
 playground/next-env.d.ts

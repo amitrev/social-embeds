@@ -4,6 +4,8 @@ Turn social media embed code or post URLs into working React components.
 
 Pasting a platform's embed code into `dangerouslySetInnerHTML` does not work in React: the `<script>` tag never runs, every embed adds the same script again, and nothing initialises after client-side navigation. `social-embeds` recognises the platform, reads the post and its options from the embed code, drops the `<script>` tag, loads each platform script once per page and asks the platform to render the post. Iframe-based platforms get a responsive `<iframe>` instead.
 
+**[Live demo](https://amitrev.github.io/social-embeds/)**: every platform from embed code and post URLs, and a box for your own, running the released version.
+
 - X, Instagram, Threads, Facebook, TikTok, YouTube, Telegram, Snapchat, LinkedIn, Reddit, Pinterest, Spotify, Vimeo, Twitch, Dailymotion, Bluesky, SoundCloud, Apple Music, Apple Podcasts, Tumblr, Kick and Giphy
 - React 19, Next.js App Router (Server Components, client navigation), or plain React
 - Zero runtime dependencies, ESM only, typed
@@ -416,6 +418,7 @@ URL shapes, each tested against Facebook's plugins on `www.facebook.com`, `faceb
 - Embed code from Dailymotion Studio carries the Player ID (`geo.dailymotion.com/player/{playerId}.html?video={id}`) and renders as given, also inside Dailymotion's responsive wrapper `div`.
 - URLs, and code without a Player ID, render only through `DailymotionEmbed` with your `playerId`. A `playerId` prop also replaces the one in the embed code. `<SocialEmbed>` takes none: for that input it renders nothing and calls `onError`.
 - The package never uses a Player ID you did not give it.
+- Playback with a publisher's own Player ID is not yet tested. The sample Player ID from Dailymotion's docs loads the player and plays, but its stream is refused after a few plays (`docs/decisions.md` D69), so the demo's Dailymotion page may show "Playback error".
 - Playlists are not supported.
 
 ### Bluesky
