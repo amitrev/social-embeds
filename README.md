@@ -113,7 +113,7 @@ import {
 
 <InstagramEmbed url="https://www.instagram.com/p/Df75lxnmIrF/" captioned />
 
-<ThreadsEmbed url="https://www.threads.com/@threads/post/Df7kSgBJVNz" theme="auto" />
+<ThreadsEmbed url="https://www.threads.com/@instagram/post/Df5MmLBm0O7" theme="auto" />
 
 <FacebookEmbed
   url="https://www.facebook.com/facebook/videos/10153231379946729/"

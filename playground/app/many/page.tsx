@@ -6,7 +6,7 @@ const FACEBOOK_VIDEO =
   'https://www.facebook.com/facebook/videos/10153231379946729/';
 const FACEBOOK_POST =
   'https://www.facebook.com/facebook/posts/1710463914458955';
-const THREADS = 'https://www.threads.com/@threads/post/Df7kSgBJVNz';
+const THREADS = 'https://www.threads.com/@instagram/post/Df5MmLBm0O7';
 const INSTAGRAM = 'https://www.instagram.com/p/Df75lxnmIrF/';
 const X_1 = 'https://x.com/jack/status/20';
 const X_2 = 'https://x.com/XDevelopers/status/1460323737035677698';

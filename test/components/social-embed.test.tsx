@@ -180,7 +180,7 @@ describe('SocialEmbed with a URL', () => {
       'https://www.instagram.com/p/Df75lxnmIrF/',
       'blockquote www.instagram.com',
     ],
-    ['https://www.threads.com/t/Df7kSgBJVNz', 'blockquote www.threads.com'],
+    ['https://www.threads.com/t/Df5MmLBm0O7', 'blockquote www.threads.com'],
     [
       'https://www.facebook.com/facebook/videos/10153231379946729/',
       'div.fb-video www.facebook.com',

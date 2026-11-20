@@ -266,7 +266,7 @@ describe('ThreadsEmbed', () => {
     );
     const markup = markupOf(container);
     expect(markup).toMatch(
-      /^<blockquote data-text-post-permalink="https:\/\/www\.threads\.com\/t\/Df7kSgBJVNz" data-text-post-version="0" id="ig-tp-Df7kSgBJVNz" data-theme="dark"> <a href=/,
+      /^<blockquote data-text-post-permalink="https:\/\/www\.threads\.com\/t\/Df5MmLBm0O7" data-text-post-version="0" id="ig-tp-Df5MmLBm0O7" data-theme="dark"> <a href=/,
     );
     expect((container.firstElementChild as HTMLElement).style.maxWidth).toBe(
       '658px',

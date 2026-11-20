@@ -288,7 +288,7 @@ export const URLS: Record<PlatformKey, Sample[]> = {
   threads: [
     {
       label: 'Post',
-      value: 'https://www.threads.com/@threads/post/Df7kSgBJVNz',
+      value: 'https://www.threads.com/@instagram/post/Df5MmLBm0O7',
     },
   ],
   facebook: [

@@ -6,12 +6,12 @@ import oembed from '../fixtures/threads/embed-dialog.html?raw';
 const post = {
   platform: 'threads',
   kind: 'post',
-  url: 'https://www.threads.com/t/Df7kSgBJVNz',
-  id: 'Df7kSgBJVNz',
+  url: 'https://www.threads.com/t/Df5MmLBm0O7',
+  id: 'Df5MmLBm0O7',
   variant: 'sdk',
 } as const;
 
-const permalink = 'https://www.threads.com/@threads/post/Df7kSgBJVNz';
+const permalink = 'https://www.threads.com/@instagram/post/Df5MmLBm0O7';
 
 describe('Threads embed code', () => {
   it('parses the Embed dialog code', () => {
@@ -40,7 +40,7 @@ describe('Threads embed code', () => {
 
   it('rejects an element id that does not match the permalink', () => {
     expect(
-      parseEmbed(oembed.replace('id="ig-tp-Df7kSgBJVNz"', 'id="ig-tp-other"')),
+      parseEmbed(oembed.replace('id="ig-tp-Df5MmLBm0O7"', 'id="ig-tp-other"')),
     ).toBeNull();
   });
 
@@ -58,10 +58,10 @@ describe('Threads embed code', () => {
 
 describe('Threads URLs', () => {
   it.each([
-    'https://www.threads.com/@threads/post/Df7kSgBJVNz',
-    'https://www.threads.net/@threads/post/Df7kSgBJVNz/',
-    'https://threads.com/t/Df7kSgBJVNz?xmt=abc',
-    'https://www.threads.net/t/Df7kSgBJVNz',
+    'https://www.threads.com/@instagram/post/Df5MmLBm0O7',
+    'https://www.threads.net/@instagram/post/Df5MmLBm0O7/',
+    'https://threads.com/t/Df5MmLBm0O7?xmt=abc',
+    'https://www.threads.net/t/Df5MmLBm0O7',
   ])('%s', (url) => {
     expect(matchUrl(url)).toEqual({ ...post, options: {} });
   });
@@ -69,7 +69,7 @@ describe('Threads URLs', () => {
   it.each([
     'https://www.threads.com/@instagram',
     'https://www.threads.com/t/',
-    'https://threads.example/t/Df7kSgBJVNz',
+    'https://threads.example/t/Df5MmLBm0O7',
   ])('rejects %s', (url) => {
     expect(matchUrl(url)).toBeNull();
   });

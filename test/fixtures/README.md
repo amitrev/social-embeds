@@ -12,7 +12,7 @@ Real embed codes, stored byte for byte as the platform produced them. Prettier i
 | `youtube/share-start.html`                     | same, "Start at" ticked                                                                        | 2026-11-03 |
 | `youtube/share-nocookie-controls-start.html`   | same, plus "Enable privacy-enhanced mode" ticked and "Show player controls" unticked           | 2026-11-03 |
 | `youtube/oembed.html`                          | `youtube.com/oembed?url=https://www.youtube.com/watch?v=jNQXAC9IVRw&format=json`                | 2026-11-03 |
-| `threads/embed-dialog.html` | Threads post `@threads/post/Df7kSgBJVNz` → ⋯ → Embed, pasted by the maintainer; derived: Threads wrote the link text in the maintainer's interface language, and it was changed to its English "View on Threads" | 2026-11-20 |
+| `threads/embed-dialog.html` | derived: the Threads Embed dialog code the maintainer pasted for a `@threads` post, with its permalink and id changed to `@instagram/post/Df5MmLBm0O7` (`@threads` posts show "Thread not available" when embedded) and its link text changed from the maintainer's interface language to Threads' English "View on Threads" | 2026-11-20 |
 | `threads/embed-dialog-maxwidth.html` | derived: the same, with the inline `max-width:400px` that oEmbed's `maxwidth=400` writes | 2026-11-20 |
 | `tiktok/oembed-player.html` | `tiktok.com/oembed?url=https://www.tiktok.com/@tiktok/video/7704834703446117662` | 2026-11-20 |
 | `tiktok/webapp-share-player.html` | TikTok website share dialog → Embed, `@tiktok` video `7704834703446117662`, pasted by the maintainer | 2026-11-20 |

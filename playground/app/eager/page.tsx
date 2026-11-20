@@ -5,7 +5,7 @@ import { SocialEmbed } from 'social-embeds';
 const EMBEDS = [
   'https://www.facebook.com/facebook/videos/10153231379946729/',
   'https://www.instagram.com/p/Df75lxnmIrF/',
-  'https://www.threads.com/@threads/post/Df7kSgBJVNz',
+  'https://www.threads.com/@instagram/post/Df5MmLBm0O7',
   'https://x.com/jack/status/20',
   'https://www.pinterest.com/pin/424605071145752542/',
 ];
