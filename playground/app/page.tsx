@@ -30,6 +30,11 @@ export default function Home() {
           <Link href="/many">Many embeds</Link>: lazy loading and one script per
           platform.
         </li>
+        <li>
+          <Link href="/element">Web component</Link>: every post URL and two
+          embed codes as <code>&lt;social-embed&gt;</code>, with its{' '}
+          <code>load</code> and <code>error</code> events.
+        </li>
       </ul>
       <p>
         The bar at the bottom counts the platform scripts on the page. It stays
