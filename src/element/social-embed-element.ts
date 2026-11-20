@@ -120,8 +120,9 @@ export class SocialEmbedElement extends Base {
     return this.hasAttribute('eager');
   }
 
-  set eager(value: boolean) {
-    this.toggleAttribute('eager', value);
+  set eager(value: boolean | null | undefined) {
+    // An undefined force would toggle the attribute instead of removing it.
+    this.toggleAttribute('eager', Boolean(value));
   }
 
   connectedCallback(): void {

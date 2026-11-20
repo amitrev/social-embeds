@@ -201,6 +201,16 @@ describe('<social-embed>', () => {
     expect(element.childElementCount).toBe(0);
   });
 
+  it('treats an undefined eager property as off', () => {
+    const element = create();
+    // React sets a removed prop to undefined on an upgraded custom element.
+    element.eager = undefined;
+    expect(element.hasAttribute('eager')).toBe(false);
+    element.eager = true;
+    element.eager = undefined;
+    expect(element.hasAttribute('eager')).toBe(false);
+  });
+
   it('ignores an html property that is not a string', () => {
     const element = create({ url: YOUTUBE, eager: '' });
     (element as unknown as { html: unknown }).html = 42;
