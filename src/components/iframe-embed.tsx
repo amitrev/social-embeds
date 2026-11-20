@@ -7,7 +7,7 @@ import {
 } from 'react';
 import { HEIGHT_TIMEOUT_MS, MAX_REPORTED_HEIGHT } from '../core/timing';
 import { frameStyle } from '../core/layout';
-import type { MessageHeight } from '../core/plan';
+import type { IframePlan, MessageHeight } from '../core/plan';
 import { useNearViewport } from './hooks';
 import type { FrameProps } from './shared';
 
@@ -30,6 +30,13 @@ type IframeEmbedProps = FrameProps & {
   /** Query parameter that gets the page's host when the iframe is created (Twitch's `parent`). */
   hostParam?: string;
 };
+
+/** The plan's fields as `IframeEmbed` props. */
+export function planProps(plan: IframePlan): Omit<IframePlan, 'kind'> {
+  const props: Partial<IframePlan> = { ...plan };
+  delete props.kind;
+  return props as Omit<IframePlan, 'kind'>;
+}
 
 const FILL: CSSProperties = { position: 'absolute', inset: 0 };
 
