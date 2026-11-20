@@ -14,6 +14,8 @@ Real embed codes, stored byte for byte as the platform produced them. Prettier i
 | `youtube/oembed.html`                          | `youtube.com/oembed?url=https://www.youtube.com/watch?v=jNQXAC9IVRw&format=json`                | 2026-11-03 |
 | `threads/embed-dialog.html` | derived: the Threads Embed dialog code the maintainer pasted for a `@threads` post, with its permalink and id changed to `@instagram/post/Df5MmLBm0O7` (`@threads` posts show "Thread not available" when embedded) and its link text changed from the maintainer's interface language to Threads' English "View on Threads" | 2026-11-20 |
 | `threads/embed-dialog-maxwidth.html` | derived: the same, with the inline `max-width:400px` that oEmbed's `maxwidth=400` writes | 2026-11-20 |
+| `threads/oembed.html` | derived: the previous `graph.threads.net/v1.0/oembed` response, with the post code changed to `Df5MmLBm0O7`; it keeps the oEmbed form: `/t/{code}` permalink with its `utm_` query, `data-theme="light"` | 2026-11-20 |
+| `threads/oembed-maxwidth.html` | derived: the same with `maxwidth=400` (`max-width:400px`) | 2026-11-20 |
 | `tiktok/oembed-player.html` | `tiktok.com/oembed?url=https://www.tiktok.com/@tiktok/video/7704834703446117662` | 2026-11-20 |
 | `tiktok/webapp-share-player.html` | TikTok website share dialog → Embed, `@tiktok` video `7704834703446117662`, pasted by the maintainer | 2026-11-20 |
 | `instagram/post-captioned.html` | `instagram.com/api/v1/oembed/?url=https://www.instagram.com/p/Df75lxnmIrF/&maxwidth=540` (@instagram), the `html` field | 2026-11-20 |

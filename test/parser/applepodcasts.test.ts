@@ -60,7 +60,7 @@ describe('Apple Podcasts URLs', () => {
   });
 
   it.each([
-    'https://podcasts.apple.com/us/channel/the-new-york-times/id6442505455',
+    'https://podcasts.apple.com/us/channel/a-channel/id1000000001',
     'https://podcasts.apple.com/us/podcast/monument-valley-meet-the-developer/idabc',
   ])('does not match %s', (url) => {
     expect(matchUrl(url)).toBeNull();

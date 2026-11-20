@@ -63,10 +63,10 @@ describe('Tumblr embed code', () => {
 describe('Tumblr URLs', () => {
   it.each([
     'https://www.tumblr.com/staff/828009069026721792',
-    'https://www.tumblr.com/staff/828009069026721792/ao3-is-down',
+    'https://www.tumblr.com/staff/828009069026721792/premium-just-got-better',
     'https://tumblr.com/staff/828009069026721792',
     'https://staff.tumblr.com/post/828009069026721792',
-    'https://staff.tumblr.com/post/828009069026721792/ao3-is-down',
+    'https://staff.tumblr.com/post/828009069026721792/premium-just-got-better',
   ])('matches %s', (url) => {
     expect(matchUrl(url)).toEqual(base);
     expect(needsLookup(url)).toBeNull();

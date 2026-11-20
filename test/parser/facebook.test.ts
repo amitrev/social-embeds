@@ -185,45 +185,45 @@ describe('Facebook URLs (shapes verified in docs/decisions.md D21)', () => {
       post(pfbid, `https://www.facebook.com/facebook/posts/${pfbid}`),
     ],
     [
-      'https://m.facebook.com/facebook/posts/10234117416785614/?app=fbl',
+      'https://m.facebook.com/facebook/posts/1710463914458955/?app=fbl',
       post(
-        '10234117416785614',
-        'https://www.facebook.com/facebook/posts/10234117416785614',
+        '1710463914458955',
+        'https://www.facebook.com/facebook/posts/1710463914458955',
       ),
     ],
     [
-      'https://facebook.com/permalink.php?story_fbid=10234117416785614&id=1903493489701660',
+      'https://facebook.com/permalink.php?story_fbid=1710463914458955&id=20531316728',
       post(
-        '10234117416785614',
-        'https://www.facebook.com/permalink.php?story_fbid=10234117416785614&id=1903493489701660',
+        '1710463914458955',
+        'https://www.facebook.com/permalink.php?story_fbid=1710463914458955&id=20531316728',
       ),
     ],
     [
-      'https://www.facebook.com/story.php?story_fbid=10234117416785614&id=1903493489701660&rdid=x',
+      'https://www.facebook.com/story.php?story_fbid=1710463914458955&id=20531316728&rdid=x',
       post(
-        '10234117416785614',
-        'https://www.facebook.com/story.php?story_fbid=10234117416785614&id=1903493489701660',
+        '1710463914458955',
+        'https://www.facebook.com/story.php?story_fbid=1710463914458955&id=20531316728',
       ),
     ],
     [
-      'https://www.facebook.com/photo.php?fbid=10234117378664661&set=a.1018797998903&type=3',
+      'https://www.facebook.com/photo.php?fbid=1000000000000001&set=a.1000000000001&type=3',
       post(
-        '10234117378664661',
-        'https://www.facebook.com/photo.php?fbid=10234117378664661',
+        '1000000000000001',
+        'https://www.facebook.com/photo.php?fbid=1000000000000001',
       ),
     ],
     [
-      'https://www.facebook.com/photo/?fbid=10234117378664661',
+      'https://www.facebook.com/photo/?fbid=1000000000000001',
       post(
-        '10234117378664661',
-        'https://www.facebook.com/photo/?fbid=10234117378664661',
+        '1000000000000001',
+        'https://www.facebook.com/photo/?fbid=1000000000000001',
       ),
     ],
     [
-      'https://www.facebook.com/facebook/photos/a.1018797998903/10234117378664661/',
+      'https://www.facebook.com/facebook/photos/a.1000000000001/1000000000000001/',
       post(
-        '10234117378664661',
-        'https://www.facebook.com/facebook/photos/a.1018797998903/10234117378664661/',
+        '1000000000000001',
+        'https://www.facebook.com/facebook/photos/a.1000000000001/1000000000000001/',
       ),
     ],
     [docsVideo, video('10153231379946729', docsVideo)],

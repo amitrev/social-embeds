@@ -69,8 +69,8 @@ describe('Apple Music URLs', () => {
   });
 
   it.each([
-    'https://music.apple.com/us/music-video/the-fate-of-ophelia/1845446611',
-    'https://music.apple.com/us/artist/jack-johnson/909253',
+    'https://music.apple.com/us/music-video/a-music-video/1000000001',
+    'https://music.apple.com/us/artist/chad-crouch/19053718',
     'https://music.apple.com/us/album/x/abc',
     'https://music.apple.com/usa/album/1357820591',
   ])('does not match %s', (url) => {

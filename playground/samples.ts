@@ -326,7 +326,7 @@ export const URLS: Record<PlatformKey, Sample[]> = {
   ],
   linkedin: [
     {
-      label: 'Post (activity URN), default height',
+      label: 'Post (ugcPost URN), default height',
       value:
         'https://www.linkedin.com/feed/update/urn:li:ugcPost:7528828146767409153/',
     },

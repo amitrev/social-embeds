@@ -26,6 +26,11 @@ import youtube from '../fixtures/youtube/share-nocookie-controls-start.html?raw'
 import appleMusic from '../fixtures/applemusic/share-song.html?raw';
 import applePodcasts from '../fixtures/applepodcasts/share-episode.html?raw';
 import soundcloudShare from '../fixtures/soundcloud/share-visual.html?raw';
+import bluesky from '../fixtures/bluesky/oembed.html?raw';
+import giphy from '../fixtures/giphy/embed-responsive.html?raw';
+import kick from '../fixtures/kick/player-channel.html?raw';
+import threadsOembed from '../fixtures/threads/oembed.html?raw';
+import tumblr from '../fixtures/tumblr/oembed.html?raw';
 
 const fixtures = {
   postIframe,
@@ -53,6 +58,11 @@ const fixtures = {
   soundcloudShare,
   appleMusic,
   applePodcasts,
+  bluesky,
+  tumblr,
+  kick,
+  giphy,
+  threadsOembed,
 };
 
 describe('verifyEmbed', () => {

@@ -78,7 +78,7 @@ describe('Dailymotion URLs', () => {
   });
 
   it.each([
-    'https://www.dailymotion.com/euronews-en',
+    'https://www.dailymotion.com/dm-support-policy',
     'https://www.dailymotion.com/playlist/x5zhzj',
     'https://dai.ly/',
   ])('rejects %s', (url) => {

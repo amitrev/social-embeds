@@ -62,7 +62,7 @@ describe('LinkedIn URLs', () => {
       post('ugcPost', '7528828146767409153'),
     ],
     [
-      'https://www.linkedin.com/posts/pavlin-dobrev_robotics-activity-7528828146767409153-Ab1c?utm_source=share',
+      'https://www.linkedin.com/posts/linkedin_new-features-activity-7528828146767409153-Ab1c?utm_source=share',
       post('activity', '7528828146767409153'),
     ],
     [

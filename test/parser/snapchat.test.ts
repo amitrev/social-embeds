@@ -125,7 +125,7 @@ describe('Snapchat URLs', () => {
 
   // These have no /embed page (docs/decisions.md D50).
   it.each([
-    'https://www.snapchat.com/@snapgames/_okTjPWBROGWHUK3mnmVIwAAgdXhkYWd6cXNmAaHsDXXqAaHsDXFnAAAAAA',
+    'https://www.snapchat.com/@snapgames/_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
     'https://www.snapchat.com/p/9d647766-d450-45e9-b2a9-6b656b92c808',
     'https://t.snapchat.com/abcdef',
     'https://www.snapchat.com/spotlight',

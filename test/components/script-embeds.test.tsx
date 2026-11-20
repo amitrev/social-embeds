@@ -302,7 +302,7 @@ describe('FacebookEmbed', () => {
     const onLoad = vi.fn();
     const { container } = render(
       <FacebookEmbed
-        url="https://m.facebook.com/facebook/posts/10234117416785614"
+        url="https://m.facebook.com/facebook/posts/1710463914458955"
         locale="bg_BG"
         onLoad={onLoad}
       />,
@@ -311,7 +311,7 @@ describe('FacebookEmbed', () => {
       '750px',
     );
     expect(markupOf(container)).toBe(
-      '<div class="fb-post" data-href="https://www.facebook.com/facebook/posts/10234117416785614"></div>',
+      '<div class="fb-post" data-href="https://www.facebook.com/facebook/posts/1710463914458955"></div>',
     );
 
     await enter();

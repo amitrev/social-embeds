@@ -117,7 +117,7 @@ import {
 
 <FacebookEmbed
   url="https://www.facebook.com/facebook/videos/10153231379946729/"
-  locale="bg_BG"
+  locale="en_GB"
   showCaptions
 />
 
@@ -142,7 +142,7 @@ import {
 <RedditEmbed
   url="https://www.reddit.com/r/reddit/comments/11zso11/"
   theme="dark"
-  locale="bg-BG"
+  locale="en-GB"
 />
 
 <PinterestEmbed url="https://www.pinterest.com/pin/424605071145752542/" pinWidth="large" />
