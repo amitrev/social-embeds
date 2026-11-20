@@ -3,23 +3,17 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { stdout } from 'node:process';
 import { gzipSync } from 'node:zlib';
+import { findImports } from './find-imports.mjs';
 
 const LIMIT = 30_720;
 const file = join(import.meta.dirname, '..', 'dist', 'element.js');
 const code = readFileSync(file, 'utf8');
 
-const IMPORT = /^\s*import\s*(?:[\w*{][^;]*?\sfrom\s*)?['"]([^'"]+)['"]/gm;
-const REEXPORT = /^\s*export\s*(?:\*|\{[^}]*\})\s*from\s*['"]([^'"]+)['"]/gm;
-const specifiers = [...code.matchAll(IMPORT), ...code.matchAll(REEXPORT)].map(
-  (m) => m[1],
-);
+const specifiers = await findImports(code);
 if (specifiers.length > 0) {
   throw new Error(
     `dist/element.js must have no imports, found: ${specifiers.join(', ')}`,
   );
-}
-if (/\bimport\s*\(/.test(code)) {
-  throw new Error('dist/element.js must have no dynamic imports');
 }
 
 const size = gzipSync(code).length;

@@ -11,6 +11,7 @@ export default defineConfig({
             'test/parser/**/*.test.ts',
             'test/core/**/*.test.ts',
             'test/element/node-import.test.ts',
+            'test/scripts/**/*.test.ts',
           ],
         },
       },
