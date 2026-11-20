@@ -140,13 +140,13 @@ describe('AppleMusicEmbed', () => {
   it('renders an album URL at 450px with Apple’s sandbox', () => {
     const { container } = render(
       <AppleMusicEmbed
-        url="https://music.apple.com/us/album/in-between-dreams/1440857781"
+        url="https://music.apple.com/us/album/birds-of-oaks-bottom-piano-solos/1357820591"
         lazy={false}
       />,
     );
     const { wrapper, iframe } = parts(container);
     expect(iframe.getAttribute('src')).toBe(
-      'https://embed.music.apple.com/us/album/1440857781',
+      'https://embed.music.apple.com/us/album/1357820591',
     );
     expect(iframe.getAttribute('sandbox')).toBe(APPLE_SANDBOX);
     expect(iframe.getAttribute('allow')).toBe(
@@ -160,13 +160,13 @@ describe('AppleMusicEmbed', () => {
   it('renders a song on its album at 175px', () => {
     const { container } = render(
       <AppleMusicEmbed
-        url="https://music.apple.com/us/album/better-together/1440857781?i=1440857786"
+        url="https://music.apple.com/us/album/great-blue-heron/1357820591?i=1357820597"
         lazy={false}
       />,
     );
     const { wrapper, iframe } = parts(container);
     expect(iframe.getAttribute('src')).toBe(
-      'https://embed.music.apple.com/us/album/1440857781?i=1440857786',
+      'https://embed.music.apple.com/us/album/1357820591?i=1357820597',
     );
     expect(wrapper.style.height).toBe('175px');
   });
@@ -201,7 +201,7 @@ describe('AppleMusicEmbed', () => {
       />,
     );
     expect(parts(container).iframe.getAttribute('src')).toBe(
-      'https://embed.music.apple.com/us/album/1440857781',
+      'https://embed.music.apple.com/us/album/1357820591',
     );
   });
 
@@ -258,23 +258,23 @@ describe('ApplePodcastsEmbed', () => {
 describe('KickEmbed', () => {
   it('renders a channel URL at 16:9', () => {
     const { container } = render(
-      <KickEmbed url="https://kick.com/xqc" lazy={false} />,
+      <KickEmbed url="https://kick.com/kick" lazy={false} />,
     );
     const { wrapper, iframe } = parts(container);
-    expect(iframe.getAttribute('src')).toBe('https://player.kick.com/xqc');
+    expect(iframe.getAttribute('src')).toBe('https://player.kick.com/kick');
     expect(iframe.getAttribute('allow')).toBe('autoplay; fullscreen');
     expect(wrapper.style.aspectRatio).toBe('16 / 9');
   });
 
   it('passes autoplay and muted, props over the embed code', () => {
     const embed = parsed(
-      kickChannel.replace('/xqc"', '/xqc?autoplay=true&muted=false"'),
+      kickChannel.replace('/kick"', '/kick?autoplay=true&muted=false"'),
     );
     const { container } = render(
       <KickEmbed embed={embed} muted lazy={false} />,
     );
     expect(parts(container).iframe.getAttribute('src')).toBe(
-      'https://player.kick.com/xqc?autoplay=true&muted=true',
+      'https://player.kick.com/kick?autoplay=true&muted=true',
     );
   });
 
@@ -287,13 +287,13 @@ describe('KickEmbed', () => {
       />,
     );
     expect(parts(container).iframe.getAttribute('src')).toBe(
-      'https://player.kick.com/xqc',
+      'https://player.kick.com/kick',
     );
   });
 
   it('narrows to a maxHeight', () => {
     const { container } = render(
-      <KickEmbed url="https://kick.com/xqc" maxHeight={360} lazy={false} />,
+      <KickEmbed url="https://kick.com/kick" maxHeight={360} lazy={false} />,
     );
     expect(parts(container).wrapper.style.maxWidth).toBe('640px');
   });
@@ -303,25 +303,22 @@ describe('GiphyEmbed', () => {
   it('renders a URL at 1:1', () => {
     const { container } = render(
       <GiphyEmbed
-        url="https://giphy.com/gifs/cat-funny-JIX9t2j0ZTN9S"
+        url="https://giphy.com/gifs/originals-animation-kitten-logo-l41YlHs99JsSptZf2"
         lazy={false}
       />,
     );
     const { wrapper, iframe } = parts(container);
     expect(iframe.getAttribute('src')).toBe(
-      'https://giphy.com/embed/JIX9t2j0ZTN9S',
+      'https://giphy.com/embed/l41YlHs99JsSptZf2',
     );
     expect(wrapper.style.aspectRatio).toBe('1 / 1');
   });
 
   it('renders embed code at its size, without the credit', () => {
     const { container } = render(
-      <GiphyEmbed
-        embed={parsed(giphyFixed.replace('height="480"', 'height="270"'))}
-        lazy={false}
-      />,
+      <GiphyEmbed embed={parsed(giphyFixed)} lazy={false} />,
     );
-    expect(parts(container).wrapper.style.aspectRatio).toBe('480 / 270');
+    expect(parts(container).wrapper.style.aspectRatio).toBe('480 / 269');
     expect(container.textContent).not.toContain('via GIPHY');
   });
 });

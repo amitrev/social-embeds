@@ -116,7 +116,7 @@ describe('SocialEmbed with embed code', () => {
     [
       'Bluesky',
       bluesky,
-      'iframe https://embed.bsky.app/embed/did:plc:z72i7hdynmk6r22z27h6tvur/app.bsky.feed.post/3n2mkgfb4tk2d',
+      'iframe https://embed.bsky.app/embed/did:plc:z72i7hdynmk6r22z27h6tvur/app.bsky.feed.post/3mxu3hsnebc2v',
     ],
     [
       'SoundCloud',
@@ -126,7 +126,7 @@ describe('SocialEmbed with embed code', () => {
     [
       'Apple Music',
       appleMusic,
-      'iframe https://embed.music.apple.com/us/song/1440857786',
+      'iframe https://embed.music.apple.com/us/song/1357820597',
     ],
     [
       'Apple Podcasts',
@@ -136,10 +136,10 @@ describe('SocialEmbed with embed code', () => {
     [
       'Tumblr',
       tumblr,
-      'iframe https://embed.tumblr.com/embed/post/staff/832577330595643392/v2',
+      'iframe https://embed.tumblr.com/embed/post/staff/828009069026721792/v2',
     ],
-    ['Kick', kick, 'iframe https://player.kick.com/xqc'],
-    ['Giphy', giphy, 'iframe https://giphy.com/embed/JIX9t2j0ZTN9S'],
+    ['Kick', kick, 'iframe https://player.kick.com/kick'],
+    ['Giphy', giphy, 'iframe https://giphy.com/embed/l41YlHs99JsSptZf2'],
   ])('routes %s embed code to its component', (_, html, expected) => {
     const { container } = render(<SocialEmbed html={html} lazy={false} />);
     expect(rendered(container)).toBe(expected);
@@ -290,7 +290,7 @@ describe('SocialEmbed with wave 4 URLs', () => {
     const onError = vi.fn();
     const { container } = render(
       <SocialEmbed
-        url="https://bsky.app/profile/bsky.app/post/3n2mkgfb4tk2d"
+        url="https://bsky.app/profile/bsky.app/post/3mxu3hsnebc2v"
         onError={onError}
       />,
     );
@@ -319,7 +319,7 @@ describe('SocialEmbed with wave 4 URLs', () => {
 
   it('passes height to the wave 4 iframe embeds', () => {
     const { container } = render(
-      <SocialEmbed url="https://kick.com/xqc" height={300} lazy={false} />,
+      <SocialEmbed url="https://kick.com/kick" height={300} lazy={false} />,
     );
     expect((container.firstElementChild as HTMLElement).style.height).toBe(
       '300px',

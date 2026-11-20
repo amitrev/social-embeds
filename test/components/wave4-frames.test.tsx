@@ -49,7 +49,7 @@ describe('BlueskyEmbed', () => {
     );
     const { wrapper, iframe } = parts(container);
     expect(iframe.getAttribute('src')).toBe(
-      `https://embed.bsky.app/embed/${DID}/app.bsky.feed.post/3n2mkgfb4tk2d`,
+      `https://embed.bsky.app/embed/${DID}/app.bsky.feed.post/3mxu3hsnebc2v`,
     );
     expect(wrapper.style.maxWidth).toBe('600px');
     post(iframe, 'https://embed.bsky.app', { height: 682.27, id: null });
@@ -77,14 +77,14 @@ describe('BlueskyEmbed', () => {
       <BlueskyEmbed embed={embed} colorMode="light" lazy={false} />,
     );
     expect(parts(container).iframe.getAttribute('src')).toBe(
-      `https://embed.bsky.app/embed/${DID}/app.bsky.feed.post/3n2mkgfb4tk2d?colorMode=light`,
+      `https://embed.bsky.app/embed/${DID}/app.bsky.feed.post/3mxu3hsnebc2v?colorMode=light`,
     );
   });
 
   it('renders a DID URL', () => {
     const { container } = render(
       <BlueskyEmbed
-        url={`https://bsky.app/profile/${DID}/post/3n2mkgfb4tk2d`}
+        url={`https://bsky.app/profile/${DID}/post/3mxu3hsnebc2v`}
         lazy={false}
       />,
     );
@@ -95,7 +95,7 @@ describe('BlueskyEmbed', () => {
     const onError = vi.fn();
     const { container } = render(
       <BlueskyEmbed
-        url="https://bsky.app/profile/bsky.app/post/3n2mkgfb4tk2d"
+        url="https://bsky.app/profile/bsky.app/post/3mxu3hsnebc2v"
         onError={onError}
         lazy={false}
       />,
@@ -110,7 +110,7 @@ describe('BlueskyEmbed', () => {
 
   it('renders the post text on the server, without the frame', () => {
     const html = renderToString(<BlueskyEmbed embed={parsed(bluesky)} />);
-    expect(html).toContain('Read all about @germnetwork.com in @wired.com:');
+    expect(html).toContain('saw some cool clouds today');
     expect(html).not.toContain('<iframe');
     expect(html).not.toContain('<script');
   });
@@ -123,7 +123,7 @@ describe('TumblrEmbed', () => {
     );
     const { wrapper, iframe } = parts(container);
     expect(iframe.getAttribute('src')).toBe(
-      'https://embed.tumblr.com/embed/post/staff/832577330595643392/v2',
+      'https://embed.tumblr.com/embed/post/staff/828009069026721792/v2',
     );
     expect(wrapper.style.maxWidth).toBe('540px');
     post(
@@ -137,12 +137,12 @@ describe('TumblrEmbed', () => {
   it('renders a post URL', () => {
     const { container } = render(
       <TumblrEmbed
-        url="https://staff.tumblr.com/post/832577330595643392"
+        url="https://staff.tumblr.com/post/828009069026721792"
         lazy={false}
       />,
     );
     expect(parts(container).iframe.getAttribute('src')).toBe(
-      'https://embed.tumblr.com/embed/post/staff/832577330595643392/v2',
+      'https://embed.tumblr.com/embed/post/staff/828009069026721792/v2',
     );
   });
 

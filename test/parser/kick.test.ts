@@ -8,8 +8,8 @@ describe('Kick embed code', () => {
   it('parses the player with its size', () => {
     expect(parseEmbed(channel)).toEqual({
       ...base,
-      url: 'https://kick.com/xqc',
-      id: 'xqc',
+      url: 'https://kick.com/kick',
+      id: 'kick',
       options: {},
       size: { width: 1280, height: 720 },
     });
@@ -18,14 +18,14 @@ describe('Kick embed code', () => {
   it('keeps autoplay and muted, and drops the rest', () => {
     expect(
       parseEmbed(
-        channel.replace('/xqc"', '/xqc?autoplay=false&muted=true&x=1"'),
+        channel.replace('/kick"', '/kick?autoplay=false&muted=true&x=1"'),
       )?.options,
     ).toEqual({ autoplay: false, muted: true });
   });
 
   it.each([
     ['another host', channel.replace('player.kick.com', 'example.com')],
-    ['a path below the channel', channel.replace('/xqc"', '/xqc/videos"')],
+    ['a path below the channel', channel.replace('/kick"', '/kick/videos"')],
   ])('rejects %s', (_, html) => {
     expect(parseEmbed(html)).toBeNull();
   });
@@ -33,9 +33,9 @@ describe('Kick embed code', () => {
 
 describe('Kick URLs', () => {
   it.each([
-    ['https://kick.com/xqc', 'xqc'],
-    ['https://www.kick.com/XQC/', 'xqc'],
-    ['https://player.kick.com/xqc', 'xqc'],
+    ['https://kick.com/kick', 'kick'],
+    ['https://www.kick.com/KICK/', 'kick'],
+    ['https://player.kick.com/kick', 'kick'],
   ])('matches %s', (url, id) => {
     expect(matchUrl(url)).toEqual({
       ...base,
@@ -51,8 +51,8 @@ describe('Kick URLs', () => {
     'https://kick.com/clips',
     'https://kick.com/video',
     'https://kick.com/videos',
-    'https://kick.com/xqc/videos/abc',
-    'https://kick.com/xqc/clips/clip_01',
+    'https://kick.com/kick/videos/abc',
+    'https://kick.com/kick/clips/clip_01',
   ])('does not match %s', (url) => {
     expect(matchUrl(url)).toBeNull();
   });

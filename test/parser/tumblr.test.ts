@@ -8,8 +8,8 @@ const base = {
   platform: 'tumblr',
   kind: 'post',
   variant: 'iframe',
-  url: 'https://www.tumblr.com/staff/832577330595643392',
-  id: '832577330595643392',
+  url: 'https://www.tumblr.com/staff/828009069026721792',
+  id: '828009069026721792',
   options: {},
 } as const;
 
@@ -36,17 +36,20 @@ describe('Tumblr embed code', () => {
   it.each([
     [
       'a link to another post',
-      oembed.replace('/staff/832577330595643392"', '/staff/1"'),
+      oembed.replace(
+        '/staff/828009069026721792/premium-just-got-better"',
+        '/staff/1/premium-just-got-better"',
+      ),
     ],
     [
       'a frame for another post',
-      oembed.replace('/832577330595643392/v2', '/1/v2'),
+      oembed.replace('/828009069026721792/v2', '/1/v2'),
     ],
     [
       'a frame for another blog',
       oembed.replace(
-        't:0aY0xL2Fi1OFJg4YxpmegQ/832577330595643392',
-        'someoneelse/832577330595643392',
+        't:0aY0xL2Fi1OFJg4YxpmegQ/828009069026721792',
+        'someoneelse/828009069026721792',
       ),
     ],
     ['another frame host', oembed.replace('embed.tumblr.com', 'example.com')],
@@ -59,11 +62,11 @@ describe('Tumblr embed code', () => {
 
 describe('Tumblr URLs', () => {
   it.each([
-    'https://www.tumblr.com/staff/832577330595643392',
-    'https://www.tumblr.com/staff/832577330595643392/ao3-is-down',
-    'https://tumblr.com/staff/832577330595643392',
-    'https://staff.tumblr.com/post/832577330595643392',
-    'https://staff.tumblr.com/post/832577330595643392/ao3-is-down',
+    'https://www.tumblr.com/staff/828009069026721792',
+    'https://www.tumblr.com/staff/828009069026721792/ao3-is-down',
+    'https://tumblr.com/staff/828009069026721792',
+    'https://staff.tumblr.com/post/828009069026721792',
+    'https://staff.tumblr.com/post/828009069026721792/ao3-is-down',
   ])('matches %s', (url) => {
     expect(matchUrl(url)).toEqual(base);
     expect(needsLookup(url)).toBeNull();
@@ -72,8 +75,8 @@ describe('Tumblr URLs', () => {
   it.each([
     'https://www.tumblr.com/dashboard',
     'https://www.tumblr.com/staff',
-    'https://www.tumblr.com/tagged/832577330595643392',
-    'https://assets.tumblr.com/post/832577330595643392',
+    'https://www.tumblr.com/tagged/828009069026721792',
+    'https://assets.tumblr.com/post/828009069026721792',
   ])('does not match %s', (url) => {
     expect(matchUrl(url)).toBeNull();
   });
