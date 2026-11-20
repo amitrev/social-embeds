@@ -5,16 +5,12 @@ import {
   useRef,
   useState,
 } from 'react';
+import { HEIGHT_TIMEOUT_MS, MAX_REPORTED_HEIGHT } from '../core/timing';
+import type { MessageHeight } from '../core/plan';
 import { useNearViewport } from './hooks';
 import type { FrameProps } from './shared';
 
-/** A frame that posts its own height (docs/decisions.md D55). */
-export type MessageHeight = {
-  /** The frame's origin; messages from any other origin are ignored. */
-  origin: string;
-  /** The height in a message's `data`, or `undefined` for any other message. May throw. */
-  read: (data: unknown) => number | undefined;
-};
+export type { MessageHeight };
 
 type IframeEmbedProps = FrameProps & {
   src: string;
@@ -35,8 +31,6 @@ type IframeEmbedProps = FrameProps & {
 };
 
 const FILL: CSSProperties = { position: 'absolute', inset: 0 };
-const HEIGHT_TIMEOUT_MS = 15_000;
-const MAX_REPORTED_HEIGHT = 50_000; // px
 
 // The iframe is created on the client only: one in the server HTML can load before
 // hydration, and React then never sees its load event (docs/decisions.md D28).

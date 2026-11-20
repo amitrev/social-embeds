@@ -1,6 +1,6 @@
-import { pinterestDriver } from './drivers';
+import { pinterestDriver } from '../core/drivers';
 import { useReportError } from './hooks';
-import { dataAttributes, escapeAttribute, withProps } from './markup';
+import { dataAttributes, escapeAttribute, withProps } from '../core/markup';
 import { ScriptEmbed } from './script-embed';
 import { type EmbedSource, resolveEmbed, type SharedProps } from './shared';
 

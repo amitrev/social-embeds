@@ -1,6 +1,6 @@
 import { type RefObject, useEffect, useRef, useState } from 'react';
 
-const ROOT_MARGIN = '200px 0px';
+import { ROOT_MARGIN } from '../core/timing';
 
 /** False on the server and in the first client render, so the markup matches on hydration. */
 export function useNearViewport(

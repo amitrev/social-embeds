@@ -1,11 +1,11 @@
-import { xDriver } from './drivers';
+import { xDriver } from '../core/drivers';
 import { useReportError } from './hooks';
 import {
   dataAttributes,
   escapeAttribute,
   hasFallback,
   withProps,
-} from './markup';
+} from '../core/markup';
 import { ScriptEmbed } from './script-embed';
 import { type EmbedSource, resolveEmbed, type SharedProps } from './shared';
 

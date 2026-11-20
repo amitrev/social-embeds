@@ -1,6 +1,6 @@
 import { type ReactNode, useMemo } from 'react';
 import { matchUrl, parseEmbed } from '../parser';
-import { needsLookup } from '../parser/lookup';
+import { sourceError } from '../core/resolve';
 import { AppleMusicEmbed, ApplePodcastsEmbed } from './apple-embed';
 import { BlueskyEmbed, type BlueskyOptions } from './bluesky-embed';
 import { DailymotionEmbed, type DailymotionOptions } from './dailymotion-embed';
@@ -12,7 +12,7 @@ import { KickEmbed, type KickOptions } from './kick-embed';
 import { LinkedInEmbed, type LinkedInOptions } from './linkedin-embed';
 import { PinterestEmbed, type PinterestOptions } from './pinterest-embed';
 import { RedditEmbed, type RedditOptions } from './reddit-embed';
-import { type FrameProps, lookupMessage } from './shared';
+import type { FrameProps } from './shared';
 import { SnapchatEmbed } from './snapchat-embed';
 import { SoundCloudEmbed, type SoundCloudOptions } from './soundcloud-embed';
 import { SpotifyEmbed } from './spotify-embed';
@@ -68,14 +68,9 @@ export function SocialEmbed(props: SocialEmbedProps) {
   );
   // With a fallback, unrecognised embed code is the host's to handle, not an error.
   const unrecognised = embed === null && !(html !== undefined && fallback);
-  const lookup = html === undefined ? needsLookup(url) : null;
   useReportError(
     unrecognised
-      ? html !== undefined
-        ? 'social-embeds: unrecognised embed code'
-        : lookup
-          ? lookupMessage(lookup)
-          : `social-embeds: not a supported post URL: ${url}`
+      ? sourceError(html !== undefined ? { html } : { url })
       : undefined,
     onError,
   );

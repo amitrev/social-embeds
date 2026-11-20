@@ -1,5 +1,5 @@
 import type { ParsedEmbed } from '../parser';
-import { facebookDriver } from './drivers';
+import { facebookDriver } from '../core/drivers';
 import { FacebookVideoIframe } from './facebook-video-iframe';
 import { useReportError } from './hooks';
 import {
@@ -7,7 +7,7 @@ import {
   escapeAttribute,
   hasFallback,
   withProps,
-} from './markup';
+} from '../core/markup';
 import { ScriptEmbed } from './script-embed';
 import { type EmbedSource, type FrameProps, resolveEmbed } from './shared';
 

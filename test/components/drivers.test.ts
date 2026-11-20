@@ -5,7 +5,7 @@ import {
   pinterestDriver,
   threadsDriver,
   xDriver,
-} from '../../src/components/drivers';
+} from '../../src/core/drivers';
 
 const page = window as unknown as Record<string, unknown>;
 let container: HTMLDivElement;

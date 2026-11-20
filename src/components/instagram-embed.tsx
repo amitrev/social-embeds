@@ -1,6 +1,6 @@
-import { instagramDriver } from './drivers';
+import { instagramDriver } from '../core/drivers';
 import { useReportError } from './hooks';
-import { attributes, hasFallback, withProps } from './markup';
+import { attributes, hasFallback, withProps } from '../core/markup';
 import { ScriptEmbed } from './script-embed';
 import { type EmbedSource, resolveEmbed, type SharedProps } from './shared';
 
