@@ -93,6 +93,7 @@ jobs:
       - run: pnpm check:directives
       - run: pnpm check:publint
       - run: pnpm check:attw
+      - run: pnpm check:element
       - run: pnpm pack --out "$RUNNER_TEMP/social-embeds.tgz"
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
