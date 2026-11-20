@@ -123,8 +123,14 @@ export const soundcloud: PlatformParser = {
     const src = parseUrl(root.attrs.get('src') ?? '');
     if (src?.host !== 'w.soundcloud.com' || !/^\/player\/?$/.test(src.path))
       return null;
-    const found = fromApi(parseUrl(src.query.get('url') ?? ''));
+    let found = fromApi(parseUrl(src.query.get('url') ?? ''));
     if (!found) return null;
+    const outer = src.query.get('secret_token');
+    if (outer !== undefined) {
+      if (!SECRET_TOKEN.test(outer)) return null;
+      if (!found.url.includes('?'))
+        found = { ...found, url: `${found.url}?secret_token=${outer}` };
+    }
     const options: Options = Object.fromEntries(
       [...src.query]
         .filter(([key]) => key !== 'url' && key !== 'secret_token')

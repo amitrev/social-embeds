@@ -99,6 +99,9 @@ describe('Bluesky URLs', () => {
     URL,
     `https://bsky.app/profile/${DID}`,
     'not a url',
+    'https://bsky.app/profile/did:plc:Z72I7HDYNMK6R22Z27H6TVUR/post/3n2mkgfb4tk2d',
+    'https://bsky.app/profile/did:key:z6Mk/post/3n2mkgfb4tk2d',
+    'https://bsky.app/profile/not a handle/post/3n2mkgfb4tk2d',
   ])('needs no lookup for %s', (url) => {
     expect(needsLookup(url)).toBeNull();
   });

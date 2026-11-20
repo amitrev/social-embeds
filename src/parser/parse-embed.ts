@@ -37,7 +37,7 @@ export function parseEmbed(html: string): ParsedEmbed | null {
   }
   if (!root) {
     const [script] = scripts;
-    if (fbRoot || extra || scripts.length !== 1 || !script) return null;
+    if (fbRoot || scripts.length !== 1 || !script) return null;
     if (script.children.length !== 0) return null;
     for (const platform of platforms) {
       const embed = platform.parseScript?.(script);

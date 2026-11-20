@@ -12,7 +12,7 @@ import { KickEmbed, type KickOptions } from './kick-embed';
 import { LinkedInEmbed, type LinkedInOptions } from './linkedin-embed';
 import { PinterestEmbed, type PinterestOptions } from './pinterest-embed';
 import { RedditEmbed, type RedditOptions } from './reddit-embed';
-import type { FrameProps } from './shared';
+import { type FrameProps, lookupMessage } from './shared';
 import { SnapchatEmbed } from './snapchat-embed';
 import { SoundCloudEmbed, type SoundCloudOptions } from './soundcloud-embed';
 import { SpotifyEmbed } from './spotify-embed';
@@ -68,12 +68,13 @@ export function SocialEmbed(props: SocialEmbedProps) {
   );
   // With a fallback, unrecognised embed code is the host's to handle, not an error.
   const unrecognised = embed === null && !(html !== undefined && fallback);
+  const lookup = html === undefined ? needsLookup(url) : null;
   useReportError(
     unrecognised
       ? html !== undefined
         ? 'social-embeds: unrecognised embed code'
-        : needsLookup(url) === 'bluesky'
-          ? 'social-embeds: a Bluesky URL needs a lookup: use the embed code'
+        : lookup
+          ? lookupMessage(lookup)
           : `social-embeds: not a supported post URL: ${url}`
       : undefined,
     onError,
