@@ -223,7 +223,7 @@ describe('ApplePodcastsEmbed', () => {
     );
     const { wrapper, iframe } = parts(container);
     expect(iframe.getAttribute('src')).toBe(
-      'https://embed.podcasts.apple.com/us/podcast/id1200361736?i=1000802907981',
+      'https://embed.podcasts.apple.com/us/podcast/id947965068?i=1000430702647',
     );
     expect(iframe.getAttribute('sandbox')).toBe(APPLE_SANDBOX);
     expect(wrapper.style.height).toBe('160px');
@@ -235,7 +235,7 @@ describe('ApplePodcastsEmbed', () => {
       parts(
         render(
           <ApplePodcastsEmbed
-            url="https://podcasts.apple.com/us/podcast/the-daily/id1200361736"
+            url="https://podcasts.apple.com/us/podcast/monument-valley-meet-the-developer/id947965068"
             lazy={false}
           />,
         ).container,
@@ -246,7 +246,7 @@ describe('ApplePodcastsEmbed', () => {
       parts(
         render(
           <ApplePodcastsEmbed
-            url="https://podcasts.apple.com/us/podcast/x/id1200361736?i=1000802907981"
+            url="https://podcasts.apple.com/us/podcast/x/id947965068?i=1000430702647"
             lazy={false}
           />,
         ).container,

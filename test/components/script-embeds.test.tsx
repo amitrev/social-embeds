@@ -14,7 +14,7 @@ import videoIframe from '../fixtures/facebook/video-iframe-reel.html?raw';
 import videoSdk from '../fixtures/facebook/video-sdk-docs.html?raw';
 import instagramCode from '../fixtures/instagram/post-captioned.html?raw';
 import pinterestIframe from '../fixtures/pinterest/oembed-iframe.html?raw';
-import threadsCode from '../fixtures/threads/oembed.html?raw';
+import threadsCode from '../fixtures/threads/embed-dialog.html?raw';
 import xOptions from '../fixtures/x/oembed-options.html?raw';
 import { installObserver, lastObserver } from './helpers';
 
@@ -266,7 +266,7 @@ describe('ThreadsEmbed', () => {
     );
     const markup = markupOf(container);
     expect(markup).toMatch(
-      /^<blockquote data-text-post-permalink="https:\/\/www\.threads\.com\/t\/DfQSavwEs5C" data-text-post-version="0" id="ig-tp-DfQSavwEs5C" data-theme="dark"> <a href=/,
+      /^<blockquote data-text-post-permalink="https:\/\/www\.threads\.com\/t\/Df7kSgBJVNz" data-text-post-version="0" id="ig-tp-Df7kSgBJVNz" data-theme="dark"> <a href=/,
     );
     expect((container.firstElementChild as HTMLElement).style.maxWidth).toBe(
       '658px',

@@ -12,8 +12,8 @@ Real embed codes, stored byte for byte as the platform produced them. Prettier i
 | `youtube/share-start.html`                     | same, "Start at" ticked                                                                        | 2026-11-03 |
 | `youtube/share-nocookie-controls-start.html`   | same, plus "Enable privacy-enhanced mode" ticked and "Show player controls" unticked           | 2026-11-03 |
 | `youtube/oembed.html`                          | `youtube.com/oembed?url=https://www.youtube.com/watch?v=jNQXAC9IVRw&format=json`                | 2026-11-03 |
-| `threads/oembed.html`                          | `graph.threads.net/v1.0/oembed?url=https://www.threads.com/@instagram/post/DfQSavwEs5C`         | 2026-11-03 |
-| `threads/oembed-maxwidth.html`                 | same, with `maxwidth=400`                                                                      | 2026-11-03 |
+| `threads/embed-dialog.html` | Threads post `@threads/post/Df7kSgBJVNz` → ⋯ → Embed, pasted by the maintainer; derived: Threads wrote the link text in the maintainer's interface language, and it was changed to its English "View on Threads" | 2026-11-20 |
+| `threads/embed-dialog-maxwidth.html` | derived: the same, with the inline `max-width:400px` that oEmbed's `maxwidth=400` writes | 2026-11-20 |
 | `tiktok/oembed-player.html` | `tiktok.com/oembed?url=https://www.tiktok.com/@tiktok/video/7704834703446117662` | 2026-11-20 |
 | `tiktok/webapp-share-player.html` | TikTok website share dialog → Embed, `@tiktok` video `7704834703446117662`, pasted by the maintainer | 2026-11-20 |
 | `instagram/post-captioned.html` | `instagram.com/api/v1/oembed/?url=https://www.instagram.com/p/Df75lxnmIrF/&maxwidth=540` (@instagram), the `html` field | 2026-11-20 |
@@ -50,7 +50,7 @@ Real embed codes, stored byte for byte as the platform produced them. Prettier i
 | `soundcloud/share-classic.html`                | same, classic player                                                                            | 2026-11-20 |
 | `applemusic/share-album.html` | music.apple.com album `1357820591` (Chad Crouch, *Birds of Oaks Bottom: Piano Solos*) → … → Copy Embed Code | 2026-11-20 |
 | `applemusic/share-song.html` | same album, track "Great Blue Heron" `1357820597` → … → Copy Embed Code | 2026-11-20 |
-| `applepodcasts/share-episode.html`             | podcasts.apple.com episode `1000802907981` of `id1200361736` → … → Embed Episode → Copy Embed Code | 2026-11-20 |
+| `applepodcasts/share-episode.html` | podcasts.apple.com episode `1000430702647` of Apple's `id947965068` → … → Embed Episode → Copy Embed Code, pasted by the maintainer | 2026-11-20 |
 | `tumblr/oembed.html` | `www.tumblr.com/oembed/1.0?url=https://staff.tumblr.com/post/828009069026721792`, the `html` field | 2026-11-20 |
 | `kick/player-channel.html` | derived: Kick's player URL for its own channel, `player.kick.com/kick`, in an iframe; Kick has no embed dialog (D75) | 2026-11-20 |
 | `giphy/embed-fixed.html` | giphy.com GIF `l41YlHs99JsSptZf2` by GIPHY Studios Originals → Embed, Responsive off | 2026-11-20 |

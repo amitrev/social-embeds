@@ -18,7 +18,7 @@ import reddit from '../fixtures/reddit/post-share.html?raw';
 import snapchatLens from '../fixtures/snapchat/lens-share.html?raw';
 import snapchat from '../fixtures/snapchat/profile-share.html?raw';
 import telegram from '../fixtures/telegram/widget-configurator-options.html?raw';
-import threads from '../fixtures/threads/oembed.html?raw';
+import threads from '../fixtures/threads/embed-dialog.html?raw';
 import tiktok from '../fixtures/tiktok/oembed-player.html?raw';
 import xHashtag from '../fixtures/x/oembed-hashtag.html?raw';
 import xOptions from '../fixtures/x/oembed-options.html?raw';

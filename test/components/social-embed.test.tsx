@@ -11,7 +11,7 @@ import reddit from '../fixtures/reddit/post-share.html?raw';
 import snapchat from '../fixtures/snapchat/profile-share.html?raw';
 import spotify from '../fixtures/spotify/oembed-track.html?raw';
 import telegram from '../fixtures/telegram/widget-configurator.html?raw';
-import threads from '../fixtures/threads/oembed.html?raw';
+import threads from '../fixtures/threads/embed-dialog.html?raw';
 import tiktok from '../fixtures/tiktok/oembed-player.html?raw';
 import twitch from '../fixtures/twitch/docs-channel.html?raw';
 import vimeo from '../fixtures/vimeo/responsive-docs.html?raw';
@@ -131,7 +131,7 @@ describe('SocialEmbed with embed code', () => {
     [
       'Apple Podcasts',
       applePodcasts,
-      'iframe https://embed.podcasts.apple.com/us/podcast/id1200361736?i=1000802907981',
+      'iframe https://embed.podcasts.apple.com/us/podcast/id947965068?i=1000430702647',
     ],
     [
       'Tumblr',
@@ -180,7 +180,7 @@ describe('SocialEmbed with a URL', () => {
       'https://www.instagram.com/p/Df75lxnmIrF/',
       'blockquote www.instagram.com',
     ],
-    ['https://www.threads.com/t/DfQSavwEs5C', 'blockquote www.threads.com'],
+    ['https://www.threads.com/t/Df7kSgBJVNz', 'blockquote www.threads.com'],
     [
       'https://www.facebook.com/facebook/videos/10153231379946729/',
       'div.fb-video www.facebook.com',

@@ -1,36 +1,46 @@
 import { describe, expect, it } from 'vitest';
 import { matchUrl, parseEmbed } from '../../src/parser';
-import maxWidth from '../fixtures/threads/oembed-maxwidth.html?raw';
-import oembed from '../fixtures/threads/oembed.html?raw';
+import maxWidth from '../fixtures/threads/embed-dialog-maxwidth.html?raw';
+import oembed from '../fixtures/threads/embed-dialog.html?raw';
 
 const post = {
   platform: 'threads',
   kind: 'post',
-  url: 'https://www.threads.com/t/DfQSavwEs5C',
-  id: 'DfQSavwEs5C',
+  url: 'https://www.threads.com/t/Df7kSgBJVNz',
+  id: 'Df7kSgBJVNz',
   variant: 'sdk',
 } as const;
 
-const permalink =
-  'https://www.threads.com/t/DfQSavwEs5C?utm_source=th_embed&amp;utm_campaign=threads_api';
+const permalink = 'https://www.threads.com/@threads/post/Df7kSgBJVNz';
 
 describe('Threads embed code', () => {
-  it('parses the oEmbed code', () => {
+  it('parses the Embed dialog code', () => {
     expect(parseEmbed(oembed)).toEqual({
       ...post,
-      options: { theme: 'light', version: 0 },
+      options: { version: 0 },
       // The logo SVG and all inline styles are dropped; the structure and link remain.
-      fallbackHtml: ` <a href="${permalink}"> <div>\n<div> \n</div>\n<div> View on Threads</div>\n</div></a>\n`,
+      fallbackHtml: ` <a href="${permalink}"> <div><div> </div><div> View on Threads</div></div></a>`,
     });
   });
 
-  it('ignores the inline max-width set by the oEmbed maxwidth parameter', () => {
+  it('keeps the theme when the code carries one', () => {
+    expect(
+      parseEmbed(
+        oembed.replace(
+          'data-text-post-version="0"',
+          'data-text-post-version="0" data-theme="dark"',
+        ),
+      )?.options,
+    ).toEqual({ theme: 'dark', version: 0 });
+  });
+
+  it('ignores the inline max-width', () => {
     expect(parseEmbed(maxWidth)).toEqual(parseEmbed(oembed));
   });
 
   it('rejects an element id that does not match the permalink', () => {
     expect(
-      parseEmbed(oembed.replace('id="ig-tp-DfQSavwEs5C"', 'id="ig-tp-other"')),
+      parseEmbed(oembed.replace('id="ig-tp-Df7kSgBJVNz"', 'id="ig-tp-other"')),
     ).toBeNull();
   });
 
@@ -48,10 +58,10 @@ describe('Threads embed code', () => {
 
 describe('Threads URLs', () => {
   it.each([
-    'https://www.threads.com/@instagram/post/DfQSavwEs5C',
-    'https://www.threads.net/@instagram/post/DfQSavwEs5C/',
-    'https://threads.com/t/DfQSavwEs5C?xmt=abc',
-    'https://www.threads.net/t/DfQSavwEs5C',
+    'https://www.threads.com/@threads/post/Df7kSgBJVNz',
+    'https://www.threads.net/@threads/post/Df7kSgBJVNz/',
+    'https://threads.com/t/Df7kSgBJVNz?xmt=abc',
+    'https://www.threads.net/t/Df7kSgBJVNz',
   ])('%s', (url) => {
     expect(matchUrl(url)).toEqual({ ...post, options: {} });
   });
@@ -59,7 +69,7 @@ describe('Threads URLs', () => {
   it.each([
     'https://www.threads.com/@instagram',
     'https://www.threads.com/t/',
-    'https://threads.example/t/DfQSavwEs5C',
+    'https://threads.example/t/Df7kSgBJVNz',
   ])('rejects %s', (url) => {
     expect(matchUrl(url)).toBeNull();
   });

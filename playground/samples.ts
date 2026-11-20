@@ -65,7 +65,7 @@ export function embedCodes(platform: PlatformKey): Sample[] {
           label: 'oEmbed, dark theme and options',
           value: fixture('x/oembed-options.html'),
         },
-        { label: 'oEmbed, photo link', value: fixture('x/oembed-link.html') },
+        { label: 'oEmbed, link', value: fixture('x/oembed-link.html') },
         { label: 'oEmbed, hashtag', value: fixture('x/oembed-hashtag.html') },
       ];
     case 'instagram':
@@ -77,10 +77,10 @@ export function embedCodes(platform: PlatformKey): Sample[] {
       ];
     case 'threads':
       return [
-        { label: 'oEmbed', value: fixture('threads/oembed.html') },
+        { label: 'Embed dialog', value: fixture('threads/embed-dialog.html') },
         {
-          label: 'oEmbed, maxwidth 400',
-          value: fixture('threads/oembed-maxwidth.html'),
+          label: 'Embed dialog, max-width 400 (derived)',
+          value: fixture('threads/embed-dialog-maxwidth.html'),
         },
       ];
     case 'facebook':
