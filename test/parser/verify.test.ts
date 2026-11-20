@@ -23,6 +23,9 @@ import tiktok from '../fixtures/tiktok/oembed-player.html?raw';
 import xHashtag from '../fixtures/x/oembed-hashtag.html?raw';
 import xOptions from '../fixtures/x/oembed-options.html?raw';
 import youtube from '../fixtures/youtube/share-nocookie-controls-start.html?raw';
+import appleMusic from '../fixtures/applemusic/share-song.html?raw';
+import applePodcasts from '../fixtures/applepodcasts/share-episode.html?raw';
+import soundcloudShare from '../fixtures/soundcloud/share-visual.html?raw';
 
 const fixtures = {
   postIframe,
@@ -47,6 +50,9 @@ const fixtures = {
   vimeo,
   twitch,
   dailymotion,
+  soundcloudShare,
+  appleMusic,
+  applePodcasts,
 };
 
 describe('verifyEmbed', () => {
@@ -67,6 +73,16 @@ describe('verifyEmbed', () => {
       'https://www.tiktok.com/@/video/6718335390845095173',
     );
     expect(verifyEmbed(embed as ParsedEmbed)).toEqual(embed);
+  });
+
+  it('rejects a SoundCloud permalink carrying the API id', () => {
+    const embed = parseEmbed(soundcloudShare) as ParsedEmbed;
+    expect(
+      verifyEmbed({
+        ...embed,
+        url: 'https://soundcloud.com/forss/flickermood',
+      }),
+    ).toBeNull();
   });
 
   const x = parseEmbed(xHashtag) as ParsedEmbed;

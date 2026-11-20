@@ -1,4 +1,6 @@
 import type { PlatformParser } from '../platform';
+import { applemusic } from './applemusic';
+import { applepodcasts } from './applepodcasts';
 import { dailymotion } from './dailymotion';
 import { facebook } from './facebook';
 import { instagram } from './instagram';
@@ -6,6 +8,7 @@ import { linkedin } from './linkedin';
 import { pinterest } from './pinterest';
 import { reddit } from './reddit';
 import { snapchat } from './snapchat';
+import { soundcloud } from './soundcloud';
 import { spotify } from './spotify';
 import { telegram } from './telegram';
 import { threads } from './threads';
@@ -31,4 +34,7 @@ export const platforms: readonly PlatformParser[] = [
   vimeo,
   twitch,
   dailymotion,
+  soundcloud,
+  applemusic,
+  applepodcasts,
 ];

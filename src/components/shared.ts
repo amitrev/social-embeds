@@ -46,6 +46,13 @@ const NAMES: Record<Platform, string> = {
   vimeo: 'Vimeo',
   twitch: 'Twitch',
   dailymotion: 'Dailymotion',
+  bluesky: 'Bluesky',
+  soundcloud: 'SoundCloud',
+  applemusic: 'Apple Music',
+  applepodcasts: 'Apple Podcasts',
+  tumblr: 'Tumblr',
+  kick: 'Kick',
+  giphy: 'Giphy',
 };
 
 export function resolveEmbed(
