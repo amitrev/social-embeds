@@ -73,6 +73,17 @@ describe('Bluesky embed code', () => {
 });
 
 describe('Bluesky URLs', () => {
+  it.each(['a', 'ab', 'a.b'])('matches the short record key %s', (rkey) => {
+    expect(
+      matchUrl(`https://bsky.app/profile/${DID}/post/${rkey}`),
+    ).not.toBeNull();
+  });
+
+  it.each(['.', '..'])('does not match the record key %s', (rkey) => {
+    expect(matchUrl(`https://bsky.app/profile/${DID}/post/${rkey}`)).toBeNull();
+    expect(parseEmbed(oembed.replaceAll('3n2mkgfb4tk2d', rkey))).toBeNull();
+  });
+
   it('matches a post URL with a DID', () => {
     expect(matchUrl(`${URL}?ref_src=embed`)).toEqual({ ...base, options: {} });
   });

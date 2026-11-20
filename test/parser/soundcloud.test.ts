@@ -88,6 +88,25 @@ describe('SoundCloud embed code', () => {
         'https://example.com/"',
       ),
     ],
+    [
+      'the credit with text of its own',
+      shareVisual.replace('</a></div>', '</a> Editor’s note</div>'),
+    ],
+    [
+      'the credit with a third link',
+      shareVisual.replace(
+        '</a></div>',
+        '</a> · <a href="https://soundcloud.com/x">x</a></div>',
+      ),
+    ],
+    [
+      'a credit link with a handler',
+      shareVisual.replace('title="Forss"', 'title="Forss" onclick="x()"'),
+    ],
+    [
+      'a div of text after the iframe',
+      `${track}<div style="x">hello world</div>`,
+    ],
     ['another host in url', track.replace('api.soundcloud.com', 'example.com')],
     ['another player host', track.replace('w.soundcloud.com', 'example.com')],
     ['no url', track.replace(/url=[^&]*&/, '')],

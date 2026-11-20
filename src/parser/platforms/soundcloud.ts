@@ -84,21 +84,36 @@ function fromPage(url: ParsedUrl): Omit<ParsedEmbed, 'options'> | null {
   return sound(`https://soundcloud.com/${path}`, path);
 }
 
+const LINK_ATTRIBUTES = new Set(['href', 'title', 'target', 'style']);
+
+function isCreditLink(node: HtmlNode | undefined): boolean {
+  if (node?.type !== 'element' || node.tag !== 'a') return false;
+  if ([...node.attrs.keys()].some((name) => !LINK_ATTRIBUTES.has(name)))
+    return false;
+  const [text, ...rest] = node.children;
+  return (
+    rest.length === 0 &&
+    text?.type === 'text' &&
+    PAGE_HOSTS.has(parseUrl(node.attrs.get('href') ?? '')?.host ?? '')
+  );
+}
+
+/** Share code's credit: a styled `div` with the artist link, ` · `, and the sound link. */
 function isCredit(element: HtmlElement): boolean {
   if (
     element.tag !== 'div' ||
-    [...element.attrs.keys()].some((name) => name !== 'style')
+    element.attrs.size !== 1 ||
+    !element.attrs.has('style')
   )
     return false;
-  const links = (nodes: readonly HtmlNode[]): boolean =>
-    nodes.every(
-      (node) =>
-        node.type !== 'element' ||
-        (node.tag === 'a' &&
-          PAGE_HOSTS.has(parseUrl(node.attrs.get('href') ?? '')?.host ?? '') &&
-          links(node.children)),
-    );
-  return links(element.children);
+  const [artist, separator, sound, ...rest] = element.children;
+  return (
+    rest.length === 0 &&
+    isCreditLink(artist) &&
+    separator?.type === 'text' &&
+    /^\s*·\s*$/.test(separator.raw) &&
+    isCreditLink(sound)
+  );
 }
 
 export const soundcloud: PlatformParser = {
