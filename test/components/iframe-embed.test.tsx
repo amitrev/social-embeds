@@ -4,7 +4,7 @@ import {
   IframeEmbed,
   type MessageHeight,
 } from '../../src/components/iframe-embed';
-import { installObserver } from './helpers';
+import { installObserver, lastObserver } from './helpers';
 
 const ORIGIN = 'https://t.me';
 const telegramHeight: MessageHeight = {
@@ -114,6 +114,7 @@ describe('IframeEmbed sized by messages', () => {
       placeholder: <p data-testid="placeholder" />,
     });
     fireEvent.load(iframe);
+    lastObserver().enter();
     act(() => {
       vi.advanceTimersByTime(15_000);
     });
@@ -121,6 +122,25 @@ describe('IframeEmbed sized by messages', () => {
       new Error('social-embeds: Telegram post did not report its height'),
     );
     expect(() => getByTestId('placeholder')).toThrow();
+  });
+
+  // A frame posts its height only once painted, and an off-screen frame is not (docs/decisions.md D70).
+  it('with lazy off, starts the height timeout only when the frame comes near', () => {
+    vi.useFakeTimers();
+    const onError = vi.fn();
+    renderSized({ onError });
+    act(() => {
+      vi.advanceTimersByTime(60_000);
+    });
+    expect(onError).not.toHaveBeenCalled();
+
+    lastObserver().enter();
+    act(() => {
+      vi.advanceTimersByTime(15_000);
+    });
+    expect(onError).toHaveBeenCalledWith(
+      new Error('social-embeds: Telegram post did not report its height'),
+    );
   });
 
   it('does not time out once a height has arrived', () => {

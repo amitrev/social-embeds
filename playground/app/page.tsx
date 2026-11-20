@@ -6,7 +6,7 @@ export default function Home() {
     <>
       <h1>social-embeds playground</h1>
       <p>
-        The live demo of the released{' '}
+        On GitHub Pages, this is the live demo of the released{' '}
         <a href="https://www.npmjs.com/package/social-embeds">social-embeds</a>{' '}
         package: every supported platform from embed code and post URLs, and a
         box for your own. Source and docs are on{' '}

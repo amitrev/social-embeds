@@ -951,6 +951,12 @@ The rules, and why: [global samples design](./superpowers/specs/2026-11-20-globa
 - **Browser check** (2026-11-20, `next build` + `next start`, each embed brought into view): every platform page shows only the documented `onError` samples (Bluesky's handle URL, Dailymotion without a Player ID). On `/many` all 38 embeds rendered; Threads renders the `@instagram` post. One Reddit frame reported no height while the browser pane was hidden, and the same post rendered at 316 px elsewhere on the page.
 - **Pasted by the maintainer:** LinkedIn, Facebook post and reel, TikTok share dialog, Reddit post and comment, Threads.
 
+## Cleanup after 0.5.2 (2026-11-20)
+
+### D81. The height timeout waits for the frame to be near
+
+Frames that report their height (Telegram, Reddit, Bluesky, Tumblr) post it only once painted (D70). With `lazy={false}` the iframe is created at once, so a frame far below the fold timed out after 15 s and called `onError`, then took its height when scrolled to (D78). The message listener still starts when the iframe is created, but the 15 s timeout now starts when the frame comes within 200 px of the viewport. With `lazy` on, both happen together. The extra observer is created only with `lazy` off and a frame that reports its height.
+
 ## Open VERIFY items
 
 | ID  | Item                                            | Milestone | Status                                          |

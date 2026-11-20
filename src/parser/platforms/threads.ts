@@ -23,7 +23,7 @@ const FALLBACK: Whitelist = new Map([
   ['div', []],
 ]);
 
-// Threads' own embed code links every post as /t/{code}, whatever URL it was given.
+// Canonical URLs use /t/{code}: oEmbed code links that form, the Embed dialog /@{user}/post/{code}.
 function post(url: ParsedUrl | null): Omit<ParsedEmbed, 'options'> | null {
   if (!url || !HOSTS.has(url.host)) return null;
   const [, code] = POST_PATH.exec(url.path) ?? [];

@@ -10,7 +10,7 @@ Releases go out from GitHub Actions through [npm trusted publishing](https://doc
 2. **version** opens or updates the "Version Packages" pull request. It runs `changeset version`, which bumps `package.json`, writes `CHANGELOG.md` and deletes the changesets.
 3. When that pull request is merged, **pack** runs the CI checks, builds and packs the tarball. It has no publish rights, and it is skipped when the version is already staged.
 4. **stage** runs in the `npm` environment and is the only job that may request an OIDC token. `npm stage publish` exchanges GitHub's OIDC token for a short-lived npm token and stages the tarball with provenance. The job then pushes the `v{version}` tag and creates a draft GitHub release from the `CHANGELOG.md` entry. Its summary shows the stage id.
-5. **You approve** the staged version on npm. It goes live as `latest`. Then you publish the draft GitHub release, which deploys the demo (see [The demo](#the-demo)).
+5. **You approve** the staged version on npm. It goes live as `latest`. Then you publish the draft GitHub release, which deploys the demo (see [The demo](#the-demo)). Publish it only after approving on npm, so the demo never shows a version that is not on npm.
 
 The stage job holds no npm token, and `setup-node` is not given a registry, so if the OIDC exchange fails there are no credentials to fall back on and the job fails. The short-lived token can stage but cannot approve: approval always needs a maintainer's two-factor authentication.
 
