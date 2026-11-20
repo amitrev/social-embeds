@@ -811,6 +811,61 @@ D66 and D67 saw the docs' player (`x8lr5`) show "Playback error" for its demo vi
 
 So the component builds a working `src`, and the player loads and can play. The 403 comes from Dailymotion's stream CDN with or without the package. It looks like a limit on the docs' sample player after a few plays; that is not proven. Whether a publisher's own Player ID has the same limit still needs one of its own videos.
 
+## Wave 4 research (Milestone 1, 2026-11-20)
+
+The VERIFY items of [wave-4-brief.md](./wave-4-brief.md). Frames were probed in Chrome on a static page on `localhost:4173` with a `message` listener, as in waves 2 and 3. Share and Embed dialog code was read from each platform's own page; cookie banners were declined.
+
+### D70. Bluesky: embed code and DID URLs, an iframe that posts its height
+
+- **Embed code** is what `embed.bsky.app/oembed` returns (`bluesky/oembed.html`): a `blockquote.bluesky-embed` with `data-bluesky-uri` (the AT URI) and `data-bluesky-cid`, the post text in a `p`, author and post links with `?ref_src=embed`, and `embed.js`. The post link carries the DID, not the handle.
+- **`embed.js`** scans the whole node it is given (`document` by default) for `[data-bluesky-uri]` and replaces each with `https://embed.bsky.app/embed/{did}/app.bsky.feed.post/{rkey}?id={random}&ref_url={page}`; `data-bluesky-embed-color-mode` becomes `colorMode`. It exposes `window.bluesky.scan`.
+- **The frame** posts `{ height, id }` as an object, from `https://embed.bsky.app`, once it has painted: a frame that has not been on screen posts nothing. Without `id` it still posts, with `id: null`. The post rendered at 682 px for 600 px wide.
+- **Parser:** canonical `https://bsky.app/profile/{did}/post/{rkey}`, `id` `{did}/app.bsky.feed.post/{rkey}`, `kind: 'post'`. Options: `cid`, and `colorMode` from `data-bluesky-embed-color-mode` (`light`, `dark` or `system`). URLs with a handle need a lookup and return `null` (brief §2.1).
+- **Not checked:** a deleted post and an account hidden from logged-out users.
+
+### D71. SoundCloud: two id encodings, three heights
+
+- **oEmbed** (`soundcloud/oembed-*.html`): `url=https%3A%2F%2Fapi.soundcloud.com%2F{tracks|playlists|users}%2F{n}`, `visual=true`, `show_artwork=true`; height 400 for a track, 450 for a playlist and a user.
+- **Share → Embed** (`soundcloud/share-visual.html`, `share-classic.html`): `url=https%3A//api.soundcloud.com/tracks/soundcloud%253Atracks%253A293`, a URN encoded twice, plus `color`, `auto_play`, `hide_related`, `show_comments`, `show_user`, `show_reposts`, `show_teaser` and, for the visual player, `visual=true`. Height 300 visual, 166 classic. After the iframe comes a `div` with the artist and track links.
+- **The player takes a permalink:** `url=https://soundcloud.com/forss/flickermood` rendered the track, so URL input needs no lookup.
+- **Parser:** both encodings give `https://api.soundcloud.com/{type}/{n}`, `id` the number. Permalinks give `https://soundcloud.com/{user}/{slug}`, `…/sets/{slug}` or `https://soundcloud.com/{user}`. A `secret_token` stays in the canonical URL; no private track was available to check.
+- **Rendering:** the embed code's height. A URL gets the visual player at 400 (maintainer, 2026-11-20).
+
+### D72. Apple Music: album, song and playlist
+
+- **Copy Embed Code** (`applemusic/share-album.html`, `share-song.html`): an iframe on `embed.music.apple.com` with Apple's `allow` and `sandbox`, `style="width:100%;max-width:660px;overflow:hidden;border-radius:10px;"`, height 450 for an album and 175 for a song. A song from its album menu is written as `/song/{slug}/{id}`.
+- **Slugs are not needed:** `embed.music.apple.com/us/album/1440857781` and `…?i=1440857786` both rendered.
+- **Parser:** canonical without the slug: `https://music.apple.com/{cc}/{album|song|playlist}/{id}`, plus `?i={songId}` for a song on its album; `id` the `i` value when present, else the path id. The country code is kept.
+- **Music videos** have no embed option on the web, and `music-video` URLs are not supported. Artists are not supported either: no embed was checked.
+
+### D73. Apple Podcasts: episodes from embed code, shows from URLs
+
+- **Embed Episode** (`applepodcasts/share-episode.html`): as Apple Music, with `height="160" width="640"`, `max-width:640px` and `border-radius:12px`, `src` `embed.podcasts.apple.com/{cc}/podcast/{slug}/id{showId}?i={episodeId}`.
+- **Shows** have no embed option on the web. `embed.podcasts.apple.com/us/podcast/id1200361736` redirects to `/us/podcast/1200361736` and renders the show; at 450 px it fits.
+- **Parser:** canonical `https://podcasts.apple.com/{cc}/podcast/id{showId}`, plus `?i={episodeId}`; `id` as Apple Music. Heights: episode 160, show 450.
+
+### D74. Tumblr: the blog name works, so URLs render
+
+- **oEmbed** (`tumblr/oembed.html`): `div.tumblr-post` whose `data-href` is `embed.tumblr.com/embed/post/t:{token}/{id}/v2`, with `data-did`, a link to `www.tumblr.com/{blog}/{id}`, and `post.js?_v=…`.
+- **`embed.tumblr.com/embed/post/{blog}/{id}/v2` renders the same post** as the token form. A URL therefore needs no lookup, and the brief's embed-code-only path is not needed.
+- **The frame** posts the string `{"method":"tumblr-post:sizeChange","args":[768]}` from `https://embed.tumblr.com`, once it has painted.
+- **Parser:** canonical `https://www.tumblr.com/{blog}/{id}`, from `www.tumblr.com/{blog}/{id}[/{slug}]` and `{blog}.tumblr.com/post/{id}[/{slug}]`. Embed code takes the blog and id from its link, which must have the same id as `data-href`. The token and `data-did` are dropped.
+
+### D75. Kick: the player URL, channels only
+
+- Kick's site has no embed dialog, so `kick/player-channel.html` is derived from the player URL, `player.kick.com/{channel}`, which rendered the channel. The channel page asked for an age confirmation, which was not given.
+- **Parser:** canonical `https://kick.com/{channel}`, lowercase; `kind: 'video'`, 16:9. Videos and clips are not supported. `autoplay` and `muted` are kept from the query; the player showed a play button with `autoplay=false`, and the parameters are not documented.
+
+### D76. Giphy: fixed and responsive code, both with a credit
+
+- **Embed dialog** (`giphy/embed-fixed.html`, `embed-responsive.html`): `<iframe src="https://giphy.com/embed/{id}" … class="giphy-embed" allowFullScreen>` at the GIF's size, or `width/height="100%"` inside `<div style="width:100%;height:0;padding-bottom:{ratio}%;position:relative;">`. Both are followed by `<p><a href="https://giphy.com/gifs/{id}">via GIPHY</a></p>`.
+- `giphy.com/gifs/{slug}-{id}` redirects to `giphy.com/gifs/{id}`.
+- **Parser:** canonical `https://giphy.com/gifs/{id}`; `kind: 'video'`; size from the iframe or the wrapper. A URL has no size and gets 1:1. Clips are not supported.
+
+### D77. Bluesky and Tumblr render their frames directly
+
+Both frames post their height to the page, so both components build the iframe themselves, as Telegram and Reddit do (D55): `variant: 'iframe'`, no script, no page-wide scan (D39), and nothing loaded before the embed comes near. `embed.js` and `post.js` are accepted in embed code and not loaded.
+
 ## Open VERIFY items
 
 | ID  | Item                                            | Milestone | Status                                          |
