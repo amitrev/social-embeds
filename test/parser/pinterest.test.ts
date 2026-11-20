@@ -14,7 +14,10 @@ const pin = (id: string) =>
 
 describe('Pinterest embed code', () => {
   it('parses the widget code from the docs', () => {
-    expect(parseEmbed(widget)).toEqual({ ...pin('1234567890'), options: {} });
+    expect(parseEmbed(widget)).toEqual({
+      ...pin('424605071145752542'),
+      options: {},
+    });
   });
 
   it('reads data-pin-width', () => {
@@ -32,7 +35,7 @@ describe('Pinterest embed code', () => {
   // (docs/decisions.md D51).
   it('parses the oEmbed iframe as a widget pin', () => {
     expect(parseEmbed(oembed)).toEqual({
-      ...pin('99360735500167749'),
+      ...pin('424605071145752542'),
       options: {},
     });
   });
@@ -48,7 +51,7 @@ describe('Pinterest embed code', () => {
       'an iframe on another host',
       oembed.replace('assets.pinterest.com', 'example.com'),
     ],
-    ['an iframe without an id', oembed.replace('id=99360735500167749&', '')],
+    ['an iframe without an id', oembed.replace('id=424605071145752542&', '')],
   ])('rejects %s', (_, html) => {
     expect(parseEmbed(html)).toBeNull();
   });
@@ -56,13 +59,16 @@ describe('Pinterest embed code', () => {
 
 describe('Pinterest URLs', () => {
   it.each([
-    'https://www.pinterest.com/pin/99360735500167749/',
-    'https://pinterest.com/pin/99360735500167749',
-    'https://bg.pinterest.com/pin/99360735500167749/',
-    'https://www.pinterest.co.uk/pin/99360735500167749/',
-    'https://www.pinterest.com/pin/next-stop-pinterest--99360735500167749/',
+    'https://www.pinterest.com/pin/424605071145752542/',
+    'https://pinterest.com/pin/424605071145752542',
+    'https://bg.pinterest.com/pin/424605071145752542/',
+    'https://www.pinterest.co.uk/pin/424605071145752542/',
+    'https://www.pinterest.com/pin/next-stop-pinterest--424605071145752542/',
   ])('%s', (url) => {
-    expect(matchUrl(url)).toEqual({ ...pin('99360735500167749'), options: {} });
+    expect(matchUrl(url)).toEqual({
+      ...pin('424605071145752542'),
+      options: {},
+    });
   });
 
   it.each([

@@ -4,10 +4,10 @@ import { SocialEmbed } from 'social-embeds';
 // unmarked (docs/decisions.md D38 and D46).
 const EMBEDS = [
   'https://www.facebook.com/facebook/videos/10153231379946729/',
-  'https://www.instagram.com/p/DfPQchkG1tg/',
-  'https://www.threads.com/@instagram/post/DfQSavwEs5C',
+  'https://www.instagram.com/p/Df75lxnmIrF/',
+  'https://www.threads.com/@instagram/post/Df5MmLBm0O7',
   'https://x.com/jack/status/20',
-  'https://www.pinterest.com/pin/99360735500167749/',
+  'https://www.pinterest.com/pin/424605071145752542/',
 ];
 
 export default function EagerEmbeds() {

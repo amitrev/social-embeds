@@ -9,14 +9,14 @@ const base = {
 } as const;
 
 const EPISODE =
-  'https://podcasts.apple.com/us/podcast/id1200361736?i=1000802907981';
+  'https://podcasts.apple.com/us/podcast/id947965068?i=1000430702647';
 
 describe('Apple Podcasts embed code', () => {
   it('parses an episode without its slug', () => {
     expect(parseEmbed(episode)).toEqual({
       ...base,
       url: EPISODE,
-      id: '1000802907981',
+      id: '1000430702647',
       options: {},
       size: { width: 640, height: 160 },
     });
@@ -26,13 +26,13 @@ describe('Apple Podcasts embed code', () => {
     expect(
       parseEmbed(
         episode.replace(
-          '/did-a-i-break-the-internet-and-other-things/id1200361736?i=1000802907981',
-          '/1200361736',
+          '/monument-valley-meet-the-developer/id947965068?i=1000430702647',
+          '/947965068',
         ),
       ),
     ).toMatchObject({
-      url: 'https://podcasts.apple.com/us/podcast/id1200361736',
-      id: '1200361736',
+      url: 'https://podcasts.apple.com/us/podcast/id947965068',
+      id: '947965068',
     });
   });
 
@@ -46,22 +46,22 @@ describe('Apple Podcasts embed code', () => {
 describe('Apple Podcasts URLs', () => {
   it.each([
     [
-      'https://podcasts.apple.com/us/podcast/did-a-i-break-the-internet-and-other-things/id1200361736?i=1000802907981&uo=4',
+      'https://podcasts.apple.com/us/podcast/monument-valley-meet-the-developer/id947965068?i=1000430702647&uo=4',
       EPISODE,
-      '1000802907981',
+      '1000430702647',
     ],
     [
-      'https://podcasts.apple.com/us/podcast/the-daily/id1200361736',
-      'https://podcasts.apple.com/us/podcast/id1200361736',
-      '1200361736',
+      'https://podcasts.apple.com/us/podcast/monument-valley-meet-the-developer/id947965068',
+      'https://podcasts.apple.com/us/podcast/id947965068',
+      '947965068',
     ],
   ])('matches %s', (url, canonical, id) => {
     expect(matchUrl(url)).toEqual({ ...base, url: canonical, id, options: {} });
   });
 
   it.each([
-    'https://podcasts.apple.com/us/channel/the-new-york-times/id6442505455',
-    'https://podcasts.apple.com/us/podcast/the-daily/idabc',
+    'https://podcasts.apple.com/us/channel/a-channel/id1000000001',
+    'https://podcasts.apple.com/us/podcast/monument-valley-meet-the-developer/idabc',
   ])('does not match %s', (url) => {
     expect(matchUrl(url)).toBeNull();
   });

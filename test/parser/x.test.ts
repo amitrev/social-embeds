@@ -43,12 +43,12 @@ describe('X embed code', () => {
 
   it('takes the status from the last link, not links inside the text', () => {
     expect(parseEmbed(link)).toMatchObject({
-      id: '266031293945503744',
-      url: 'https://x.com/BarackObama/status/266031293945503744',
+      id: '1460323737035677698',
+      url: 'https://x.com/XDevelopers/status/1460323737035677698',
       fallbackHtml:
-        '<p lang="en" dir="ltr">Four more years. <a href="http://t.co/bAJE6Vom">pic.twitter.com/bAJE6Vom</a></p>' +
-        '&mdash; Barack Obama (@BarackObama) ' +
-        '<a href="https://x.com/BarackObama/status/266031293945503744?ref_src=twsrc%5Etfw">November 7, 2012</a>',
+        '<p lang="en" dir="ltr">Introducing a new era for the Twitter Developer Platform! <br><br>📣The Twitter API v2 is now the primary API and full of new features<br>⏱Immediate access for most use cases, or apply to get more access for free<br>📖Removed certain restrictions in the Policy<a href="https://t.co/Hrm15bkBWJ">https://t.co/Hrm15bkBWJ</a> <a href="https://t.co/YFfCDErHsg">pic.twitter.com/YFfCDErHsg</a></p>' +
+        '&mdash; Developers (@XDevelopers) ' +
+        '<a href="https://x.com/XDevelopers/status/1460323737035677698?ref_src=twsrc%5Etfw">November 15, 2021</a>',
     });
   });
 

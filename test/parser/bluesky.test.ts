@@ -5,13 +5,13 @@ import { verifyEmbed } from '../../src/parser/verify';
 import oembed from '../fixtures/bluesky/oembed.html?raw';
 
 const DID = 'did:plc:z72i7hdynmk6r22z27h6tvur';
-const URL = `https://bsky.app/profile/${DID}/post/3n2mkgfb4tk2d`;
+const URL = `https://bsky.app/profile/${DID}/post/3mxu3hsnebc2v`;
 const base = {
   platform: 'bluesky',
   kind: 'post',
   variant: 'iframe',
   url: URL,
-  id: `${DID}/app.bsky.feed.post/3n2mkgfb4tk2d`,
+  id: `${DID}/app.bsky.feed.post/3mxu3hsnebc2v`,
 } as const;
 
 describe('Bluesky embed code', () => {
@@ -19,9 +19,9 @@ describe('Bluesky embed code', () => {
     expect(parseEmbed(oembed)).toEqual({
       ...base,
       options: {
-        cid: 'bafyreif2sisjvqvshmnisis34mt6irs5ptxf3anfbg4qoruzjm6k6a5oim',
+        cid: 'bafyreihprzpev5lpm4wkevfteaurguvmtmzq4cmg6guzwxvmlumvfdcsmy',
       },
-      fallbackHtml: `<p lang="en">Read all about @germnetwork.com in @wired.com:</p>&mdash; <a href="https://bsky.app/profile/${DID}?ref_src=embed">Bluesky (@bsky.app)</a> <a href="${URL}?ref_src=embed">2026-11-18T21:57:26.111Z</a>`,
+      fallbackHtml: `<p lang="en">saw some cool clouds today</p>&mdash; <a href="https://bsky.app/profile/${DID}?ref_src=embed">Bluesky (@bsky.app)</a> <a href="${URL}?ref_src=embed">2026-10-14T17:35:30.592Z</a>`,
     });
   });
 
@@ -50,7 +50,7 @@ describe('Bluesky embed code', () => {
     [
       'a post link that names another post',
       oembed.replace(
-        '/post/3n2mkgfb4tk2d?ref_src',
+        '/post/3mxu3hsnebc2v?ref_src',
         '/post/3aaaaaaaaaaaa?ref_src',
       ),
     ],
@@ -81,7 +81,7 @@ describe('Bluesky URLs', () => {
 
   it.each(['.', '..'])('does not match the record key %s', (rkey) => {
     expect(matchUrl(`https://bsky.app/profile/${DID}/post/${rkey}`)).toBeNull();
-    expect(parseEmbed(oembed.replaceAll('3n2mkgfb4tk2d', rkey))).toBeNull();
+    expect(parseEmbed(oembed.replaceAll('3mxu3hsnebc2v', rkey))).toBeNull();
   });
 
   it('matches a post URL with a DID', () => {
@@ -89,7 +89,7 @@ describe('Bluesky URLs', () => {
   });
 
   it('does not match a post URL with a handle, which needs a lookup', () => {
-    const url = 'https://bsky.app/profile/bsky.app/post/3n2mkgfb4tk2d';
+    const url = 'https://bsky.app/profile/bsky.app/post/3mxu3hsnebc2v';
     expect(matchUrl(url)).toBeNull();
     expect(needsLookup(url)).toBe('bluesky');
   });
@@ -99,9 +99,9 @@ describe('Bluesky URLs', () => {
     URL,
     `https://bsky.app/profile/${DID}`,
     'not a url',
-    'https://bsky.app/profile/did:plc:Z72I7HDYNMK6R22Z27H6TVUR/post/3n2mkgfb4tk2d',
-    'https://bsky.app/profile/did:key:z6Mk/post/3n2mkgfb4tk2d',
-    'https://bsky.app/profile/not a handle/post/3n2mkgfb4tk2d',
+    'https://bsky.app/profile/did:plc:Z72I7HDYNMK6R22Z27H6TVUR/post/3mxu3hsnebc2v',
+    'https://bsky.app/profile/did:key:z6Mk/post/3mxu3hsnebc2v',
+    'https://bsky.app/profile/not a handle/post/3mxu3hsnebc2v',
   ])('needs no lookup for %s', (url) => {
     expect(needsLookup(url)).toBeNull();
   });

@@ -12,12 +12,12 @@ const post = (type: string, code: string) =>
   }) as const;
 
 const link =
-  'https://www.instagram.com/p/DfPQchkG1tg/?utm_source=ig_embed&amp;utm_campaign=loading';
+  'https://www.instagram.com/p/Df75lxnmIrF/?utm_source=ig_embed&amp;utm_campaign=loading';
 
 describe('Instagram embed code', () => {
   it('parses the oEmbed code with caption', () => {
     expect(parseEmbed(captioned)).toEqual({
-      ...post('p', 'DfPQchkG1tg'),
+      ...post('p', 'Df75lxnmIrF'),
       options: { captioned: true, version: 14 },
       // Inline styles and the logo SVG are dropped; the placeholder structure, the
       // "View this post" text and the attribution link remain.
@@ -37,13 +37,13 @@ describe('Instagram embed code', () => {
 
   it('falls back to the last post link when the permalink attribute is missing', () => {
     const code = captioned.replace(/ data-instgrm-permalink="[^"]*"/, '');
-    expect(parseEmbed(code)).toMatchObject(post('p', 'DfPQchkG1tg'));
+    expect(parseEmbed(code)).toMatchObject(post('p', 'Df75lxnmIrF'));
   });
 
   it.each([
-    ['https://www.instagram.com/reel/DfQCqMnhpsG/', 'reel', 'DfQCqMnhpsG'],
-    ['https://www.instagram.com/reels/DfQCqMnhpsG/', 'reel', 'DfQCqMnhpsG'],
-    ['https://www.instagram.com/tv/DfQCqMnhpsG/', 'tv', 'DfQCqMnhpsG'],
+    ['https://www.instagram.com/reel/DfkYarGBOtk/', 'reel', 'DfkYarGBOtk'],
+    ['https://www.instagram.com/reels/DfkYarGBOtk/', 'reel', 'DfkYarGBOtk'],
+    ['https://www.instagram.com/tv/DfkYarGBOtk/', 'tv', 'DfkYarGBOtk'],
   ])('canonicalises a %s permalink', (permalink, type, code) => {
     const html = captioned.replace(
       /data-instgrm-permalink="[^"]*"/,
@@ -57,7 +57,7 @@ describe('Instagram embed code', () => {
       'src="//www.instagram.com/embed.js"',
       'src="https://www.instagram.com/embed.js"',
     );
-    expect(parseEmbed(code)?.id).toBe('DfPQchkG1tg');
+    expect(parseEmbed(code)?.id).toBe('Df75lxnmIrF');
   });
 
   it('rejects a permalink that is not a post', () => {
@@ -71,21 +71,21 @@ describe('Instagram embed code', () => {
 
 describe('Instagram URLs', () => {
   it.each([
-    ['https://www.instagram.com/p/DfPQchkG1tg/', 'p', 'DfPQchkG1tg'],
-    ['https://instagram.com/p/DfPQchkG1tg', 'p', 'DfPQchkG1tg'],
+    ['https://www.instagram.com/p/Df75lxnmIrF/', 'p', 'Df75lxnmIrF'],
+    ['https://instagram.com/p/Df75lxnmIrF', 'p', 'Df75lxnmIrF'],
     [
-      'https://www.instagram.com/p/DfPQchkG1tg/?utm_source=ig_web_copy_link&igsh=abc',
+      'https://www.instagram.com/p/Df75lxnmIrF/?utm_source=ig_web_copy_link&igsh=abc',
       'p',
-      'DfPQchkG1tg',
+      'Df75lxnmIrF',
     ],
-    ['https://www.instagram.com/reel/DfQCqMnhpsG/', 'reel', 'DfQCqMnhpsG'],
-    ['https://www.instagram.com/reels/DfQCqMnhpsG/', 'reel', 'DfQCqMnhpsG'],
-    ['https://www.instagram.com/tv/DfQCqMnhpsG/', 'tv', 'DfQCqMnhpsG'],
-    ['https://www.instagram.com/instagram/p/DfPQchkG1tg/', 'p', 'DfPQchkG1tg'],
+    ['https://www.instagram.com/reel/DfkYarGBOtk/', 'reel', 'DfkYarGBOtk'],
+    ['https://www.instagram.com/reels/DfkYarGBOtk/', 'reel', 'DfkYarGBOtk'],
+    ['https://www.instagram.com/tv/DfkYarGBOtk/', 'tv', 'DfkYarGBOtk'],
+    ['https://www.instagram.com/instagram/p/Df75lxnmIrF/', 'p', 'Df75lxnmIrF'],
     [
-      'https://www.instagram.com/instagram/reel/DfQCqMnhpsG/',
+      'https://www.instagram.com/instagram/reel/DfkYarGBOtk/',
       'reel',
-      'DfQCqMnhpsG',
+      'DfkYarGBOtk',
     ],
   ])('%s', (url, type, code) => {
     expect(matchUrl(url)).toEqual({ ...post(type, code), options: {} });
@@ -93,11 +93,11 @@ describe('Instagram URLs', () => {
 
   it.each([
     'https://www.instagram.com/instagram/',
-    'https://www.instagram.com/instagram/tv/DfQCqMnhpsG/',
-    'https://www.instagram.com/p/reel/DfQCqMnhpsG/',
+    'https://www.instagram.com/instagram/tv/DfkYarGBOtk/',
+    'https://www.instagram.com/p/reel/DfkYarGBOtk/',
     'https://www.instagram.com/stories/instagram/123/',
     'https://www.instagram.com/p/',
-    'https://instagr.am/p/DfPQchkG1tg/',
+    'https://instagr.am/p/Df75lxnmIrF/',
   ])('rejects %s', (url) => {
     expect(matchUrl(url)).toBeNull();
   });

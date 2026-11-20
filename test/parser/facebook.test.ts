@@ -6,16 +6,16 @@ import videoIframe from '../fixtures/facebook/video-iframe-reel.html?raw';
 import videoSdk from '../fixtures/facebook/video-sdk-docs.html?raw';
 
 const pfbid =
-  'pfbid0r3hJSv19StgY9tsUXoENzXsNzNaPtjm27KZSyJFxk1p16pZxmY5LVdM2jAgZmPnel';
+  'pfbid0LNzRz67SN7wHoVMbZnhzwU3Cu7RwipTFrJw8jqo88cP3Ay3uezQjjA5n4XeSLRvAl';
 const docsVideo = 'https://www.facebook.com/facebook/videos/10153231379946729/';
-const reel = 'https://www.facebook.com/reel/1709746083847442';
+const reel = 'https://www.facebook.com/reel/1523911562856332';
 
 describe('Facebook post embed code', () => {
   it('renders the post iframe through the SDK, keeping show_text and width', () => {
     expect(parseEmbed(postIframe)).toEqual({
       platform: 'facebook',
       kind: 'post',
-      url: `https://www.facebook.com/vasil.popov.98/posts/${pfbid}`,
+      url: `https://www.facebook.com/facebook/posts/${pfbid}`,
       id: pfbid,
       variant: 'sdk',
       options: { showText: true, width: 500 },
@@ -26,8 +26,8 @@ describe('Facebook post embed code', () => {
     expect(parseEmbed(postSdk)).toEqual({
       platform: 'facebook',
       kind: 'post',
-      url: 'https://www.facebook.com/20531316728/posts/10154009990506729',
-      id: '10154009990506729',
+      url: 'https://www.facebook.com/facebook/posts/1710463914458955',
+      id: '1710463914458955',
       variant: 'sdk',
       options: { locale: 'en_US', width: 500 },
       fallbackHtml: '',
@@ -68,7 +68,7 @@ describe('Facebook video embed code', () => {
       platform: 'facebook',
       kind: 'video',
       url: reel,
-      id: '1709746083847442',
+      id: '1523911562856332',
       variant: 'iframe',
       options: { height: 476, show_text: false, width: 267, t: 0 },
       size: { width: 267, height: 476 },
@@ -80,7 +80,7 @@ describe('Facebook video embed code', () => {
       platform: 'facebook',
       kind: 'video',
       url: reel,
-      id: '1709746083847442',
+      id: '1523911562856332',
       variant: 'sdk',
       options: { showText: true },
       // The player's own size, from the iframe's parameters: 115 of the iframe's 591px
@@ -181,49 +181,49 @@ describe('Facebook URLs (shapes verified in docs/decisions.md D21)', () => {
 
   it.each([
     [
-      `https://www.facebook.com/vasil.popov.98/posts/${pfbid}`,
-      post(pfbid, `https://www.facebook.com/vasil.popov.98/posts/${pfbid}`),
+      `https://www.facebook.com/facebook/posts/${pfbid}`,
+      post(pfbid, `https://www.facebook.com/facebook/posts/${pfbid}`),
     ],
     [
-      'https://m.facebook.com/vasil.popov.98/posts/10234117416785614/?app=fbl',
+      'https://m.facebook.com/facebook/posts/1710463914458955/?app=fbl',
       post(
-        '10234117416785614',
-        'https://www.facebook.com/vasil.popov.98/posts/10234117416785614',
+        '1710463914458955',
+        'https://www.facebook.com/facebook/posts/1710463914458955',
       ),
     ],
     [
-      'https://facebook.com/permalink.php?story_fbid=10234117416785614&id=1903493489701660',
+      'https://facebook.com/permalink.php?story_fbid=1710463914458955&id=20531316728',
       post(
-        '10234117416785614',
-        'https://www.facebook.com/permalink.php?story_fbid=10234117416785614&id=1903493489701660',
+        '1710463914458955',
+        'https://www.facebook.com/permalink.php?story_fbid=1710463914458955&id=20531316728',
       ),
     ],
     [
-      'https://www.facebook.com/story.php?story_fbid=10234117416785614&id=1903493489701660&rdid=x',
+      'https://www.facebook.com/story.php?story_fbid=1710463914458955&id=20531316728&rdid=x',
       post(
-        '10234117416785614',
-        'https://www.facebook.com/story.php?story_fbid=10234117416785614&id=1903493489701660',
+        '1710463914458955',
+        'https://www.facebook.com/story.php?story_fbid=1710463914458955&id=20531316728',
       ),
     ],
     [
-      'https://www.facebook.com/photo.php?fbid=10234117378664661&set=a.1018797998903&type=3',
+      'https://www.facebook.com/photo.php?fbid=1000000000000001&set=a.1000000000001&type=3',
       post(
-        '10234117378664661',
-        'https://www.facebook.com/photo.php?fbid=10234117378664661',
+        '1000000000000001',
+        'https://www.facebook.com/photo.php?fbid=1000000000000001',
       ),
     ],
     [
-      'https://www.facebook.com/photo/?fbid=10234117378664661',
+      'https://www.facebook.com/photo/?fbid=1000000000000001',
       post(
-        '10234117378664661',
-        'https://www.facebook.com/photo/?fbid=10234117378664661',
+        '1000000000000001',
+        'https://www.facebook.com/photo/?fbid=1000000000000001',
       ),
     ],
     [
-      'https://www.facebook.com/vasil.popov.98/photos/a.1018797998903/10234117378664661/',
+      'https://www.facebook.com/facebook/photos/a.1000000000001/1000000000000001/',
       post(
-        '10234117378664661',
-        'https://www.facebook.com/vasil.popov.98/photos/a.1018797998903/10234117378664661/',
+        '1000000000000001',
+        'https://www.facebook.com/facebook/photos/a.1000000000001/1000000000000001/',
       ),
     ],
     [docsVideo, video('10153231379946729', docsVideo)],

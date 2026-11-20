@@ -18,7 +18,7 @@ import reddit from '../fixtures/reddit/post-share.html?raw';
 import snapchatLens from '../fixtures/snapchat/lens-share.html?raw';
 import snapchat from '../fixtures/snapchat/profile-share.html?raw';
 import telegram from '../fixtures/telegram/widget-configurator-options.html?raw';
-import threads from '../fixtures/threads/oembed.html?raw';
+import threads from '../fixtures/threads/embed-dialog.html?raw';
 import tiktok from '../fixtures/tiktok/oembed-player.html?raw';
 import xHashtag from '../fixtures/x/oembed-hashtag.html?raw';
 import xOptions from '../fixtures/x/oembed-options.html?raw';
@@ -26,6 +26,11 @@ import youtube from '../fixtures/youtube/share-nocookie-controls-start.html?raw'
 import appleMusic from '../fixtures/applemusic/share-song.html?raw';
 import applePodcasts from '../fixtures/applepodcasts/share-episode.html?raw';
 import soundcloudShare from '../fixtures/soundcloud/share-visual.html?raw';
+import bluesky from '../fixtures/bluesky/oembed.html?raw';
+import giphy from '../fixtures/giphy/embed-responsive.html?raw';
+import kick from '../fixtures/kick/player-channel.html?raw';
+import threadsOembed from '../fixtures/threads/oembed.html?raw';
+import tumblr from '../fixtures/tumblr/oembed.html?raw';
 
 const fixtures = {
   postIframe,
@@ -53,6 +58,11 @@ const fixtures = {
   soundcloudShare,
   appleMusic,
   applePodcasts,
+  bluesky,
+  tumblr,
+  kick,
+  giphy,
+  threadsOembed,
 };
 
 describe('verifyEmbed', () => {
@@ -67,10 +77,10 @@ describe('verifyEmbed', () => {
 
   it('accepts what matchUrl produced', () => {
     const embed = matchUrl(
-      'https://www.tiktok.com/@/video/6718335390845095173',
+      'https://www.tiktok.com/@/video/7704834703446117662',
     );
     expect(embed?.url).toBe(
-      'https://www.tiktok.com/@/video/6718335390845095173',
+      'https://www.tiktok.com/@/video/7704834703446117662',
     );
     expect(verifyEmbed(embed as ParsedEmbed)).toEqual(embed);
   });
@@ -103,7 +113,7 @@ describe('verifyEmbed', () => {
       'a URL in another form than the parser writes',
       {
         ...x,
-        url: 'https://twitter.com/TheEllenShow/status/440322224407314432',
+        url: 'https://twitter.com/XDevelopers/status/1293593516040269825',
       },
     ],
     // Components build iframe `src` from the canonical URL (docs/decisions.md D57).
@@ -111,7 +121,7 @@ describe('verifyEmbed', () => {
       'a Reddit URL whose path would shift into the iframe host',
       {
         ...(parseEmbed(reddit) as ParsedEmbed),
-        url: 'https://reddit.com/r/ab/comments/1xz8iq4/',
+        url: 'https://reddit.com/r/ab/comments/11zso11/',
       },
     ],
     [
@@ -127,7 +137,7 @@ describe('verifyEmbed', () => {
 
   it('drops X fallback content that links to another post', () => {
     const otherPost = (x.fallbackHtml ?? '').replace(
-      'https://x.com/TheEllenShow/status/440322224407314432',
+      'https://x.com/XDevelopers/status/1293593516040269825',
       'https://x.com/jack/status/20',
     );
     expect(otherPost).not.toBe(x.fallbackHtml);

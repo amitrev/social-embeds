@@ -3,7 +3,7 @@ import { matchUrl, parseEmbed } from '../../src/parser';
 import facebookPost from '../fixtures/facebook/post-iframe.html?raw';
 import facebookVideo from '../fixtures/facebook/video-sdk-docs.html?raw';
 import instagram from '../fixtures/instagram/post-captioned.html?raw';
-import threads from '../fixtures/threads/oembed.html?raw';
+import threads from '../fixtures/threads/embed-dialog.html?raw';
 import x from '../fixtures/x/oembed-basic.html?raw';
 import youtube from '../fixtures/youtube/share.html?raw';
 

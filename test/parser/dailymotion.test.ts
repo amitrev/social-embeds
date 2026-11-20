@@ -24,8 +24,8 @@ describe('Dailymotion embed code', () => {
   it('parses the oEmbed code, which has no Player ID', () => {
     expect(parseEmbed(oembed)).toEqual({
       ...base,
-      url: 'https://www.dailymotion.com/video/xbxskia',
-      id: 'xbxskia',
+      url: 'https://www.dailymotion.com/video/x84qh50',
+      id: 'x84qh50',
       options: {},
       size: { width: 480, height: 269 },
     });
@@ -34,9 +34,9 @@ describe('Dailymotion embed code', () => {
   it('parses the legacy embed URL', () => {
     expect(
       parseEmbed(
-        '<iframe src="https://www.dailymotion.com/embed/video/xbxskia" width="480" height="270"></iframe>',
+        '<iframe src="https://www.dailymotion.com/embed/video/x84qh50" width="480" height="270"></iframe>',
       )?.id,
-    ).toBe('xbxskia');
+    ).toBe('x84qh50');
   });
 
   it.each([
@@ -57,15 +57,15 @@ describe('Dailymotion embed code', () => {
 
 describe('Dailymotion URLs', () => {
   it.each([
-    'https://www.dailymotion.com/video/xbxskia',
-    'https://dailymotion.com/video/xbxskia/',
-    'https://dai.ly/xbxskia',
-    'https://www.dailymotion.com/embed/video/xbxskia',
+    'https://www.dailymotion.com/video/x84qh50',
+    'https://dailymotion.com/video/x84qh50/',
+    'https://dai.ly/x84qh50',
+    'https://www.dailymotion.com/embed/video/x84qh50',
   ])('%s', (url) => {
     expect(matchUrl(url)).toEqual({
       ...base,
-      url: 'https://www.dailymotion.com/video/xbxskia',
-      id: 'xbxskia',
+      url: 'https://www.dailymotion.com/video/x84qh50',
+      id: 'x84qh50',
       options: {},
     });
   });
@@ -78,7 +78,7 @@ describe('Dailymotion URLs', () => {
   });
 
   it.each([
-    'https://www.dailymotion.com/euronews-en',
+    'https://www.dailymotion.com/dm-support-policy',
     'https://www.dailymotion.com/playlist/x5zhzj',
     'https://dai.ly/',
   ])('rejects %s', (url) => {

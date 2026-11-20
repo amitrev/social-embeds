@@ -14,7 +14,7 @@ import videoIframe from '../fixtures/facebook/video-iframe-reel.html?raw';
 import videoSdk from '../fixtures/facebook/video-sdk-docs.html?raw';
 import instagramCode from '../fixtures/instagram/post-captioned.html?raw';
 import pinterestIframe from '../fixtures/pinterest/oembed-iframe.html?raw';
-import threadsCode from '../fixtures/threads/oembed.html?raw';
+import threadsCode from '../fixtures/threads/embed-dialog.html?raw';
 import xOptions from '../fixtures/x/oembed-options.html?raw';
 import { installObserver, lastObserver } from './helpers';
 
@@ -24,7 +24,7 @@ vi.mock('../../src/loader/platform-scripts', () => ({
 }));
 
 const load = vi.mocked(loadPlatformScript);
-const reel = 'https://www.facebook.com/reel/1709746083847442';
+const reel = 'https://www.facebook.com/reel/1523911562856332';
 const page = window as unknown as Record<string, unknown>;
 
 function parsed(html: string): ParsedEmbed {
@@ -219,7 +219,7 @@ describe('InstagramEmbed', () => {
     const onLoad = vi.fn();
     const { container } = render(
       <InstagramEmbed
-        url="https://www.instagram.com/reels/DfQCqMnhpsG/"
+        url="https://www.instagram.com/reels/DfkYarGBOtk/"
         onLoad={onLoad}
       />,
     );
@@ -227,7 +227,7 @@ describe('InstagramEmbed', () => {
       '540px',
     );
     expect(markupOf(container)).toBe(
-      '<blockquote data-instgrm-permalink="https://www.instagram.com/reel/DfQCqMnhpsG/" style="width:calc(100% - 2px)"></blockquote>',
+      '<blockquote data-instgrm-permalink="https://www.instagram.com/reel/DfkYarGBOtk/" style="width:calc(100% - 2px)"></blockquote>',
     );
 
     await enter();
@@ -250,7 +250,7 @@ describe('InstagramEmbed', () => {
     const embed = parsed(instagramCode);
     const { container, rerender } = render(<InstagramEmbed embed={embed} />);
     expect(markupOf(container)).toMatch(
-      /^<blockquote data-instgrm-permalink="https:\/\/www\.instagram\.com\/p\/DfPQchkG1tg\/" data-instgrm-version="14" data-instgrm-captioned="" style="width:calc\(100% - 2px\)"><div> <a href=/,
+      /^<blockquote data-instgrm-permalink="https:\/\/www\.instagram\.com\/p\/Df75lxnmIrF\/" data-instgrm-version="14" data-instgrm-captioned="" style="width:calc\(100% - 2px\)"><div> <a href=/,
     );
     rerender(<InstagramEmbed embed={embed} captioned={false} />);
     expect(markupOf(container)).not.toContain('data-instgrm-captioned');
@@ -266,7 +266,7 @@ describe('ThreadsEmbed', () => {
     );
     const markup = markupOf(container);
     expect(markup).toMatch(
-      /^<blockquote data-text-post-permalink="https:\/\/www\.threads\.com\/t\/DfQSavwEs5C" data-text-post-version="0" id="ig-tp-DfQSavwEs5C" data-theme="dark"> <a href=/,
+      /^<blockquote data-text-post-permalink="https:\/\/www\.threads\.com\/t\/Df5MmLBm0O7" data-text-post-version="0" id="ig-tp-Df5MmLBm0O7" data-theme="dark"> <a href=/,
     );
     expect((container.firstElementChild as HTMLElement).style.maxWidth).toBe(
       '658px',
@@ -302,7 +302,7 @@ describe('FacebookEmbed', () => {
     const onLoad = vi.fn();
     const { container } = render(
       <FacebookEmbed
-        url="https://m.facebook.com/vasil.popov.98/posts/10234117416785614"
+        url="https://m.facebook.com/facebook/posts/1710463914458955"
         locale="bg_BG"
         onLoad={onLoad}
       />,
@@ -311,7 +311,7 @@ describe('FacebookEmbed', () => {
       '750px',
     );
     expect(markupOf(container)).toBe(
-      '<div class="fb-post" data-href="https://www.facebook.com/vasil.popov.98/posts/10234117416785614"></div>',
+      '<div class="fb-post" data-href="https://www.facebook.com/facebook/posts/1710463914458955"></div>',
     );
 
     await enter();
@@ -326,7 +326,7 @@ describe('FacebookEmbed', () => {
   it('renders post iframe embed code through the SDK with its width and show_text', () => {
     const { container } = render(<FacebookEmbed embed={parsed(postIframe)} />);
     expect(markupOf(container)).toMatch(
-      /^<div class="fb-post" data-href="https:\/\/www\.facebook\.com\/vasil\.popov\.98\/posts\/pfbid\w+" data-width="500" data-show-text="true"><\/div>$/,
+      /^<div class="fb-post" data-href="https:\/\/www\.facebook\.com\/facebook\/posts\/pfbid\w+" data-width="500" data-show-text="true"><\/div>$/,
     );
     expect(container.querySelector('iframe')).toBeNull();
   });
@@ -348,7 +348,7 @@ describe('FacebookEmbed', () => {
       <FacebookEmbed embed={parsed(videoIframe)} lazy={false} />,
     );
     expect(markupOf(container)).toBe(
-      '<div class="fb-video" data-href="https://www.facebook.com/reel/1709746083847442" data-show-text="true"></div>',
+      '<div class="fb-video" data-href="https://www.facebook.com/reel/1523911562856332" data-show-text="true"></div>',
     );
     expect(container.querySelector('iframe')).toBeNull();
     expect((container.firstElementChild as HTMLElement).style.aspectRatio).toBe(
@@ -451,18 +451,18 @@ describe('PinterestEmbed', () => {
     cleanup();
 
     const view = render(
-      <PinterestEmbed url="https://www.pinterest.com/pin/99360735500167749/" />,
+      <PinterestEmbed url="https://www.pinterest.com/pin/424605071145752542/" />,
     );
     const wrapper = view.container.firstElementChild as HTMLElement;
     expect(wrapper.style.maxWidth).toBe('236px');
     expect(markupOf(view.container)).toBe(
-      '<a href="https://www.pinterest.com/pin/99360735500167749/"></a>',
+      '<a href="https://www.pinterest.com/pin/424605071145752542/"></a>',
     );
     await enter();
     expect(load).toHaveBeenCalledWith('pinterest');
     expect(build).toHaveBeenCalledWith(wrapper.firstElementChild);
     expect(markupOf(view.container)).toBe(
-      '<a href="https://www.pinterest.com/pin/99360735500167749/" data-pin-do="embedPin"></a>',
+      '<a href="https://www.pinterest.com/pin/424605071145752542/" data-pin-do="embedPin"></a>',
     );
   });
 
@@ -471,7 +471,7 @@ describe('PinterestEmbed', () => {
       <PinterestEmbed embed={parsed(pinterestIframe)} pinWidth="large" />,
     );
     expect(markupOf(container)).toBe(
-      '<a href="https://www.pinterest.com/pin/99360735500167749/" data-pin-width="large"></a>',
+      '<a href="https://www.pinterest.com/pin/424605071145752542/" data-pin-width="large"></a>',
     );
     expect((container.firstElementChild as HTMLElement).style.maxWidth).toBe(
       '600px',

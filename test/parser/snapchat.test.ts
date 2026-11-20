@@ -4,7 +4,7 @@ import lens from '../fixtures/snapchat/lens-share.html?raw';
 import profile from '../fixtures/snapchat/profile-share.html?raw';
 
 const SPOTLIGHT_ID =
-  'W7_EDlXWTBiXAEEniNoMPwAAYaGxkaHh3Y2xiAZ0qvNuuAZ0qvBmIAAAAAQ';
+  'W7_EDlXWTBiXAEEniNoMPwAAYbXB4dmdmdG9pAZ9IUkWUAZ9IUOjXAAAAAQ';
 
 describe('Snapchat embed code', () => {
   it('parses a profile', () => {
@@ -23,10 +23,10 @@ describe('Snapchat embed code', () => {
     expect(parseEmbed(lens)).toEqual({
       platform: 'snapchat',
       kind: 'post',
-      url: 'https://www.snapchat.com/lens/9c4b773c46ca43acba564858059f7d7a',
-      id: '9c4b773c46ca43acba564858059f7d7a',
+      url: 'https://www.snapchat.com/lens/41b1e6372aa44fb89f903ecd48a4ab8b',
+      id: '41b1e6372aa44fb89f903ecd48a4ab8b',
       variant: 'iframe',
-      options: { title: 'Pure Flame Lens' },
+      options: { title: 'Dog Lens' },
       size: { width: 416, height: 692 },
     });
   });
@@ -36,11 +36,11 @@ describe('Snapchat embed code', () => {
   it('parses a Spotlight video built from the same markup', () => {
     const html = profile.replaceAll(
       'https://www.snapchat.com/@teamsnapchat',
-      `https://www.snapchat.com/@yang_sixiang/spotlight/${SPOTLIGHT_ID}`,
+      `https://www.snapchat.com/@specsdevs/spotlight/${SPOTLIGHT_ID}`,
     );
     expect(parseEmbed(html)).toMatchObject({
       kind: 'video',
-      url: `https://www.snapchat.com/@yang_sixiang/spotlight/${SPOTLIGHT_ID}`,
+      url: `https://www.snapchat.com/@specsdevs/spotlight/${SPOTLIGHT_ID}`,
       id: SPOTLIGHT_ID,
     });
   });
@@ -83,10 +83,10 @@ describe('Snapchat URLs', () => {
       `https://www.snapchat.com/spotlight/${SPOTLIGHT_ID}`,
     ],
     [
-      `https://snapchat.com/@yang_sixiang/spotlight/${SPOTLIGHT_ID}?share_id=x&locale=bg-BG`,
+      `https://snapchat.com/@specsdevs/spotlight/${SPOTLIGHT_ID}?share_id=x&locale=bg-BG`,
       'video',
       SPOTLIGHT_ID,
-      `https://www.snapchat.com/@yang_sixiang/spotlight/${SPOTLIGHT_ID}`,
+      `https://www.snapchat.com/@specsdevs/spotlight/${SPOTLIGHT_ID}`,
     ],
     [
       'https://www.snapchat.com/@teamsnapchat',
@@ -101,16 +101,16 @@ describe('Snapchat URLs', () => {
       'https://www.snapchat.com/@teamsnapchat',
     ],
     [
-      'https://www.snapchat.com/lens/61141491143',
+      'https://www.snapchat.com/lens/6451403405463552',
       'post',
-      '61141491143',
-      'https://www.snapchat.com/lens/61141491143',
+      '6451403405463552',
+      'https://www.snapchat.com/lens/6451403405463552',
     ],
     [
-      'https://www.snapchat.com/@erling.haaland/highlight/2312d242-718d-41be-aa25-36f70b5169fb',
+      'https://www.snapchat.com/@snapgames/highlight/88d1bbae-f29c-4c27-ac5c-f2afe670d8fe',
       'post',
-      '2312d242-718d-41be-aa25-36f70b5169fb',
-      'https://www.snapchat.com/@erling.haaland/highlight/2312d242-718d-41be-aa25-36f70b5169fb',
+      '88d1bbae-f29c-4c27-ac5c-f2afe670d8fe',
+      'https://www.snapchat.com/@snapgames/highlight/88d1bbae-f29c-4c27-ac5c-f2afe670d8fe',
     ],
   ])('%s', (input, kind, id, url) => {
     expect(matchUrl(input)).toEqual({
@@ -125,7 +125,7 @@ describe('Snapchat URLs', () => {
 
   // These have no /embed page (docs/decisions.md D50).
   it.each([
-    'https://www.snapchat.com/@erling.haaland/_okTjPWBROGWHUK3mnmVIwAAgdXhkYWd6cXNmAaHsDXXqAaHsDXFnAAAAAA',
+    'https://www.snapchat.com/@snapgames/_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
     'https://www.snapchat.com/p/9d647766-d450-45e9-b2a9-6b656b92c808',
     'https://t.snapchat.com/abcdef',
     'https://www.snapchat.com/spotlight',

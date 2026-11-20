@@ -6,7 +6,7 @@ import webappShare from '../fixtures/tiktok/webapp-share-player.html?raw';
 const video = {
   platform: 'tiktok',
   kind: 'video',
-  id: '6718335390845095173',
+  id: '7704834703446117662',
   variant: 'iframe',
 } as const;
 
@@ -14,7 +14,7 @@ describe('TikTok embed code', () => {
   it('parses the Embed Player iframe that oEmbed returns', () => {
     expect(parseEmbed(player)).toEqual({
       ...video,
-      url: 'https://www.tiktok.com/@/video/6718335390845095173',
+      url: 'https://www.tiktok.com/@/video/7704834703446117662',
       options: {
         embed_from: 'oembed',
         music_info: 1,
@@ -29,7 +29,7 @@ describe('TikTok embed code', () => {
   it('parses the code from the TikTok website share dialog', () => {
     expect(parseEmbed(webappShare)).toMatchObject({
       ...video,
-      id: '7701153412242574613',
+      id: '7704834703446117662',
       options: { embed_from: 'webapp_share' },
       size: { width: 325, height: 578 },
     });
@@ -43,7 +43,7 @@ describe('TikTok embed code', () => {
 // No real fixture: TikTok's oEmbed and share dialog both return the player iframe now
 // (docs/decisions.md D11).
 describe('TikTok legacy blockquote', () => {
-  const cite = 'https://www.tiktok.com/@scout2015/video/6718335390845095173';
+  const cite = 'https://www.tiktok.com/@tiktok/video/7704834703446117662';
   const blockquote = (attributes: string) =>
     `<blockquote class="tiktok-embed" ${attributes}><section></section></blockquote>` +
     '<script async src="https://www.tiktok.com/embed.js"></script>';
@@ -51,18 +51,18 @@ describe('TikTok legacy blockquote', () => {
   it('renders through the player, keeping the username from cite', () => {
     expect(
       parseEmbed(
-        blockquote(`cite="${cite}" data-video-id="6718335390845095173"`),
+        blockquote(`cite="${cite}" data-video-id="7704834703446117662"`),
       ),
     ).toEqual({ ...video, url: cite, options: {} });
   });
 
   it('accepts either identifier alone', () => {
     expect(parseEmbed(blockquote(`cite="${cite}"`))?.id).toBe(
-      '6718335390845095173',
+      '7704834703446117662',
     );
     expect(
-      parseEmbed(blockquote('data-video-id="6718335390845095173"'))?.url,
-    ).toBe('https://www.tiktok.com/@/video/6718335390845095173');
+      parseEmbed(blockquote('data-video-id="7704834703446117662"'))?.url,
+    ).toBe('https://www.tiktok.com/@/video/7704834703446117662');
   });
 
   it('rejects conflicting identifiers', () => {
@@ -74,12 +74,12 @@ describe('TikTok legacy blockquote', () => {
 
 describe('TikTok URLs', () => {
   it.each([
-    'https://www.tiktok.com/@scout2015/video/6718335390845095173',
-    'https://tiktok.com/@scout2015/video/6718335390845095173/?is_from_webapp=1',
+    'https://www.tiktok.com/@tiktok/video/7704834703446117662',
+    'https://tiktok.com/@tiktok/video/7704834703446117662/?is_from_webapp=1',
   ])('%s', (url) => {
     expect(matchUrl(url)).toEqual({
       ...video,
-      url: 'https://www.tiktok.com/@scout2015/video/6718335390845095173',
+      url: 'https://www.tiktok.com/@tiktok/video/7704834703446117662',
       options: {},
     });
   });
@@ -87,8 +87,8 @@ describe('TikTok URLs', () => {
   it.each([
     'https://vm.tiktok.com/ZMabcdef/',
     'https://vt.tiktok.com/ZSabcdef/',
-    'https://www.tiktok.com/@scout2015',
-    'https://www.tiktok.com/@scout2015/video/abc',
+    'https://www.tiktok.com/@tiktok',
+    'https://www.tiktok.com/@tiktok/video/abc',
   ])('rejects %s', (url) => {
     expect(matchUrl(url)).toBeNull();
   });

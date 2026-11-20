@@ -5,7 +5,7 @@ import { parseEmbed, type ParsedEmbed } from '../../src/parser';
 import player from '../fixtures/tiktok/oembed-player.html?raw';
 import { installObserver } from './helpers';
 
-const URL = 'https://www.tiktok.com/@scout2015/video/6718335390845095173';
+const URL = 'https://www.tiktok.com/@tiktok/video/7704834703446117662';
 
 function parsed(html: string): ParsedEmbed {
   const embed = parseEmbed(html);
@@ -30,7 +30,7 @@ describe('TikTokEmbed', () => {
     expect(wrapper.style.maxWidth).toBe('325px');
     const iframe = container.querySelector('iframe');
     expect(iframe?.getAttribute('src')).toBe(
-      'https://www.tiktok.com/player/v1/6718335390845095173',
+      'https://www.tiktok.com/player/v1/7704834703446117662',
     );
     expect(iframe?.getAttribute('title')).toBe('TikTok video player');
   });
@@ -51,7 +51,7 @@ describe('TikTokEmbed', () => {
       '325 / 578',
     );
     expect(container.querySelector('iframe')?.getAttribute('src')).toBe(
-      'https://www.tiktok.com/player/v1/6718335390845095173?embed_from=oembed&music_info=1&description=1&autoplay=1&muted=1',
+      'https://www.tiktok.com/player/v1/7704834703446117662?embed_from=oembed&music_info=1&description=1&autoplay=1&muted=1',
     );
   });
 
@@ -69,17 +69,17 @@ describe('TikTokEmbed', () => {
       '400px',
     );
     expect(container.querySelector('iframe')?.getAttribute('src')).toBe(
-      'https://www.tiktok.com/player/v1/6718335390845095173?embed_from=oembed&music_info=0&description=1&autoplay=1&muted=1&progress_bar=0',
+      'https://www.tiktok.com/player/v1/7704834703446117662?embed_from=oembed&music_info=0&description=1&autoplay=1&muted=1&progress_bar=0',
     );
   });
 
   it('renders legacy blockquote embed code through the player', () => {
     const embed = parsed(
-      `<blockquote class="tiktok-embed" cite="${URL}" data-video-id="6718335390845095173"><section></section></blockquote>`,
+      `<blockquote class="tiktok-embed" cite="${URL}" data-video-id="7704834703446117662"><section></section></blockquote>`,
     );
     const { container } = render(<TikTokEmbed embed={embed} lazy={false} />);
     expect(container.querySelector('iframe')?.getAttribute('src')).toBe(
-      'https://www.tiktok.com/player/v1/6718335390845095173',
+      'https://www.tiktok.com/player/v1/7704834703446117662',
     );
   });
 

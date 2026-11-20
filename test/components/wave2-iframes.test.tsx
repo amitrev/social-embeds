@@ -119,7 +119,7 @@ describe('TelegramEmbed', () => {
     const onError = vi.fn();
     render(
       <TelegramEmbed
-        url="https://www.reddit.com/r/bulgaria/comments/1xz8iq4/"
+        url="https://www.reddit.com/r/reddit/comments/11zso11/"
         onError={onError}
       />,
     );
@@ -136,7 +136,7 @@ describe('RedditEmbed', () => {
     );
     const { wrapper, iframe } = parts(container);
     expect(iframe.getAttribute('src')).toBe(
-      'https://embed.reddit.com/r/bulgaria/comments/1xz8iq4/?embed=true',
+      'https://embed.reddit.com/r/reddit/comments/11zso11/?embed=true',
     );
     expect(iframe.getAttribute('sandbox')).toBe(
       'allow-scripts allow-same-origin allow-popups',
@@ -163,7 +163,7 @@ describe('RedditEmbed', () => {
       <RedditEmbed
         embed={{
           ...parsed(redditPost),
-          url: 'https://reddit.com/r/ab/comments/1xz8iq4/',
+          url: 'https://reddit.com/r/ab/comments/11zso11/',
         }}
         onError={onError}
         lazy={false}
@@ -179,9 +179,9 @@ describe('RedditEmbed', () => {
     );
     const { wrapper, iframe } = parts(container);
     expect(iframe.getAttribute('src')).toBe(
-      'https://embed.reddit.com/r/bulgaria/comments/1xz8iq4/comment/19st69pk12h39/?embed=true',
+      'https://embed.reddit.com/r/reddit/comments/11zso11/comment/jde89cx/?embed=true',
     );
-    expect(wrapper.style.height).toBe('240px');
+    expect(wrapper.style.height).toBe('552px');
   });
 
   it('passes options from embed code and props', () => {
@@ -195,7 +195,7 @@ describe('RedditEmbed', () => {
       <RedditEmbed embed={embed} locale="bg-BG" showMedia lazy={false} />,
     );
     expect(parts(container).iframe.getAttribute('src')).toBe(
-      'https://embed.reddit.com/r/bulgaria/comments/1xz8iq4/?embed=true&theme=dark&showmedia=true&locale=bg-BG',
+      'https://embed.reddit.com/r/reddit/comments/11zso11/?embed=true&theme=dark&showmedia=true&locale=bg-BG',
     );
   });
 });
@@ -207,12 +207,12 @@ describe('SnapchatEmbed', () => {
     );
     const { wrapper, iframe } = parts(container);
     expect(iframe.getAttribute('src')).toBe(
-      'https://www.snapchat.com/lens/9c4b773c46ca43acba564858059f7d7a/embed',
+      'https://www.snapchat.com/lens/41b1e6372aa44fb89f903ecd48a4ab8b/embed',
     );
     expect(iframe.getAttribute('allow')).toBe(
       'autoplay; camera; microphone; clipboard-write;',
     );
-    expect(iframe.getAttribute('title')).toBe('Pure Flame Lens');
+    expect(iframe.getAttribute('title')).toBe('Dog Lens');
     expect(wrapper.style.aspectRatio).toBe('416 / 692');
     expect(wrapper.style.maxWidth).toBe('416px');
   });
@@ -240,10 +240,10 @@ describe('LinkedInEmbed', () => {
     );
     const { wrapper, iframe } = parts(container);
     expect(iframe.getAttribute('src')).toBe(
-      'https://www.linkedin.com/embed/feed/update/urn:li:share:7508448197254705153?collapsed=1',
+      'https://www.linkedin.com/embed/feed/update/urn:li:ugcPost:7528828146767409153?collapsed=1',
     );
     expect(iframe.getAttribute('title')).toBe('LinkedIn post');
-    expect(wrapper.style.height).toBe('670px');
+    expect(wrapper.style.height).toBe('525px');
     expect(wrapper.style.maxWidth).toBe('504px');
     expect(wrapper.style.aspectRatio).toBe('');
   });
@@ -251,13 +251,13 @@ describe('LinkedInEmbed', () => {
   it('uses 670px for a URL, and the height prop over both', () => {
     const { container } = render(
       <LinkedInEmbed
-        url="https://www.linkedin.com/posts/someone_title-activity-7527261038006697984-Ab1c"
+        url="https://www.linkedin.com/posts/someone_title-activity-7528828146767409153-Ab1c"
         lazy={false}
       />,
     );
     const { wrapper, iframe } = parts(container);
     expect(iframe.getAttribute('src')).toBe(
-      'https://www.linkedin.com/embed/feed/update/urn:li:activity:7527261038006697984',
+      'https://www.linkedin.com/embed/feed/update/urn:li:activity:7528828146767409153',
     );
     expect(wrapper.style.height).toBe('670px');
 
@@ -273,7 +273,7 @@ describe('LinkedInEmbed', () => {
     const next = parts(second.container);
     expect(next.wrapper.style.height).toBe('900px');
     expect(next.iframe.getAttribute('src')).toBe(
-      'https://www.linkedin.com/embed/feed/update/urn:li:share:7508448197254705153',
+      'https://www.linkedin.com/embed/feed/update/urn:li:ugcPost:7528828146767409153',
     );
   });
 });

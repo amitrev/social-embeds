@@ -11,7 +11,7 @@ import reddit from '../fixtures/reddit/post-share.html?raw';
 import snapchat from '../fixtures/snapchat/profile-share.html?raw';
 import spotify from '../fixtures/spotify/oembed-track.html?raw';
 import telegram from '../fixtures/telegram/widget-configurator.html?raw';
-import threads from '../fixtures/threads/oembed.html?raw';
+import threads from '../fixtures/threads/embed-dialog.html?raw';
 import tiktok from '../fixtures/tiktok/oembed-player.html?raw';
 import twitch from '../fixtures/twitch/docs-channel.html?raw';
 import vimeo from '../fixtures/vimeo/responsive-docs.html?raw';
@@ -69,7 +69,7 @@ describe('SocialEmbed with embed code', () => {
     [
       'TikTok',
       tiktok,
-      'iframe https://www.tiktok.com/player/v1/6718335390845095173?embed_from=oembed&music_info=1&description=1&autoplay=1&muted=1',
+      'iframe https://www.tiktok.com/player/v1/7704834703446117662?embed_from=oembed&music_info=1&description=1&autoplay=1&muted=1',
     ],
     [
       'YouTube',
@@ -85,18 +85,18 @@ describe('SocialEmbed with embed code', () => {
     [
       'LinkedIn',
       linkedin,
-      'iframe https://www.linkedin.com/embed/feed/update/urn:li:share:7527261037016817664',
+      'iframe https://www.linkedin.com/embed/feed/update/urn:li:ugcPost:7528828146767409153',
     ],
     [
       'Reddit',
       reddit,
-      'iframe https://embed.reddit.com/r/bulgaria/comments/1xz8iq4/?embed=true',
+      'iframe https://embed.reddit.com/r/reddit/comments/11zso11/?embed=true',
     ],
     ['Pinterest', pinterest, 'a www.pinterest.com'],
     [
       'Spotify',
       spotify,
-      'iframe https://open.spotify.com/embed/track/4uLU6hMCjMI75M1A2tKUQC',
+      'iframe https://open.spotify.com/embed/track/0LrHzQHk5gYGbMsoVbKDuS',
     ],
     [
       'Vimeo',
@@ -106,7 +106,7 @@ describe('SocialEmbed with embed code', () => {
     [
       'Twitch',
       twitch,
-      `iframe https://player.twitch.tv/?channel=dallas&muted=true&parent=${window.location.hostname}`,
+      `iframe https://player.twitch.tv/?channel=twitch&muted=true&parent=${window.location.hostname}`,
     ],
     [
       'Dailymotion',
@@ -116,7 +116,7 @@ describe('SocialEmbed with embed code', () => {
     [
       'Bluesky',
       bluesky,
-      'iframe https://embed.bsky.app/embed/did:plc:z72i7hdynmk6r22z27h6tvur/app.bsky.feed.post/3n2mkgfb4tk2d',
+      'iframe https://embed.bsky.app/embed/did:plc:z72i7hdynmk6r22z27h6tvur/app.bsky.feed.post/3mxu3hsnebc2v',
     ],
     [
       'SoundCloud',
@@ -126,20 +126,20 @@ describe('SocialEmbed with embed code', () => {
     [
       'Apple Music',
       appleMusic,
-      'iframe https://embed.music.apple.com/us/song/1440857786',
+      'iframe https://embed.music.apple.com/us/song/1357820597',
     ],
     [
       'Apple Podcasts',
       applePodcasts,
-      'iframe https://embed.podcasts.apple.com/us/podcast/id1200361736?i=1000802907981',
+      'iframe https://embed.podcasts.apple.com/us/podcast/id947965068?i=1000430702647',
     ],
     [
       'Tumblr',
       tumblr,
-      'iframe https://embed.tumblr.com/embed/post/staff/832577330595643392/v2',
+      'iframe https://embed.tumblr.com/embed/post/staff/828009069026721792/v2',
     ],
-    ['Kick', kick, 'iframe https://player.kick.com/xqc'],
-    ['Giphy', giphy, 'iframe https://giphy.com/embed/JIX9t2j0ZTN9S'],
+    ['Kick', kick, 'iframe https://player.kick.com/kick'],
+    ['Giphy', giphy, 'iframe https://giphy.com/embed/l41YlHs99JsSptZf2'],
   ])('routes %s embed code to its component', (_, html, expected) => {
     const { container } = render(<SocialEmbed html={html} lazy={false} />);
     expect(rendered(container)).toBe(expected);
@@ -177,17 +177,17 @@ describe('SocialEmbed with a URL', () => {
   it.each([
     ['https://x.com/jack/status/20', 'blockquote x.com'],
     [
-      'https://www.instagram.com/p/DfPQchkG1tg/',
+      'https://www.instagram.com/p/Df75lxnmIrF/',
       'blockquote www.instagram.com',
     ],
-    ['https://www.threads.com/t/DfQSavwEs5C', 'blockquote www.threads.com'],
+    ['https://www.threads.com/t/Df5MmLBm0O7', 'blockquote www.threads.com'],
     [
       'https://www.facebook.com/facebook/videos/10153231379946729/',
       'div.fb-video www.facebook.com',
     ],
     [
-      'https://www.tiktok.com/@scout2015/video/6718335390845095173',
-      'iframe https://www.tiktok.com/player/v1/6718335390845095173',
+      'https://www.tiktok.com/@tiktok/video/7704834703446117662',
+      'iframe https://www.tiktok.com/player/v1/7704834703446117662',
     ],
     [
       'https://youtu.be/jNQXAC9IVRw?t=90',
@@ -195,29 +195,29 @@ describe('SocialEmbed with a URL', () => {
     ],
     ['https://t.me/s/telegram/83', 'iframe https://t.me/telegram/83?embed=1'],
     [
-      'https://www.snapchat.com/lens/61141491143',
-      'iframe https://www.snapchat.com/lens/61141491143/embed',
+      'https://www.snapchat.com/lens/6451403405463552',
+      'iframe https://www.snapchat.com/lens/6451403405463552/embed',
     ],
     [
-      'https://www.linkedin.com/feed/update/urn:li:activity:7527261038006697984/',
-      'iframe https://www.linkedin.com/embed/feed/update/urn:li:activity:7527261038006697984',
+      'https://www.linkedin.com/feed/update/urn:li:activity:7528828146767409153/',
+      'iframe https://www.linkedin.com/embed/feed/update/urn:li:activity:7528828146767409153',
     ],
     [
-      'https://old.reddit.com/r/bulgaria/comments/1xz8iq4/comment/19st69pk12h39/',
-      'iframe https://embed.reddit.com/r/bulgaria/comments/1xz8iq4/comment/19st69pk12h39/?embed=true',
+      'https://old.reddit.com/r/reddit/comments/11zso11/comment/jde89cx/',
+      'iframe https://embed.reddit.com/r/reddit/comments/11zso11/comment/jde89cx/?embed=true',
     ],
-    ['https://bg.pinterest.com/pin/99360735500167749/', 'a www.pinterest.com'],
+    ['https://bg.pinterest.com/pin/424605071145752542/', 'a www.pinterest.com'],
     [
-      'https://open.spotify.com/intl-de/playlist/37i9dQZF1DXcBWIGoYBM5M',
-      'iframe https://open.spotify.com/embed/playlist/37i9dQZF1DXcBWIGoYBM5M',
+      'https://open.spotify.com/intl-de/playlist/37i9dQZF1DX4sWSpwq3LiO',
+      'iframe https://open.spotify.com/embed/playlist/37i9dQZF1DX4sWSpwq3LiO',
     ],
     [
       'https://vimeo.com/76979871/abcdef1234',
       'iframe https://player.vimeo.com/video/76979871?h=abcdef1234',
     ],
     [
-      'https://clips.twitch.tv/AwkwardHelplessSalamanderSwiftRage',
-      `iframe https://clips.twitch.tv/embed?clip=AwkwardHelplessSalamanderSwiftRage&parent=${window.location.hostname}`,
+      'https://clips.twitch.tv/LivelyFrigidApeLeeroyJenkins-D01Eij0_9y-oFwAu',
+      `iframe https://clips.twitch.tv/embed?clip=LivelyFrigidApeLeeroyJenkins-D01Eij0_9y-oFwAu&parent=${window.location.hostname}`,
     ],
   ])('routes %s', (url, expected) => {
     const { container } = render(<SocialEmbed url={url} lazy={false} />);
@@ -290,7 +290,7 @@ describe('SocialEmbed with wave 4 URLs', () => {
     const onError = vi.fn();
     const { container } = render(
       <SocialEmbed
-        url="https://bsky.app/profile/bsky.app/post/3n2mkgfb4tk2d"
+        url="https://bsky.app/profile/bsky.app/post/3mxu3hsnebc2v"
         onError={onError}
       />,
     );
@@ -319,7 +319,7 @@ describe('SocialEmbed with wave 4 URLs', () => {
 
   it('passes height to the wave 4 iframe embeds', () => {
     const { container } = render(
-      <SocialEmbed url="https://kick.com/xqc" height={300} lazy={false} />,
+      <SocialEmbed url="https://kick.com/kick" height={300} lazy={false} />,
     );
     expect((container.firstElementChild as HTMLElement).style.height).toBe(
       '300px',
@@ -366,7 +366,7 @@ describe('SocialEmbed props', () => {
   it('forwards height to LinkedIn and Snapchat, not to Telegram or Reddit', () => {
     const fixed = render(
       <SocialEmbed
-        url="https://www.linkedin.com/feed/update/urn:li:share:7527261037016817664/"
+        url="https://www.linkedin.com/feed/update/urn:li:share:7528828146767409153/"
         height={900}
       />,
     );
@@ -385,9 +385,9 @@ describe('SocialEmbed props', () => {
 
   it('forwards height to the wave 3 iframes', () => {
     for (const url of [
-      'https://open.spotify.com/track/4uLU6hMCjMI75M1A2tKUQC',
+      'https://open.spotify.com/track/0LrHzQHk5gYGbMsoVbKDuS',
       'https://vimeo.com/76979871',
-      'https://www.twitch.tv/dallas',
+      'https://www.twitch.tv/twitch',
     ]) {
       const { container } = render(<SocialEmbed url={url} height={400} />);
       expect((container.firstElementChild as HTMLElement).style.height).toBe(
