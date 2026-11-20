@@ -17,6 +17,13 @@ export const PLATFORMS = {
   vimeo: 'Vimeo',
   twitch: 'Twitch',
   dailymotion: 'Dailymotion',
+  bluesky: 'Bluesky',
+  soundcloud: 'SoundCloud',
+  applemusic: 'Apple Music',
+  applepodcasts: 'Apple Podcasts',
+  tumblr: 'Tumblr',
+  kick: 'Kick',
+  giphy: 'Giphy',
 } as const;
 
 export type PlatformKey = keyof typeof PLATFORMS;
@@ -39,6 +46,8 @@ const FACEBOOK_POST =
 const SNAPCHAT_SPOTLIGHT =
   'https://www.snapchat.com/@yang_sixiang/spotlight/W7_EDlXWTBiXAEEniNoMPwAAYaGxkaHh3Y2xiAZ0qvNuuAZ0qvBmIAAAAAQ';
 const PINTEREST_PIN = '99360735500167749';
+export const BLUESKY_POST =
+  'https://bsky.app/profile/did:plc:z72i7hdynmk6r22z27h6tvur/post/3n2mkgfb4tk2d';
 export const DAILYMOTION_VIDEO = 'https://www.dailymotion.com/video/x84sh87';
 // The Player ID in Dailymotion's own iframe docs (test/fixtures/dailymotion/player-id-docs.html).
 export const DAILYMOTION_DOCS_PLAYER = 'x8lr5';
@@ -224,6 +233,49 @@ export function embedCodes(platform: PlatformKey): Sample[] {
           value: fixture('dailymotion/oembed.html'),
         },
       ];
+    case 'bluesky':
+      return [{ label: 'oEmbed', value: fixture('bluesky/oembed.html') }];
+    case 'soundcloud':
+      return [
+        {
+          label: 'Share, visual player',
+          value: fixture('soundcloud/share-visual.html'),
+        },
+        {
+          label: 'Share, classic player',
+          value: fixture('soundcloud/share-classic.html'),
+        },
+        {
+          label: 'oEmbed, playlist',
+          value: fixture('soundcloud/oembed-playlist.html'),
+        },
+      ];
+    case 'applemusic':
+      return [
+        { label: 'Album', value: fixture('applemusic/share-album.html') },
+        { label: 'Song', value: fixture('applemusic/share-song.html') },
+      ];
+    case 'applepodcasts':
+      return [
+        {
+          label: 'Episode',
+          value: fixture('applepodcasts/share-episode.html'),
+        },
+      ];
+    case 'tumblr':
+      return [{ label: 'oEmbed', value: fixture('tumblr/oembed.html') }];
+    case 'kick':
+      return [
+        {
+          label: 'Player URL in an iframe',
+          value: fixture('kick/player-channel.html'),
+        },
+      ];
+    case 'giphy':
+      return [
+        { label: 'Fixed', value: fixture('giphy/embed-fixed.html') },
+        { label: 'Responsive', value: fixture('giphy/embed-responsive.html') },
+      ];
   }
 }
 
@@ -325,5 +377,43 @@ export const URLS: Record<PlatformKey, Sample[]> = {
       label: 'Video, no Player ID: reports an error',
       value: DAILYMOTION_VIDEO,
     },
+  ],
+  bluesky: [
+    { label: 'Post, by DID', value: BLUESKY_POST },
+    {
+      label: 'Post, by handle: reports a lookup error',
+      value: 'https://bsky.app/profile/bsky.app/post/3n2mkgfb4tk2d',
+    },
+  ],
+  soundcloud: [
+    { label: 'Track', value: 'https://soundcloud.com/forss/flickermood' },
+    { label: 'Playlist', value: 'https://soundcloud.com/forss/sets/soulhack' },
+  ],
+  applemusic: [
+    {
+      label: 'Song on its album',
+      value:
+        'https://music.apple.com/us/album/better-together/1440857781?i=1440857786',
+    },
+    {
+      label: 'Album',
+      value: 'https://music.apple.com/us/album/in-between-dreams/1440857781',
+    },
+  ],
+  applepodcasts: [
+    {
+      label: 'Show',
+      value: 'https://podcasts.apple.com/us/podcast/the-daily/id1200361736',
+    },
+  ],
+  tumblr: [
+    {
+      label: 'Post',
+      value: 'https://staff.tumblr.com/post/832577330595643392',
+    },
+  ],
+  kick: [{ label: 'Channel', value: 'https://kick.com/xqc' }],
+  giphy: [
+    { label: 'GIF', value: 'https://giphy.com/gifs/cat-funny-JIX9t2j0ZTN9S' },
   ],
 };

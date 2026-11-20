@@ -866,6 +866,24 @@ The VERIFY items of [wave-4-brief.md](./wave-4-brief.md). Frames were probed in 
 
 Both frames post their height to the page, so both components build the iframe themselves, as Telegram and Reddit do (D55): `variant: 'iframe'`, no script, no page-wide scan (D39), and nothing loaded before the embed comes near. `embed.js` and `post.js` are accepted in embed code and not loaded.
 
+## Wave 4 dispatcher and playground (Milestone 5, 2026-11-20)
+
+### D78. `<SocialEmbed>` routes the wave 4 platforms
+
+- **Routing:** `bluesky`, `soundcloud`, `applemusic`, `applepodcasts`, `tumblr`, `kick` and `giphy` go to their components. `height` and `maxHeight` reach the five fixed-size iframes; Bluesky and Tumblr take their height from the frame.
+- **A Bluesky handle URL** renders nothing, and `onError` reports `social-embeds: a Bluesky URL needs a lookup: use the embed code`, from the dispatcher and from `BlueskyEmbed`.
+- **Props left off the dispatcher:** the new option names join the D36 list: SoundCloud's (`visual`, `autoPlay`, `hideRelated`, `showComments`, `showUser`, `showReposts`, `showTeaser`, `showArtwork`; `color` was already there), Kick's `autoplay` and `muted`, Bluesky's `colorMode`.
+- **Playground:** a page per platform with every wave 4 fixture and URL samples, and one embed of each on `/many`, before the X posts.
+
+Checked in Chrome on 2026-11-20, against `next build` and `next start`. The browser pane was hidden, so frames were brought into view one by one with a screenshot, which paints them:
+
+- **SoundCloud:** Share visual 760×300, classic 760×166, oEmbed playlist 760×450, URLs 760×400.
+- **Apple Music:** album 660×450, song 660×175, song on its album 660×175. **Apple Podcasts:** episode 640×160, show 640×450.
+- **Kick:** 760×428. **Giphy:** 760×760, the credit not rendered.
+- **Bluesky:** 600×691 and **Tumblr:** 540×768, from the frames' own height messages; neither platform's script was added to the page. The handle URL sample showed the lookup message.
+- **`/many`:** the seven new embeds rendered at the sizes above, with no `onError` message.
+- A Bluesky frame that had not been painted for 15 s reported `social-embeds: Bluesky post did not report its height`, then still took its height when painted. Frames paint once on screen, and `lazy` creates them only near the viewport, so this needs a hidden page or `lazy={false}` far below the fold.
+
 ## Open VERIFY items
 
 | ID  | Item                                            | Milestone | Status                                          |

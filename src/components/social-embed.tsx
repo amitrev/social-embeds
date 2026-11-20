@@ -1,18 +1,25 @@
 import { type ReactNode, useMemo } from 'react';
 import { matchUrl, parseEmbed } from '../parser';
+import { needsLookup } from '../parser/lookup';
+import { AppleMusicEmbed, ApplePodcastsEmbed } from './apple-embed';
+import { BlueskyEmbed, type BlueskyOptions } from './bluesky-embed';
 import { DailymotionEmbed, type DailymotionOptions } from './dailymotion-embed';
 import { FacebookEmbed, type FacebookOptions } from './facebook-embed';
+import { GiphyEmbed } from './giphy-embed';
 import { useReportError } from './hooks';
 import { InstagramEmbed, type InstagramOptions } from './instagram-embed';
+import { KickEmbed, type KickOptions } from './kick-embed';
 import { LinkedInEmbed, type LinkedInOptions } from './linkedin-embed';
 import { PinterestEmbed, type PinterestOptions } from './pinterest-embed';
 import { RedditEmbed, type RedditOptions } from './reddit-embed';
 import type { FrameProps } from './shared';
 import { SnapchatEmbed } from './snapchat-embed';
+import { SoundCloudEmbed, type SoundCloudOptions } from './soundcloud-embed';
 import { SpotifyEmbed } from './spotify-embed';
 import { TelegramEmbed, type TelegramOptions } from './telegram-embed';
 import { ThreadsEmbed, type ThreadsOptions } from './threads-embed';
 import { TikTokEmbed, type TikTokOptions } from './tiktok-embed';
+import { TumblrEmbed } from './tumblr-embed';
 import { TwitchEmbed, type TwitchOptions } from './twitch-embed';
 import { VimeoEmbed, type VimeoOptions } from './vimeo-embed';
 import { XEmbed, type XOptions } from './x-embed';
@@ -37,7 +44,10 @@ type PlatformOption =
   | keyof PinterestOptions
   | keyof VimeoOptions
   | keyof TwitchOptions
-  | keyof DailymotionOptions;
+  | keyof DailymotionOptions
+  | keyof BlueskyOptions
+  | keyof SoundCloudOptions
+  | keyof KickOptions;
 
 export type SocialEmbedProps = SocialEmbedSource &
   Omit<FrameProps, PlatformOption> & {
@@ -62,7 +72,9 @@ export function SocialEmbed(props: SocialEmbedProps) {
     unrecognised
       ? html !== undefined
         ? 'social-embeds: unrecognised embed code'
-        : `social-embeds: not a supported post URL: ${url}`
+        : needsLookup(url) === 'bluesky'
+          ? 'social-embeds: a Bluesky URL needs a lookup: use the embed code'
+          : `social-embeds: not a supported post URL: ${url}`
       : undefined,
     onError,
   );
@@ -124,6 +136,45 @@ export function SocialEmbed(props: SocialEmbedProps) {
           onError={onError}
           embed={embed}
         />
+      );
+    case 'bluesky':
+      return <BlueskyEmbed {...shared} onError={onError} embed={embed} />;
+    case 'soundcloud':
+      return (
+        <SoundCloudEmbed
+          {...shared}
+          {...frame}
+          onError={onError}
+          embed={embed}
+        />
+      );
+    case 'applemusic':
+      return (
+        <AppleMusicEmbed
+          {...shared}
+          {...frame}
+          onError={onError}
+          embed={embed}
+        />
+      );
+    case 'applepodcasts':
+      return (
+        <ApplePodcastsEmbed
+          {...shared}
+          {...frame}
+          onError={onError}
+          embed={embed}
+        />
+      );
+    case 'tumblr':
+      return <TumblrEmbed {...shared} onError={onError} embed={embed} />;
+    case 'kick':
+      return (
+        <KickEmbed {...shared} {...frame} onError={onError} embed={embed} />
+      );
+    case 'giphy':
+      return (
+        <GiphyEmbed {...shared} {...frame} onError={onError} embed={embed} />
       );
   }
 }
