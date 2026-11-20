@@ -93,3 +93,9 @@ export {
   type KickOptions,
 } from './components/kick-embed';
 export { GiphyEmbed, type GiphyEmbedProps } from './components/giphy-embed';
+export {
+  BlueskyEmbed,
+  type BlueskyEmbedProps,
+  type BlueskyOptions,
+} from './components/bluesky-embed';
+export { TumblrEmbed, type TumblrEmbedProps } from './components/tumblr-embed';
