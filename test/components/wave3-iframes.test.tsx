@@ -64,7 +64,7 @@ describe('SpotifyEmbed', () => {
   it('gives a playlist, album or artist URL the full player, 352px high', () => {
     for (const path of [
       'playlist/37i9dQZF1DX4sWSpwq3LiO',
-      'album/4aawyAB9vmqN3uQ7FjRGTy',
+      'album/4JFX70cq4K7PGohmm5OoNe',
       'artist/0gxyHStUsqpMadRV0Di1Qt',
     ]) {
       const { container } = render(

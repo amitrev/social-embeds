@@ -41,9 +41,9 @@ describe('Instagram embed code', () => {
   });
 
   it.each([
-    ['https://www.instagram.com/reel/DfQCqMnhpsG/', 'reel', 'DfQCqMnhpsG'],
-    ['https://www.instagram.com/reels/DfQCqMnhpsG/', 'reel', 'DfQCqMnhpsG'],
-    ['https://www.instagram.com/tv/DfQCqMnhpsG/', 'tv', 'DfQCqMnhpsG'],
+    ['https://www.instagram.com/reel/DfkYarGBOtk/', 'reel', 'DfkYarGBOtk'],
+    ['https://www.instagram.com/reels/DfkYarGBOtk/', 'reel', 'DfkYarGBOtk'],
+    ['https://www.instagram.com/tv/DfkYarGBOtk/', 'tv', 'DfkYarGBOtk'],
   ])('canonicalises a %s permalink', (permalink, type, code) => {
     const html = captioned.replace(
       /data-instgrm-permalink="[^"]*"/,
@@ -78,14 +78,14 @@ describe('Instagram URLs', () => {
       'p',
       'Df75lxnmIrF',
     ],
-    ['https://www.instagram.com/reel/DfQCqMnhpsG/', 'reel', 'DfQCqMnhpsG'],
-    ['https://www.instagram.com/reels/DfQCqMnhpsG/', 'reel', 'DfQCqMnhpsG'],
-    ['https://www.instagram.com/tv/DfQCqMnhpsG/', 'tv', 'DfQCqMnhpsG'],
+    ['https://www.instagram.com/reel/DfkYarGBOtk/', 'reel', 'DfkYarGBOtk'],
+    ['https://www.instagram.com/reels/DfkYarGBOtk/', 'reel', 'DfkYarGBOtk'],
+    ['https://www.instagram.com/tv/DfkYarGBOtk/', 'tv', 'DfkYarGBOtk'],
     ['https://www.instagram.com/instagram/p/Df75lxnmIrF/', 'p', 'Df75lxnmIrF'],
     [
-      'https://www.instagram.com/instagram/reel/DfQCqMnhpsG/',
+      'https://www.instagram.com/instagram/reel/DfkYarGBOtk/',
       'reel',
-      'DfQCqMnhpsG',
+      'DfkYarGBOtk',
     ],
   ])('%s', (url, type, code) => {
     expect(matchUrl(url)).toEqual({ ...post(type, code), options: {} });
@@ -93,8 +93,8 @@ describe('Instagram URLs', () => {
 
   it.each([
     'https://www.instagram.com/instagram/',
-    'https://www.instagram.com/instagram/tv/DfQCqMnhpsG/',
-    'https://www.instagram.com/p/reel/DfQCqMnhpsG/',
+    'https://www.instagram.com/instagram/tv/DfkYarGBOtk/',
+    'https://www.instagram.com/p/reel/DfkYarGBOtk/',
     'https://www.instagram.com/stories/instagram/123/',
     'https://www.instagram.com/p/',
     'https://instagr.am/p/Df75lxnmIrF/',

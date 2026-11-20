@@ -111,9 +111,9 @@ import {
 
 <XEmbed url="https://x.com/jack/status/20" theme="dark" cards="hidden" />
 
-<InstagramEmbed url="https://www.instagram.com/p/DfPQchkG1tg/" captioned />
+<InstagramEmbed url="https://www.instagram.com/p/Df75lxnmIrF/" captioned />
 
-<ThreadsEmbed url="https://www.threads.com/@instagram/post/DfQSavwEs5C" theme="auto" />
+<ThreadsEmbed url="https://www.threads.com/@threads/post/Df7kSgBJVNz" theme="auto" />
 
 <FacebookEmbed
   url="https://www.facebook.com/facebook/videos/10153231379946729/"
@@ -122,36 +122,36 @@ import {
 />
 
 <TikTokEmbed
-  url="https://www.tiktok.com/@scout2015/video/6718335390845095173"
+  url="https://www.tiktok.com/@tiktok/video/7704834703446117662"
   musicInfo={false}
   description={false}
 />
 
-<YouTubeEmbed url="https://youtu.be/jNQXAC9IVRw?t=90" nocookie controls={false} />
+<YouTubeEmbed url="https://youtu.be/jNQXAC9IVRw?t=11" nocookie controls={false} />
 
 <TelegramEmbed url="https://t.me/telegram/83" dark userpic={false} />
 
 <SnapchatEmbed url="https://www.snapchat.com/@teamsnapchat" />
 
 <LinkedInEmbed
-  url="https://www.linkedin.com/feed/update/urn:li:activity:7527261038006697984/"
+  url="https://www.linkedin.com/feed/update/urn:li:ugcPost:7528828146767409153/"
   collapsed
   height={560}
 />
 
 <RedditEmbed
-  url="https://www.reddit.com/r/bulgaria/comments/1xz8iq4/"
+  url="https://www.reddit.com/r/reddit/comments/11zso11/"
   theme="dark"
   locale="bg-BG"
 />
 
-<PinterestEmbed url="https://www.pinterest.com/pin/99360735500167749/" pinWidth="large" />
+<PinterestEmbed url="https://www.pinterest.com/pin/424605071145752542/" pinWidth="large" />
 
-<SpotifyEmbed url="https://open.spotify.com/track/4uLU6hMCjMI75M1A2tKUQC" theme={0} />
+<SpotifyEmbed url="https://open.spotify.com/track/0LrHzQHk5gYGbMsoVbKDuS" theme={0} />
 
 <VimeoEmbed url="https://vimeo.com/76979871" muted title={false} t="1m2s" />
 
-<TwitchEmbed url="https://www.twitch.tv/videos/40464143" autoplay={false} time="1h2m3s" />
+<TwitchEmbed url="https://www.twitch.tv/videos/1816688726" autoplay={false} time="30s" />
 
 <DailymotionEmbed
   url="https://www.dailymotion.com/video/x84sh87"
@@ -160,21 +160,21 @@ import {
 />
 
 <BlueskyEmbed
-  url="https://bsky.app/profile/did:plc:z72i7hdynmk6r22z27h6tvur/post/3n2mkgfb4tk2d"
+  url="https://bsky.app/profile/did:plc:z72i7hdynmk6r22z27h6tvur/post/3mxu3hsnebc2v"
   colorMode="dark"
 />
 
 <SoundCloudEmbed url="https://soundcloud.com/forss/flickermood" visual={false} height={166} />
 
-<AppleMusicEmbed url="https://music.apple.com/us/album/better-together/1440857781?i=1440857786" />
+<AppleMusicEmbed url="https://music.apple.com/us/album/birds-of-oaks-bottom-piano-solos/1357820591?i=1357820597" />
 
-<ApplePodcastsEmbed url="https://podcasts.apple.com/us/podcast/the-daily/id1200361736" />
+<ApplePodcastsEmbed url="https://podcasts.apple.com/us/podcast/monument-valley-meet-the-developer/id947965068" />
 
-<TumblrEmbed url="https://staff.tumblr.com/post/832577330595643392" />
+<TumblrEmbed url="https://staff.tumblr.com/post/828009069026721792" />
 
-<KickEmbed url="https://kick.com/xqc" muted />
+<KickEmbed url="https://kick.com/kick" muted />
 
-<GiphyEmbed url="https://giphy.com/gifs/cat-funny-JIX9t2j0ZTN9S" maxWidth={480} />
+<GiphyEmbed url="https://giphy.com/gifs/originals-animation-kitten-logo-l41YlHs99JsSptZf2" maxWidth={480} />
 ```
 
 | Component                                                            | Option props                                                                                                                                                                                                                                                                                                                                                        |

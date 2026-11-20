@@ -195,8 +195,8 @@ describe('SocialEmbed with a URL', () => {
     ],
     ['https://t.me/s/telegram/83', 'iframe https://t.me/telegram/83?embed=1'],
     [
-      'https://www.snapchat.com/lens/61141491143',
-      'iframe https://www.snapchat.com/lens/61141491143/embed',
+      'https://www.snapchat.com/lens/6451403405463552',
+      'iframe https://www.snapchat.com/lens/6451403405463552/embed',
     ],
     [
       'https://www.linkedin.com/feed/update/urn:li:activity:7528828146767409153/',

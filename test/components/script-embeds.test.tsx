@@ -219,7 +219,7 @@ describe('InstagramEmbed', () => {
     const onLoad = vi.fn();
     const { container } = render(
       <InstagramEmbed
-        url="https://www.instagram.com/reels/DfQCqMnhpsG/"
+        url="https://www.instagram.com/reels/DfkYarGBOtk/"
         onLoad={onLoad}
       />,
     );
@@ -227,7 +227,7 @@ describe('InstagramEmbed', () => {
       '540px',
     );
     expect(markupOf(container)).toBe(
-      '<blockquote data-instgrm-permalink="https://www.instagram.com/reel/DfQCqMnhpsG/" style="width:calc(100% - 2px)"></blockquote>',
+      '<blockquote data-instgrm-permalink="https://www.instagram.com/reel/DfkYarGBOtk/" style="width:calc(100% - 2px)"></blockquote>',
     );
 
     await enter();
