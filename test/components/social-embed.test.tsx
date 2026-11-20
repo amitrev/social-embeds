@@ -177,7 +177,7 @@ describe('SocialEmbed with a URL', () => {
   it.each([
     ['https://x.com/jack/status/20', 'blockquote x.com'],
     [
-      'https://www.instagram.com/p/DfPQchkG1tg/',
+      'https://www.instagram.com/p/Df75lxnmIrF/',
       'blockquote www.instagram.com',
     ],
     ['https://www.threads.com/t/DfQSavwEs5C', 'blockquote www.threads.com'],

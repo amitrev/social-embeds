@@ -4,7 +4,7 @@ import { FacebookVideoIframe } from '../../src/components/facebook-video-iframe'
 import { parseEmbed } from '../../src/parser';
 import videoIframe from '../fixtures/facebook/video-iframe-reel.html?raw';
 
-const reel = 'https://www.facebook.com/reel/1709746083847442';
+const reel = 'https://www.facebook.com/reel/1523911562856332';
 
 afterEach(() => {
   cleanup();

@@ -18,10 +18,10 @@ describe('server rendering', () => {
     const html = renderToString(<SocialEmbed html={xLink} />);
     // The class is added on the client when the post renders (docs/decisions.md D39).
     expect(html).toContain(
-      '<blockquote><p lang="en" dir="ltr">Four more years.',
+      '<blockquote><p lang="en" dir="ltr">Introducing a new era for the Twitter Developer Platform!',
     );
     expect(html).toContain(
-      'href="https://x.com/BarackObama/status/266031293945503744?ref_src=twsrc%5Etfw"',
+      'href="https://x.com/XDevelopers/status/1460323737035677698?ref_src=twsrc%5Etfw"',
     );
     expect(html).not.toContain('<script');
   });

@@ -24,7 +24,7 @@ vi.mock('../../src/loader/platform-scripts', () => ({
 }));
 
 const load = vi.mocked(loadPlatformScript);
-const reel = 'https://www.facebook.com/reel/1709746083847442';
+const reel = 'https://www.facebook.com/reel/1523911562856332';
 const page = window as unknown as Record<string, unknown>;
 
 function parsed(html: string): ParsedEmbed {
@@ -250,7 +250,7 @@ describe('InstagramEmbed', () => {
     const embed = parsed(instagramCode);
     const { container, rerender } = render(<InstagramEmbed embed={embed} />);
     expect(markupOf(container)).toMatch(
-      /^<blockquote data-instgrm-permalink="https:\/\/www\.instagram\.com\/p\/DfPQchkG1tg\/" data-instgrm-version="14" data-instgrm-captioned="" style="width:calc\(100% - 2px\)"><div> <a href=/,
+      /^<blockquote data-instgrm-permalink="https:\/\/www\.instagram\.com\/p\/Df75lxnmIrF\/" data-instgrm-version="14" data-instgrm-captioned="" style="width:calc\(100% - 2px\)"><div> <a href=/,
     );
     rerender(<InstagramEmbed embed={embed} captioned={false} />);
     expect(markupOf(container)).not.toContain('data-instgrm-captioned');
@@ -302,7 +302,7 @@ describe('FacebookEmbed', () => {
     const onLoad = vi.fn();
     const { container } = render(
       <FacebookEmbed
-        url="https://m.facebook.com/vasil.popov.98/posts/10234117416785614"
+        url="https://m.facebook.com/facebook/posts/10234117416785614"
         locale="bg_BG"
         onLoad={onLoad}
       />,
@@ -311,7 +311,7 @@ describe('FacebookEmbed', () => {
       '750px',
     );
     expect(markupOf(container)).toBe(
-      '<div class="fb-post" data-href="https://www.facebook.com/vasil.popov.98/posts/10234117416785614"></div>',
+      '<div class="fb-post" data-href="https://www.facebook.com/facebook/posts/10234117416785614"></div>',
     );
 
     await enter();
@@ -326,7 +326,7 @@ describe('FacebookEmbed', () => {
   it('renders post iframe embed code through the SDK with its width and show_text', () => {
     const { container } = render(<FacebookEmbed embed={parsed(postIframe)} />);
     expect(markupOf(container)).toMatch(
-      /^<div class="fb-post" data-href="https:\/\/www\.facebook\.com\/vasil\.popov\.98\/posts\/pfbid\w+" data-width="500" data-show-text="true"><\/div>$/,
+      /^<div class="fb-post" data-href="https:\/\/www\.facebook\.com\/facebook\/posts\/pfbid\w+" data-width="500" data-show-text="true"><\/div>$/,
     );
     expect(container.querySelector('iframe')).toBeNull();
   });
@@ -348,7 +348,7 @@ describe('FacebookEmbed', () => {
       <FacebookEmbed embed={parsed(videoIframe)} lazy={false} />,
     );
     expect(markupOf(container)).toBe(
-      '<div class="fb-video" data-href="https://www.facebook.com/reel/1709746083847442" data-show-text="true"></div>',
+      '<div class="fb-video" data-href="https://www.facebook.com/reel/1523911562856332" data-show-text="true"></div>',
     );
     expect(container.querySelector('iframe')).toBeNull();
     expect((container.firstElementChild as HTMLElement).style.aspectRatio).toBe(

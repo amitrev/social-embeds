@@ -6,8 +6,8 @@ Real embed codes, stored byte for byte as the platform produced them. Prettier i
 | ---------------------------------------------- | ---------------------------------------------------------------------------------------------- | ---------- |
 | `x/oembed-basic.html`                          | `publish.x.com/oembed?url=https://x.com/jack/status/20`                                         | 2026-11-03 |
 | `x/oembed-options.html`                        | same, with `theme=dark&hide_thread=true&hide_media=true&align=center&lang=es&dnt=true&maxwidth=400` | 2026-11-03 |
-| `x/oembed-link.html`                           | `publish.x.com/oembed?url=https://twitter.com/BarackObama/status/266031293945503744`            | 2026-11-03 |
-| `x/oembed-hashtag.html`                        | `publish.x.com/oembed?url=https://twitter.com/TheEllenShow/status/440322224407314432`           | 2026-11-03 |
+| `x/oembed-link.html` | `publish.x.com/oembed?url=https://x.com/XDevelopers/status/1460323737035677698` | 2026-11-20 |
+| `x/oembed-hashtag.html` | `publish.x.com/oembed?url=https://x.com/XDevelopers/status/1293593516040269825` | 2026-11-20 |
 | `youtube/share.html`                           | YouTube share dialog → Embed, video `jNQXAC9IVRw`                                               | 2026-11-03 |
 | `youtube/share-start.html`                     | same, "Start at" ticked                                                                        | 2026-11-03 |
 | `youtube/share-nocookie-controls-start.html`   | same, plus "Enable privacy-enhanced mode" ticked and "Show player controls" unticked           | 2026-11-03 |
@@ -16,10 +16,10 @@ Real embed codes, stored byte for byte as the platform produced them. Prettier i
 | `threads/oembed-maxwidth.html`                 | same, with `maxwidth=400`                                                                      | 2026-11-03 |
 | `tiktok/oembed-player.html` | `tiktok.com/oembed?url=https://www.tiktok.com/@tiktok/video/7704834703446117662` | 2026-11-20 |
 | `tiktok/webapp-share-player.html` | TikTok website share dialog → Embed, `@tiktok` video `7704834703446117662`, pasted by the maintainer | 2026-11-20 |
-| `instagram/post-captioned.html`                | `instagram.com/api/v1/oembed/?url=https://www.instagram.com/p/DfPQchkG1tg/&maxwidth=540`, the `html` field | 2026-11-11 |
-| `facebook/post-iframe.html`                    | Facebook post menu → Embed, pasted by the maintainer                                           | 2026-11-03 |
-| `facebook/video-iframe-reel.html`              | Facebook reel menu → Embed, "Include full post" ticked, as published in a news article        | 2026-11-11 |
-| `facebook/post-sdk-docs.html`                  | Meta's [Embedded Posts](https://developers.facebook.com/docs/plugins/embedded-posts) "Add Code Manually" steps 2–3; its sample post has since been removed | 2026-11-03 |
+| `instagram/post-captioned.html` | `instagram.com/api/v1/oembed/?url=https://www.instagram.com/p/Df75lxnmIrF/&maxwidth=540` (@instagram), the `html` field | 2026-11-20 |
+| `facebook/post-iframe.html` | Facebook page post `facebook/posts/1710463914458955` → Embed, pasted by the maintainer | 2026-11-20 |
+| `facebook/video-iframe-reel.html` | Facebook page reel `1523911562856332` → Embed, "Include full post" ticked, pasted by the maintainer | 2026-11-20 |
+| `facebook/post-sdk-docs.html` | derived: Meta's [Embedded Posts](https://developers.facebook.com/docs/plugins/embedded-posts) "Add Code Manually" steps 2–3, with the Facebook page's post `1710463914458955` | 2026-11-20 |
 | `facebook/video-sdk-docs.html`                 | Meta's [Embedded Videos](https://developers.facebook.com/docs/plugins/embedded-video-player) "Full Code Example", `<body>` content | 2026-11-03 |
 | `telegram/widget-configurator.html`            | `core.telegram.org/widgets/post` configurator, post `telegram/83`, defaults                    | 2026-11-18 |
 | `telegram/widget-configurator-options.html`    | same, "Always hide" author photo, red accent, dark theme                                       | 2026-11-18 |

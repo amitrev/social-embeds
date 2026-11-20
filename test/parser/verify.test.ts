@@ -103,7 +103,7 @@ describe('verifyEmbed', () => {
       'a URL in another form than the parser writes',
       {
         ...x,
-        url: 'https://twitter.com/TheEllenShow/status/440322224407314432',
+        url: 'https://twitter.com/XDevelopers/status/1293593516040269825',
       },
     ],
     // Components build iframe `src` from the canonical URL (docs/decisions.md D57).
@@ -127,7 +127,7 @@ describe('verifyEmbed', () => {
 
   it('drops X fallback content that links to another post', () => {
     const otherPost = (x.fallbackHtml ?? '').replace(
-      'https://x.com/TheEllenShow/status/440322224407314432',
+      'https://x.com/XDevelopers/status/1293593516040269825',
       'https://x.com/jack/status/20',
     );
     expect(otherPost).not.toBe(x.fallbackHtml);
