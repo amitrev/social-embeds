@@ -1,6 +1,7 @@
 import type { PlatformParser } from '../platform';
 import { applemusic } from './applemusic';
 import { applepodcasts } from './applepodcasts';
+import { bluesky } from './bluesky';
 import { dailymotion } from './dailymotion';
 import { facebook } from './facebook';
 import { giphy } from './giphy';
@@ -15,6 +16,7 @@ import { spotify } from './spotify';
 import { telegram } from './telegram';
 import { threads } from './threads';
 import { tiktok } from './tiktok';
+import { tumblr } from './tumblr';
 import { twitch } from './twitch';
 import { vimeo } from './vimeo';
 import { x } from './x';
@@ -41,4 +43,6 @@ export const platforms: readonly PlatformParser[] = [
   applepodcasts,
   kick,
   giphy,
+  bluesky,
+  tumblr,
 ];
