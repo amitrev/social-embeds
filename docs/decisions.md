@@ -981,7 +981,7 @@ The `html` property wins over the first `<template>` child, which wins over the 
 
 ### D87. One self-contained `element.js`
 
-Subresource Integrity checks only the file a script tag names, not the modules it imports, so `dist/element.js` has no chunks shared with the other entries and one `integrity` hash covers all of its code. It is 28,767 bytes gzipped, under the 30 KB budget, against about 45 KB for React alone. `scripts/check-element.mjs` fails the build if the file has any import or is over 30 KB gzipped; it finds imports with a lexer, so a string or comment that merely says `import` does not fail it. The entry is listed in `sideEffects` because importing it registers the tag.
+Subresource Integrity checks only the file a script tag names, not the modules it imports, so `dist/element.js` has no chunks shared with the other entries and one `integrity` hash covers all of its code. It is minified, unlike the other entries, and 19,725 bytes gzipped, under the 30 KB budget, against about 45 KB for React alone. `scripts/check-element.mjs` fails the build if the file has any import or is over 30 KB gzipped; it finds imports with a lexer, so a string or comment that merely says `import` does not fail it. It also imports the file in Node, which must export `SocialEmbedElement` and define nothing. The entry is listed in `sideEffects` because importing it registers the tag.
 
 ### D88. Per-platform defaults live in the plans
 
