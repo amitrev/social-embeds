@@ -957,6 +957,40 @@ The rules, and why: [global samples design](./superpowers/specs/2026-11-20-globa
 
 Frames that report their height (Telegram, Reddit, Bluesky, Tumblr) post it only once painted (D70). With `lazy={false}` the iframe is created at once, so a frame far below the fold timed out after 15 s and called `onError`, then took its height when scrolled to (D78). The message listener still starts when the iframe is created, but the 15 s timeout now starts when the frame comes within 200 px of the viewport. With `lazy` on, both happen together. The extra observer is created only with `lazy` off and a frame that reports its height.
 
+## Web component (2026-11-20)
+
+### D82. Shared plans, separate frame code
+
+Each platform's knowledge (the iframe URL, allowed features, aspect ratio, height messages, options and script markup) moved into plain "plan" functions in `src/core/` that the React components and the `<social-embed>` element both call, so a platform fix is made once. The frame behaviour (lazy loading, height messages, the 15 s timeouts and retries) is written twice, in the React hooks and in DOM code, because sharing it would have rewritten the code that D28 and D81 depend on. The numbers both sides use live in one shared constants module.
+
+### D83. The element renders into the light DOM
+
+The platform scripts (X, Instagram, Threads, Facebook, Pinterest) scan the page's document for their markup and cannot see into a shadow root. The element therefore renders inside itself, as the components render inside their wrapper.
+
+### D84. Input order and the template
+
+The `html` property wins over the first `<template>` child, which wins over the `url` attribute, mirroring `<SocialEmbed>`'s embed-code-first rule. A template keeps the embed code inert, so the platform's script tag never runs and the blockquote is never shown raw. The element builds markup only from a verified embed and escaped values (D68); unrecognised embed code renders nothing and fires `error`.
+
+### D85. Events
+
+`load` is a plain `Event` and `error` an `ErrorEvent` whose `error` is the `Error` React's `onError` receives, with the same message. Neither bubbles, like `<img>` and `<iframe>` events. Both dispatch in a microtask, so a listener added right after the element is created still hears an outcome that is known at once, and only while the element is connected, so a removed element never fires.
+
+### D86. `eager`
+
+`eager` is a boolean attribute that loads at once instead of when near the viewport. It is the inverse of React's `lazy`, because HTML boolean attributes default to off. The height timeout still starts when the frame is near (D81).
+
+### D87. One self-contained `element.js`
+
+Subresource Integrity checks only the file a script tag names, not the modules it imports, so `dist/element.js` has no chunks shared with the other entries and one `integrity` hash covers all of its code. It is minified, unlike the other entries, and about 20 KB gzipped, under the 30 KB budget, against about 45 KB for React alone. `scripts/check-element.mjs` fails the build if the file has any import or is over 30 KB gzipped; it finds imports with a lexer, so a string or comment that merely says `import` does not fail it. It also imports the file in Node, which must export `SocialEmbedElement` and define nothing. The entry is listed in `sideEffects` because importing it registers the tag.
+
+### D88. Per-platform defaults live in the plans
+
+A component that sets a default `maxWidth`, a fixed `height` or a `borderRadius` for its platform now sets it in the plan, so the element sizes and rounds each embed the same as React. The components keep only prop typing and option names; a prop or `style` the host passes still replaces the plan's value.
+
+### D89. Waiting for `DOMContentLoaded`
+
+An element in the HTML can connect while the parser is still reading, before its children and `<template>` exist. If the document is still loading when it connects, it waits for `DOMContentLoaded` before capturing its children and starting, so a template or placeholder written inside it is never missed.
+
 ## Open VERIFY items
 
 | ID  | Item                                            | Milestone | Status                                          |

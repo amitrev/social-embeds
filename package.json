@@ -42,7 +42,9 @@
   "bugs": "https://github.com/amitrev/social-embeds/issues",
   "homepage": "https://github.com/amitrev/social-embeds#readme",
   "type": "module",
-  "sideEffects": false,
+  "sideEffects": [
+    "./dist/element.js"
+  ],
   "files": [
     "dist"
   ],
@@ -54,6 +56,10 @@
     "./parser": {
       "types": "./dist/parser.d.ts",
       "default": "./dist/parser.js"
+    },
+    "./element": {
+      "types": "./dist/element.d.ts",
+      "default": "./dist/element.js"
     }
   },
   "engines": {
@@ -70,6 +76,7 @@
     "check:directives": "node scripts/check-directives.mjs",
     "check:publint": "publint",
     "check:attw": "attw --pack . --profile esm-only",
+    "check:element": "node scripts/check-element.mjs",
     "changeset": "changeset"
   },
   "peerDependencies": {
@@ -84,6 +91,7 @@
     "@testing-library/react": "16.3.3",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
+    "es-module-lexer": "2.3.2",
     "eslint": "10.15.0",
     "eslint-plugin-react-hooks": "7.1.1",
     "happy-dom": "21.0.4",

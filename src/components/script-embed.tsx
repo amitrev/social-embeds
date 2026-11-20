@@ -1,12 +1,13 @@
 import { type CSSProperties, useEffect, useRef, useState } from 'react';
-import type { Driver } from './drivers';
+import type { Driver } from '../core/drivers';
+import {
+  RENDER_ATTEMPTS,
+  RENDER_TIMEOUT_MS,
+  RETRY_DELAY_MS,
+} from '../core/timing';
 import { useNearViewport } from './hooks';
 import { Skeleton } from './iframe-embed';
 import type { SharedProps } from './shared';
-
-const ATTEMPTS = 3;
-const RENDER_TIMEOUT_MS = 15_000; // for each attempt
-const RETRY_DELAY_MS = 1000; // doubles with each attempt
 
 type ScriptEmbedProps = SharedProps & {
   driver: Driver;
@@ -69,7 +70,7 @@ export function ScriptEmbed({
       if (cancelled || done) return;
       stop();
       stop = () => {};
-      if (number >= ATTEMPTS) {
+      if (number >= RENDER_ATTEMPTS) {
         callbacks.current.onError?.(error);
         return;
       }

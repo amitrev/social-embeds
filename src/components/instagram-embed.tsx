@@ -1,58 +1,35 @@
-import { instagramDriver } from './drivers';
+import { instagramPlan, type InstagramOptions } from '../core/plans/instagram';
 import { useReportError } from './hooks';
-import { attributes, hasFallback, withProps } from './markup';
 import { ScriptEmbed } from './script-embed';
 import { type EmbedSource, resolveEmbed, type SharedProps } from './shared';
 
-export type InstagramOptions = {
-  /** Show the caption (`data-instgrm-captioned`). */
-  captioned?: boolean;
-};
+export type { InstagramOptions };
 
 export type InstagramEmbedProps = EmbedSource &
   Omit<SharedProps, keyof InstagramOptions> &
   InstagramOptions;
 
-/** A photo post without caption at 375px, the smallest measured (docs/decisions.md D34). */
-const MIN_HEIGHT = 680;
-
-// embed.js copies the blockquote's inline style onto its iframe, which has no width of
-// its own: without this the post stays 326px wide (docs/decisions.md D33).
-const FLUID_WIDTH = 'width:calc(100% - 2px)';
-
 export function InstagramEmbed(props: InstagramEmbedProps) {
-  const {
-    url,
-    embed: given,
-    onError,
-    maxWidth = 540,
-    captioned,
-    ...shared
-  } = props;
+  const { url, embed: given, onError, maxWidth, captioned, ...shared } = props;
   const { embed, error } = resolveEmbed(url, given, 'instagram');
-  useReportError(error, onError);
-  if (!embed) return null;
-
-  const options = withProps(embed.options, { captioned });
-  // No class yet: the driver adds it when the post renders (docs/decisions.md D39).
-  const markup = `<blockquote${attributes({
-    'data-instgrm-permalink': embed.url,
-    'data-instgrm-version': options.version,
-    'data-instgrm-captioned': options.captioned === true ? true : undefined,
-    style: FLUID_WIDTH,
-  })}>${embed.fallbackHtml ?? ''}</blockquote>`;
+  const plan = embed ? instagramPlan(embed, { captioned }) : undefined;
+  useReportError(
+    error ?? (plan?.kind === 'error' ? plan.message : undefined),
+    onError,
+  );
+  if (plan?.kind !== 'script') return null;
 
   return (
     <ScriptEmbed
-      key={markup}
+      key={plan.key}
       {...shared}
       onError={onError}
-      maxWidth={maxWidth}
-      driver={instagramDriver}
-      markup={markup}
-      hasFallback={hasFallback(embed.fallbackHtml)}
-      minHeight={MIN_HEIGHT}
-      label="Instagram"
+      maxWidth={maxWidth ?? plan.maxWidth}
+      driver={plan.driver}
+      markup={plan.markup}
+      hasFallback={plan.hasFallback}
+      minHeight={plan.minHeight}
+      label={plan.label}
     />
   );
 }

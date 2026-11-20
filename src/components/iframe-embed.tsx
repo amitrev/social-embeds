@@ -5,16 +5,13 @@ import {
   useRef,
   useState,
 } from 'react';
+import { HEIGHT_TIMEOUT_MS, MAX_REPORTED_HEIGHT } from '../core/timing';
+import { frameStyle } from '../core/layout';
+import type { IframePlan, MessageHeight } from '../core/plan';
 import { useNearViewport } from './hooks';
 import type { FrameProps } from './shared';
 
-/** A frame that posts its own height (docs/decisions.md D55). */
-export type MessageHeight = {
-  /** The frame's origin; messages from any other origin are ignored. */
-  origin: string;
-  /** The height in a message's `data`, or `undefined` for any other message. May throw. */
-  read: (data: unknown) => number | undefined;
-};
+export type { MessageHeight };
 
 type IframeEmbedProps = FrameProps & {
   src: string;
@@ -32,11 +29,19 @@ type IframeEmbedProps = FrameProps & {
   startHeight?: number;
   /** Query parameter that gets the page's host when the iframe is created (Twitch's `parent`). */
   hostParam?: string;
+  borderRadius?: number;
 };
 
+/** The plan's fields as `IframeEmbed` props. */
+export function planProps(
+  plan: IframePlan,
+): Omit<IframePlan, 'kind' | 'fallbackHtml'> {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { kind, fallbackHtml, ...props } = plan;
+  return props;
+}
+
 const FILL: CSSProperties = { position: 'absolute', inset: 0 };
-const HEIGHT_TIMEOUT_MS = 15_000;
-const MAX_REPORTED_HEIGHT = 50_000; // px
 
 // The iframe is created on the client only: one in the server HTML can load before
 // hydration, and React then never sees its load event (docs/decisions.md D28).
@@ -52,7 +57,8 @@ export function IframeEmbed({
   messageHeight,
   startHeight,
   hostParam,
-  width = '100%',
+  borderRadius,
+  width,
   maxWidth,
   height,
   maxHeight,
@@ -128,25 +134,22 @@ export function IframeEmbed({
     };
   }, [near, inView, messageHeight, title]);
 
-  const aspectWidth = size?.width ?? ratio.width;
-  const aspectHeight = size?.height ?? ratio.height;
-  // With an aspect ratio, a height limit is a width limit: the widest box that fits it.
-  const widest =
-    maxHeight === undefined || height !== undefined
-      ? undefined
-      : Math.floor((maxHeight * aspectWidth) / aspectHeight);
   const wrapper: CSSProperties = {
-    position: 'relative',
-    width,
-    maxWidth:
-      widest === undefined || (maxWidth !== undefined && maxWidth < widest)
-        ? maxWidth
-        : widest,
-    ...(messageHeight
-      ? { height: reportedHeight ?? startHeight }
-      : height === undefined
-        ? { aspectRatio: `${String(aspectWidth)} / ${String(aspectHeight)}` }
-        : { height, maxHeight }),
+    ...frameStyle(
+      {
+        kind: 'iframe',
+        src,
+        title,
+        allow,
+        ratio,
+        size,
+        messageHeight,
+        startHeight,
+        borderRadius,
+      },
+      { width, maxWidth, height, maxHeight },
+      reportedHeight,
+    ),
     ...style,
   };
 

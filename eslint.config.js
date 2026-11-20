@@ -17,6 +17,17 @@ export default defineConfig(
   },
   reactHooks.configs.flat.recommended,
   {
+    files: ['src/core/**/*.ts', 'src/element/**/*.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: ['react', 'react-dom', 'react/*', '**/components/**'],
+        },
+      ],
+    },
+  },
+  {
     files: ['**/*.js', '**/*.mjs'],
     extends: [tseslint.configs.disableTypeChecked],
   },

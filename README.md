@@ -454,6 +454,74 @@ URL shapes, each tested against Facebook's plugins on `www.facebook.com`, `faceb
 - Facebook group posts.
 - Fetching embed code from oEmbed endpoints, consent gating and HTML sanitising: these stay with the host.
 
+## Without React
+
+`social-embeds/element` defines `<social-embed>`, a custom element for plain HTML, CMS templates, Vue, Svelte and Angular. It is one self-contained file with no React in it, about 20 KB gzipped.
+
+```html
+<script
+  type="module"
+  src="https://cdn.jsdelivr.net/npm/social-embeds@0.6.0/dist/element.js"
+  integrity="sha384-…"
+  crossorigin="anonymous"
+></script>
+
+<social-embed url="https://www.youtube.com/watch?v=jNQXAC9IVRw"></social-embed>
+```
+
+Copy the real `integrity` hash from the file's page on jsDelivr (the package page's "Copy HTML + SRI" button). From npm, import it once: `import 'social-embeds/element'`. Importing defines the tag where `customElements` exists; in Node it does not throw and defines nothing. In a server-rendered app (React or Next.js, Vue or Nuxt, SvelteKit), import it after hydration, in `useEffect` or `onMounted` as the playground's `/element` page does: the upgrade rewrites the element's light DOM, which hydration expects to match the server HTML. The module exports the class as `SocialEmbedElement`.
+
+Embed code goes in a `<template>`, which keeps the platform's own `<script>` from running:
+
+```html
+<social-embed max-width="540">
+  <template>
+    <!-- the platform's embed code, exactly as given -->
+  </template>
+</social-embed>
+```
+
+| Attribute / property       | Meaning                                                                         |
+| -------------------------- | ------------------------------------------------------------------------------- |
+| `url`                      | A post URL.                                                                     |
+| `width`                    | A number means pixels; otherwise any CSS length.                                |
+| `max-width` / `maxWidth`   | Pixels: `400` or `400px`.                                                       |
+| `height`                   | Pixels: `400` or `400px`. Reaches only iframe-based platforms, as in React.     |
+| `max-height` / `maxHeight` | Pixels: `400` or `400px`. Reaches only iframe-based platforms, as in React.     |
+| `eager`                    | Load at once instead of when near the viewport (the inverse of React's `lazy`). |
+
+Each property reflects its attribute, so framework property bindings such as Angular's `[url]` work. `url` and the size properties take a string, and `null` removes the attribute; `eager` takes a boolean.
+
+The `html` property takes embed code from script. From a framework, pass embed code this way: a `<template>` the framework renders keeps its children in `childNodes`, not in `content`, where the element reads them. When several inputs are set, `html` wins over the `<template>`, and the `<template>` wins over `url`. Options come only from the embed code, as with `<SocialEmbed>`, and the element renders into the light DOM. The element has no `playerId`, so Dailymotion needs embed code that names a Player ID; a Dailymotion URL alone fires `error`.
+
+Child elements other than `<template>` are the placeholder until the embed loads; without any, a neutral skeleton shows. They are read once, when the element first connects; children added later are not a placeholder. If the element connects while the document is still loading, it waits for `DOMContentLoaded` before reading its children.
+
+It dispatches `load` (an `Event`) when the platform has rendered, and `error` (an `ErrorEvent`) when it cannot. `error.error` is an `Error` with the same message as React's `onError`. Neither event bubbles, both fire in a microtask, and only while the element is connected.
+
+Events dispatch in a microtask after the element connects or changes, so add `load` and `error` listeners before inserting the element, or in the same task. In React, attach them before the element module is imported (as the playground's `/element` page does), or use the React components.
+
+```js
+const embed = document.querySelector('social-embed');
+embed.addEventListener('load', () => console.log('rendered'));
+embed.addEventListener('error', (event) => console.warn(event.error.message));
+embed.html = post.embedCode;
+```
+
+Platform defaults (maximum width, height, rounded corners, placeholder) are shared with the React components, so the element looks the same.
+
+Tell Vue and Angular that `social-embed` is a custom element:
+
+```ts
+// Vue, Vite plugin: vue({ template: { compilerOptions: { isCustomElement: (tag) => tag === 'social-embed' } } })
+// Vue, at runtime:
+app.config.compilerOptions.isCustomElement = (tag) => tag === 'social-embed';
+
+// Angular: add CUSTOM_ELEMENTS_SCHEMA to the component's (or module's) schemas
+import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+
+@Component({ schemas: [CUSTOM_ELEMENTS_SCHEMA] /* … */ })
+```
+
 ## Next.js
 
 The `social-embeds` entry starts with `'use client'`, so its components can be rendered straight from a Server Component, with props that can be serialised:
