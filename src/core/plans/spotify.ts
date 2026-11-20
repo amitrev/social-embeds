@@ -36,6 +36,7 @@ export function spotifyPlan(
     allow: ALLOW,
     ratio: { width: 16, height: 9 },
     size: video ? embed.size : undefined,
+    borderRadius: 12,
     height: video
       ? undefined
       : (embed.size?.height ??

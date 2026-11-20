@@ -8,15 +8,7 @@ export type ApplePodcastsEmbedProps = EmbedSource & FrameProps;
 
 /** A fixed height: the `height` prop, else the embed code's, else 175px for a song and 450px for the rest. */
 export function AppleMusicEmbed(props: AppleMusicEmbedProps) {
-  const {
-    url,
-    embed: given,
-    onError,
-    height,
-    maxWidth,
-    style,
-    ...frame
-  } = props;
+  const { url, embed: given, onError, height, maxWidth, ...frame } = props;
   const { embed, error } = resolveEmbed(url, given, 'applemusic');
   const plan = embed ? appleMusicPlan(embed) : undefined;
   useReportError(
@@ -31,7 +23,6 @@ export function AppleMusicEmbed(props: AppleMusicEmbedProps) {
       {...planProps(plan)}
       onError={onError}
       maxWidth={maxWidth ?? plan.maxWidth}
-      style={{ borderRadius: 10, overflow: 'hidden', ...style }}
       height={height ?? plan.height}
     />
   );
@@ -39,15 +30,7 @@ export function AppleMusicEmbed(props: AppleMusicEmbedProps) {
 
 /** A fixed height: the `height` prop, else the embed code's, else 160px for an episode and 450px for a show. */
 export function ApplePodcastsEmbed(props: ApplePodcastsEmbedProps) {
-  const {
-    url,
-    embed: given,
-    onError,
-    height,
-    maxWidth,
-    style,
-    ...frame
-  } = props;
+  const { url, embed: given, onError, height, maxWidth, ...frame } = props;
   const { embed, error } = resolveEmbed(url, given, 'applepodcasts');
   const plan = embed ? applePodcastsPlan(embed) : undefined;
   useReportError(
@@ -62,7 +45,6 @@ export function ApplePodcastsEmbed(props: ApplePodcastsEmbedProps) {
       {...planProps(plan)}
       onError={onError}
       maxWidth={maxWidth ?? plan.maxWidth}
-      style={{ borderRadius: 12, overflow: 'hidden', ...style }}
       height={height ?? plan.height}
     />
   );

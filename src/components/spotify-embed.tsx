@@ -14,7 +14,7 @@ export type SpotifyEmbedProps = EmbedSource &
  * and 352px for the rest. A video show keeps its 16:9 aspect ratio instead.
  */
 export function SpotifyEmbed(props: SpotifyEmbedProps) {
-  const { url, embed: given, onError, height, theme, style, ...frame } = props;
+  const { url, embed: given, onError, height, theme, ...frame } = props;
   const { embed, error } = resolveEmbed(url, given, 'spotify');
   const plan = embed ? spotifyPlan(embed, { theme }) : undefined;
   useReportError(
@@ -27,7 +27,6 @@ export function SpotifyEmbed(props: SpotifyEmbedProps) {
     <IframeEmbed
       {...frame}
       {...planProps(plan)}
-      style={{ borderRadius: 12, overflow: 'hidden', ...style }}
       height={height ?? plan.height}
     />
   );

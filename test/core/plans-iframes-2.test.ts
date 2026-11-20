@@ -65,6 +65,7 @@ describe('spotifyPlan', () => {
       ratio: { width: 16, height: 9 },
       size: undefined,
       height: 152,
+      borderRadius: 12,
     });
   });
 
@@ -81,6 +82,7 @@ describe('spotifyPlan', () => {
       ratio: { width: 16, height: 9 },
       size: undefined,
       height: 352,
+      borderRadius: 12,
     });
   });
 
@@ -93,6 +95,7 @@ describe('spotifyPlan', () => {
       ratio: { width: 16, height: 9 },
       size: undefined,
       height: 152,
+      borderRadius: 12,
     });
   });
 
@@ -105,6 +108,7 @@ describe('spotifyPlan', () => {
       ratio: { width: 16, height: 9 },
       size: { width: 624, height: 351 },
       height: undefined,
+      borderRadius: 12,
     });
   });
 
@@ -121,6 +125,7 @@ describe('spotifyPlan', () => {
       ratio: { width: 16, height: 9 },
       size: undefined,
       height: 152,
+      borderRadius: 12,
     });
   });
 });
@@ -410,6 +415,7 @@ describe('appleMusicPlan', () => {
       ratio: { width: 16, height: 9 },
       height: 175,
       maxWidth: 660,
+      borderRadius: 10,
     });
   });
 
@@ -427,6 +433,7 @@ describe('appleMusicPlan', () => {
       ratio: { width: 16, height: 9 },
       height: 450,
       maxWidth: 660,
+      borderRadius: 10,
     });
   });
 
@@ -456,6 +463,7 @@ describe('applePodcastsPlan', () => {
       ratio: { width: 16, height: 9 },
       height: 450,
       maxWidth: 640,
+      borderRadius: 12,
     });
   });
 
@@ -473,6 +481,7 @@ describe('applePodcastsPlan', () => {
       ratio: { width: 16, height: 9 },
       height: 160,
       maxWidth: 640,
+      borderRadius: 12,
     });
   });
 
@@ -488,6 +497,7 @@ describe('applePodcastsPlan', () => {
       ratio: { width: 16, height: 9 },
       height: 160,
       maxWidth: 640,
+      borderRadius: 12,
     });
   });
 });

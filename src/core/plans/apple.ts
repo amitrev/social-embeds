@@ -22,6 +22,7 @@ export function appleMusicPlan(embed: ParsedEmbed): Plan | PlanError {
     ratio: { width: 16, height: 9 },
     height: embed.size?.height ?? (single ? SINGLE_HEIGHT : FULL_HEIGHT),
     maxWidth: 660,
+    borderRadius: 10,
   };
 }
 
@@ -39,5 +40,6 @@ export function applePodcastsPlan(embed: ParsedEmbed): Plan | PlanError {
       embed.size?.height ??
       (path.includes('?i=') ? EPISODE_HEIGHT : FULL_HEIGHT),
     maxWidth: 640,
+    borderRadius: 12,
   };
 }

@@ -29,6 +29,7 @@ type IframeEmbedProps = FrameProps & {
   startHeight?: number;
   /** Query parameter that gets the page's host when the iframe is created (Twitch's `parent`). */
   hostParam?: string;
+  borderRadius?: number;
 };
 
 /** The plan's fields as `IframeEmbed` props. */
@@ -54,6 +55,7 @@ export function IframeEmbed({
   messageHeight,
   startHeight,
   hostParam,
+  borderRadius,
   width,
   maxWidth,
   height,
@@ -141,6 +143,7 @@ export function IframeEmbed({
         size,
         messageHeight,
         startHeight,
+        borderRadius,
       },
       { width, maxWidth, height, maxHeight },
       reportedHeight,

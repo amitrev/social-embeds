@@ -27,6 +27,8 @@ export type IframePlan = {
   startHeight?: number;
   /** Query parameter that gets the page's host when the iframe is created (Twitch's `parent`). */
   hostParam?: string;
+  /** Rounds the corners and clips the frame to them; the host's `style` can override. */
+  borderRadius?: number;
   /** The platform's default; a host `maxWidth` replaces it. */
   maxWidth?: number;
   /** Verified fallback content shown as the placeholder (Bluesky). */

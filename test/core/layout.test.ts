@@ -30,6 +30,16 @@ describe('frameStyle', () => {
     });
   });
 
+  it('rounds the corners and clips only when the plan has a radius', () => {
+    expect(frameStyle(plan({ borderRadius: 12 }), {})).toMatchObject({
+      borderRadius: 12,
+      overflow: 'hidden',
+    });
+    const plain = frameStyle(plan(), {});
+    expect(plain).not.toHaveProperty('borderRadius');
+    expect(plain).not.toHaveProperty('overflow');
+  });
+
   it('uses the ratio and full width by default', () => {
     expect(frameStyle(plan(), {})).toEqual({
       position: 'relative',

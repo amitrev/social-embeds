@@ -25,6 +25,9 @@ export function frameStyle(
       : Math.floor((maxHeight * aspectWidth) / aspectHeight);
   return {
     position: 'relative',
+    ...(plan.borderRadius === undefined
+      ? {}
+      : { borderRadius: plan.borderRadius, overflow: 'hidden' }),
     width,
     maxWidth:
       widest === undefined || (maxWidth !== undefined && maxWidth < widest)
