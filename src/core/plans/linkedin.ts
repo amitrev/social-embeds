@@ -11,7 +11,7 @@ export type LinkedInOptions = {
 const DEFAULT_HEIGHT = 670;
 const DEFAULT_WIDTH = 504;
 
-/** A fixed height: the embed code's, else 670px; `size.height` carries it. */
+/** A fixed height: the embed code's, else 670px. */
 export function linkedinPlan(
   embed: ParsedEmbed,
   options: LinkedInOptions,
@@ -25,7 +25,7 @@ export function linkedinPlan(
     title: 'LinkedIn post',
     allow: '',
     ratio: { width: DEFAULT_WIDTH, height: DEFAULT_HEIGHT },
-    size: { height: embed.size?.height ?? DEFAULT_HEIGHT },
+    height: embed.size?.height ?? DEFAULT_HEIGHT,
     maxWidth: embed.size?.width ?? DEFAULT_WIDTH,
   };
 }

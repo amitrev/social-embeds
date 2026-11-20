@@ -215,7 +215,7 @@ describe('linkedinPlan', () => {
       title: 'LinkedIn post',
       allow: '',
       ratio: { width: 504, height: 670 },
-      size: { height: 670 },
+      height: 670,
       maxWidth: 504,
     });
   });
@@ -228,7 +228,7 @@ describe('linkedinPlan', () => {
       title: 'LinkedIn post',
       allow: '',
       ratio: { width: 504, height: 670 },
-      size: { height: 525 },
+      height: 525,
       maxWidth: 504,
     });
   });

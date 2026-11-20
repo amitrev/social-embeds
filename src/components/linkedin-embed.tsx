@@ -33,7 +33,7 @@ export function LinkedInEmbed(props: LinkedInEmbedProps) {
       {...frame}
       {...planProps(plan)}
       maxWidth={maxWidth ?? plan.maxWidth}
-      height={height ?? plan.size?.height}
+      height={height ?? plan.height}
     />
   );
 }

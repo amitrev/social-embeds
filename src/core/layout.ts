@@ -13,7 +13,8 @@ export function frameStyle(
   layout: FrameLayout,
   reportedHeight?: number,
 ): Record<string, string | number> {
-  const { width = '100%', height, maxHeight } = layout;
+  const { width = '100%', maxHeight } = layout;
+  const height = layout.height ?? plan.height;
   const maxWidth = layout.maxWidth ?? plan.maxWidth;
   const aspectWidth = plan.size?.width ?? plan.ratio.width;
   const aspectHeight = plan.size?.height ?? plan.ratio.height;

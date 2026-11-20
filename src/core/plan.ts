@@ -19,6 +19,8 @@ export type IframePlan = {
   /** Used when the input carries no size. */
   ratio: { width: number; height: number };
   size?: { width?: number; height?: number };
+  /** The platform's default fixed height; a host `height` replaces it. */
+  height?: number;
   /** Height from the frame's messages instead of an aspect ratio. */
   messageHeight?: MessageHeight;
   /** With `messageHeight`: the height until the first message. */

@@ -17,6 +17,19 @@ const message = {
 };
 
 describe('frameStyle', () => {
+  it('uses the plan height as a fixed height, which the layout replaces', () => {
+    expect(frameStyle(plan({ height: 670 }), {})).toEqual({
+      position: 'relative',
+      width: '100%',
+      maxWidth: undefined,
+      height: 670,
+      maxHeight: undefined,
+    });
+    expect(frameStyle(plan({ height: 670 }), { height: 400 })).toMatchObject({
+      height: 400,
+    });
+  });
+
   it('uses the ratio and full width by default', () => {
     expect(frameStyle(plan(), {})).toEqual({
       position: 'relative',
