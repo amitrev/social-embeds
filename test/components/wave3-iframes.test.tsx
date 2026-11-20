@@ -44,13 +44,13 @@ describe('SpotifyEmbed', () => {
   it('renders a track URL as the compact player, 152px high', () => {
     const { container } = render(
       <SpotifyEmbed
-        url="https://open.spotify.com/track/4uLU6hMCjMI75M1A2tKUQC?si=abc"
+        url="https://open.spotify.com/track/0LrHzQHk5gYGbMsoVbKDuS?si=abc"
         lazy={false}
       />,
     );
     const { wrapper, iframe } = parts(container);
     expect(iframe.getAttribute('src')).toBe(
-      'https://open.spotify.com/embed/track/4uLU6hMCjMI75M1A2tKUQC',
+      'https://open.spotify.com/embed/track/0LrHzQHk5gYGbMsoVbKDuS',
     );
     expect(iframe.getAttribute('title')).toBe('Spotify Embed');
     expect(iframe.getAttribute('allow')).toBe(
@@ -63,7 +63,7 @@ describe('SpotifyEmbed', () => {
 
   it('gives a playlist, album or artist URL the full player, 352px high', () => {
     for (const path of [
-      'playlist/37i9dQZF1DXcBWIGoYBM5M',
+      'playlist/37i9dQZF1DX4sWSpwq3LiO',
       'album/4aawyAB9vmqN3uQ7FjRGTy',
       'artist/0gxyHStUsqpMadRV0Di1Qt',
     ]) {
@@ -81,7 +81,7 @@ describe('SpotifyEmbed', () => {
     );
     expect(parts(container).wrapper.style.height).toBe('152px');
     expect(parts(container).iframe.getAttribute('src')).toBe(
-      'https://open.spotify.com/embed/track/4uLU6hMCjMI75M1A2tKUQC',
+      'https://open.spotify.com/embed/track/0LrHzQHk5gYGbMsoVbKDuS',
     );
     cleanup();
 
@@ -97,7 +97,7 @@ describe('SpotifyEmbed', () => {
     );
     const { wrapper, iframe } = parts(container);
     expect(iframe.getAttribute('src')).toBe(
-      'https://open.spotify.com/embed/show/4rOoJ6Egrf8K2IrywzwOMk/video',
+      'https://open.spotify.com/embed/show/4OsuS4G6ukepPsjme51uFt/video',
     );
     expect(wrapper.style.aspectRatio).toBe('624 / 351');
     expect(wrapper.style.height).toBe('');
@@ -106,20 +106,20 @@ describe('SpotifyEmbed', () => {
   it('passes the dark theme', () => {
     const { container } = render(
       <SpotifyEmbed
-        url="https://open.spotify.com/track/4uLU6hMCjMI75M1A2tKUQC"
+        url="https://open.spotify.com/track/0LrHzQHk5gYGbMsoVbKDuS"
         theme={0}
         lazy={false}
       />,
     );
     expect(parts(container).iframe.getAttribute('src')).toBe(
-      'https://open.spotify.com/embed/track/4uLU6hMCjMI75M1A2tKUQC?theme=0',
+      'https://open.spotify.com/embed/track/0LrHzQHk5gYGbMsoVbKDuS?theme=0',
     );
   });
 
   it('lets the style prop replace the rounded corners', () => {
     const { container } = render(
       <SpotifyEmbed
-        url="https://open.spotify.com/track/4uLU6hMCjMI75M1A2tKUQC"
+        url="https://open.spotify.com/track/0LrHzQHk5gYGbMsoVbKDuS"
         style={{ borderRadius: 0 }}
         lazy={false}
       />,
@@ -188,11 +188,11 @@ describe('VimeoEmbed', () => {
 describe('TwitchEmbed', () => {
   it('names the page host as parent for a channel URL', () => {
     const { container } = render(
-      <TwitchEmbed url="https://www.twitch.tv/Dallas" lazy={false} />,
+      <TwitchEmbed url="https://www.twitch.tv/Twitch" lazy={false} />,
     );
     const { wrapper, iframe } = parts(container);
     expect(iframe.getAttribute('src')).toBe(
-      `https://player.twitch.tv/?channel=dallas&parent=${host()}`,
+      `https://player.twitch.tv/?channel=twitch&parent=${host()}`,
     );
     expect(iframe.getAttribute('title')).toBe('Twitch player');
     expect(iframe.hasAttribute('allowfullscreen')).toBe(true);
@@ -205,7 +205,7 @@ describe('TwitchEmbed', () => {
     );
     const { wrapper, iframe } = parts(container);
     expect(iframe.getAttribute('src')).toBe(
-      `https://player.twitch.tv/?channel=dallas&muted=true&parent=${host()}`,
+      `https://player.twitch.tv/?channel=twitch&muted=true&parent=${host()}`,
     );
     expect(wrapper.style.aspectRatio).toBe('1280 / 720');
   });
@@ -215,32 +215,32 @@ describe('TwitchEmbed', () => {
       <TwitchEmbed embed={parsed(twitchVideo)} time="1h2m3s" lazy={false} />,
     );
     expect(parts(container).iframe.getAttribute('src')).toBe(
-      `https://player.twitch.tv/?video=v40464143&autoplay=false&time=1h2m3s&parent=${host()}`,
+      `https://player.twitch.tv/?video=v1816688726&autoplay=false&time=1h2m3s&parent=${host()}`,
     );
   });
 
   it('renders a collection and a clip', () => {
     const { container } = render(
       <TwitchEmbed
-        url="https://www.twitch.tv/collections/abcDeF1ghIJ2kL"
+        url="https://www.twitch.tv/collections/ryMlWIJaBxf2aQ"
         lazy={false}
       />,
     );
     expect(parts(container).iframe.getAttribute('src')).toBe(
-      `https://player.twitch.tv/?collection=abcDeF1ghIJ2kL&parent=${host()}`,
+      `https://player.twitch.tv/?collection=ryMlWIJaBxf2aQ&parent=${host()}`,
     );
     cleanup();
 
     const clip = render(
       <TwitchEmbed
-        url="https://www.twitch.tv/dallas/clip/AwkwardHelplessSalamanderSwiftRage"
+        url="https://www.twitch.tv/twitch/clip/LivelyFrigidApeLeeroyJenkins-D01Eij0_9y-oFwAu"
         autoplay
         muted={false}
         lazy={false}
       />,
     );
     expect(parts(clip.container).iframe.getAttribute('src')).toBe(
-      `https://clips.twitch.tv/embed?clip=AwkwardHelplessSalamanderSwiftRage&autoplay=true&muted=false&parent=${host()}`,
+      `https://clips.twitch.tv/embed?clip=LivelyFrigidApeLeeroyJenkins-D01Eij0_9y-oFwAu&autoplay=true&muted=false&parent=${host()}`,
     );
   });
 });
@@ -301,7 +301,7 @@ describe('DailymotionEmbed', () => {
     );
     const { wrapper, iframe } = parts(code.container);
     expect(iframe.getAttribute('src')).toBe(
-      'https://geo.dailymotion.com/player/x8lr5.html?video=xbxskia',
+      'https://geo.dailymotion.com/player/x8lr5.html?video=x84qh50',
     );
     expect(wrapper.style.aspectRatio).toBe('480 / 269');
   });
@@ -351,7 +351,7 @@ describe('a host-built embed whose options name other content', () => {
     };
     const { container } = render(<TwitchEmbed embed={embed} lazy={false} />);
     expect(parts(container).iframe.getAttribute('src')).toBe(
-      `https://player.twitch.tv/?channel=dallas&parent=${host()}`,
+      `https://player.twitch.tv/?channel=twitch&parent=${host()}`,
     );
   });
 

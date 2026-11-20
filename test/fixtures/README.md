@@ -31,17 +31,17 @@ Real embed codes, stored byte for byte as the platform produced them. Prettier i
 | `reddit/comment-share.html` | Reddit comment → Share → Embed, `jde89cx` in r/reddit `11zso11`, pasted by the maintainer | 2026-11-20 |
 | `linkedin/post-collapsed.html` | LinkedIn company page post `urn:li:ugcPost:7528828146767409153` → Embed this post, "less text", pasted by the maintainer | 2026-11-20 |
 | `linkedin/post-full.html` | same post → Embed this post, full post, pasted by the maintainer | 2026-11-20 |
-| `spotify/oembed-track.html`                    | `open.spotify.com/oembed?url=https://open.spotify.com/track/4uLU6hMCjMI75M1A2tKUQC`, the `html` field | 2026-11-19 |
+| `spotify/oembed-track.html` | `open.spotify.com/oembed?url=https://open.spotify.com/track/0LrHzQHk5gYGbMsoVbKDuS` (Kevin MacLeod, royalty-free), the `html` field | 2026-11-20 |
 | `spotify/oembed-episode.html`                  | same, `episode/7makk4oTQel546B0PZlDM5`                                                          | 2026-11-19 |
-| `spotify/oembed-playlist.html`                 | same, `playlist/37i9dQZF1DXcBWIGoYBM5M`                                                         | 2026-11-19 |
-| `spotify/oembed-show-video.html`               | same, `show/4rOoJ6Egrf8K2IrywzwOMk` (a video show)                                              | 2026-11-19 |
+| `spotify/oembed-playlist.html` | same, `playlist/37i9dQZF1DX4sWSpwq3LiO` (Spotify's Peaceful Piano) | 2026-11-20 |
+| `spotify/oembed-show-video.html` | same, `show/4OsuS4G6ukepPsjme51uFt` (Spotify News, a video show; its title is the newest episode's) | 2026-11-20 |
 | `vimeo/oembed.html`                            | `vimeo.com/api/oembed.json?url=https://vimeo.com/76979871`, the `html` field                    | 2026-11-19 |
 | `vimeo/responsive-docs.html`                   | Vimeo help center's responsive snippet, without the autoplay parameters it appends with a second `?` (derived) | 2026-11-19 |
-| `twitch/docs-channel.html`                     | Twitch's [embed docs](https://dev.twitch.tv/docs/embed/video-and-clips/), live channel example   | 2026-11-19 |
-| `twitch/docs-video.html`                       | same, VOD example                                                                               | 2026-11-19 |
-| `twitch/docs-collection.html`                  | same, collection example                                                                        | 2026-11-19 |
+| `twitch/docs-channel.html` | derived: Twitch's [embed docs](https://dev.twitch.tv/docs/embed/video-and-clips/) live channel example, with Twitch's own channel `twitch` | 2026-11-20 |
+| `twitch/docs-video.html` | derived: same, VOD example, with Twitch's video `1816688726` | 2026-11-20 |
+| `twitch/docs-collection.html` | derived: same, collection example, with Twitch's collection `ryMlWIJaBxf2aQ` | 2026-11-20 |
 | `dailymotion/player-id-docs.html`             | Dailymotion's [iframe docs](https://developers.dailymotion.com/docs/iframe-web), the responsive example with Player ID `x8lr5` | 2026-11-19 |
-| `dailymotion/oembed.html`                      | `dailymotion.com/services/oembed?url=https://www.dailymotion.com/video/xbxskia`, the `html` field (no Player ID: 403, D63) | 2026-11-19 |
+| `dailymotion/oembed.html` | `dailymotion.com/services/oembed?url=https://www.dailymotion.com/video/x84qh50` (Dailymotion's demo video), the `html` field (no Player ID: 403, D63) | 2026-11-20 |
 | `bluesky/oembed.html`                          | `embed.bsky.app/oembed?url=https://bsky.app/profile/bsky.app/post/3n2mkgfb4tk2d`, the `html` field | 2026-11-20 |
 | `soundcloud/oembed-track.html`                 | `soundcloud.com/oembed?format=json&url=https://soundcloud.com/forss/flickermood`, the `html` field | 2026-11-20 |
 | `soundcloud/oembed-playlist.html`              | same, `forss/sets/soulhack`                                                                     | 2026-11-20 |

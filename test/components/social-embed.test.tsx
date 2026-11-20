@@ -96,7 +96,7 @@ describe('SocialEmbed with embed code', () => {
     [
       'Spotify',
       spotify,
-      'iframe https://open.spotify.com/embed/track/4uLU6hMCjMI75M1A2tKUQC',
+      'iframe https://open.spotify.com/embed/track/0LrHzQHk5gYGbMsoVbKDuS',
     ],
     [
       'Vimeo',
@@ -106,7 +106,7 @@ describe('SocialEmbed with embed code', () => {
     [
       'Twitch',
       twitch,
-      `iframe https://player.twitch.tv/?channel=dallas&muted=true&parent=${window.location.hostname}`,
+      `iframe https://player.twitch.tv/?channel=twitch&muted=true&parent=${window.location.hostname}`,
     ],
     [
       'Dailymotion',
@@ -208,16 +208,16 @@ describe('SocialEmbed with a URL', () => {
     ],
     ['https://bg.pinterest.com/pin/424605071145752542/', 'a www.pinterest.com'],
     [
-      'https://open.spotify.com/intl-de/playlist/37i9dQZF1DXcBWIGoYBM5M',
-      'iframe https://open.spotify.com/embed/playlist/37i9dQZF1DXcBWIGoYBM5M',
+      'https://open.spotify.com/intl-de/playlist/37i9dQZF1DX4sWSpwq3LiO',
+      'iframe https://open.spotify.com/embed/playlist/37i9dQZF1DX4sWSpwq3LiO',
     ],
     [
       'https://vimeo.com/76979871/abcdef1234',
       'iframe https://player.vimeo.com/video/76979871?h=abcdef1234',
     ],
     [
-      'https://clips.twitch.tv/AwkwardHelplessSalamanderSwiftRage',
-      `iframe https://clips.twitch.tv/embed?clip=AwkwardHelplessSalamanderSwiftRage&parent=${window.location.hostname}`,
+      'https://clips.twitch.tv/LivelyFrigidApeLeeroyJenkins-D01Eij0_9y-oFwAu',
+      `iframe https://clips.twitch.tv/embed?clip=LivelyFrigidApeLeeroyJenkins-D01Eij0_9y-oFwAu&parent=${window.location.hostname}`,
     ],
   ])('routes %s', (url, expected) => {
     const { container } = render(<SocialEmbed url={url} lazy={false} />);
@@ -385,9 +385,9 @@ describe('SocialEmbed props', () => {
 
   it('forwards height to the wave 3 iframes', () => {
     for (const url of [
-      'https://open.spotify.com/track/4uLU6hMCjMI75M1A2tKUQC',
+      'https://open.spotify.com/track/0LrHzQHk5gYGbMsoVbKDuS',
       'https://vimeo.com/76979871',
-      'https://www.twitch.tv/dallas',
+      'https://www.twitch.tv/twitch',
     ]) {
       const { container } = render(<SocialEmbed url={url} height={400} />);
       expect((container.firstElementChild as HTMLElement).style.height).toBe(

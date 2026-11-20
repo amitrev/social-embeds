@@ -140,7 +140,7 @@ describe('IframeEmbed with the page host in its src', () => {
   it('adds the host as the named parameter when it creates the iframe', () => {
     const { container } = render(
       <IframeEmbed
-        src="https://player.twitch.tv/?channel=dallas"
+        src="https://player.twitch.tv/?channel=twitch"
         title="Twitch"
         allow=""
         ratio={{ width: 16, height: 9 }}
@@ -149,7 +149,7 @@ describe('IframeEmbed with the page host in its src', () => {
       />,
     );
     expect(container.querySelector('iframe')?.getAttribute('src')).toBe(
-      `https://player.twitch.tv/?channel=dallas&parent=${window.location.hostname}`,
+      `https://player.twitch.tv/?channel=twitch&parent=${window.location.hostname}`,
     );
   });
 
@@ -173,7 +173,7 @@ describe('IframeEmbed with the page host in its src', () => {
     const { renderToString } = await import('react-dom/server');
     const html = renderToString(
       <IframeEmbed
-        src="https://player.twitch.tv/?channel=dallas"
+        src="https://player.twitch.tv/?channel=twitch"
         title="Twitch"
         allow=""
         ratio={{ width: 16, height: 9 }}
