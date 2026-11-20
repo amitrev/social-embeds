@@ -284,4 +284,48 @@ describe('<social-embed>', () => {
     element.setAttribute('url', YOUTUBE_SHORT);
     expect(element.querySelector('p')?.textContent).toBe('wait');
   });
+
+  it('dispatches nothing once removed in the same task', async () => {
+    const element = create({ url: 'https://example.com/' });
+    const { errors } = listen(element);
+    document.body.append(element);
+    element.remove();
+    await flush();
+    expect(errors).not.toHaveBeenCalled();
+  });
+
+  it('still dispatches after a move in the same task', async () => {
+    const element = create({ url: 'https://example.com/' });
+    const other = document.createElement('div');
+    const { errors } = listen(element);
+    document.body.append(element, other);
+    element.remove();
+    other.append(element);
+    await flush();
+    expect(errors).toHaveBeenCalledOnce();
+  });
+
+  it('waits for parsing to capture its children', async () => {
+    const state = vi
+      .spyOn(document, 'readyState', 'get')
+      .mockReturnValue('loading');
+    const element = create({ url: TELEGRAM, eager: '' });
+    document.body.append(element);
+    element.insertAdjacentHTML(
+      'beforeend',
+      `<p>wait</p><template>${youtubeCode}</template>`,
+    );
+    await flush();
+    expect(element.querySelector('iframe')).toBeNull();
+    expect(element.childElementCount).toBe(2);
+    state.mockReturnValue('interactive');
+    document.dispatchEvent(new Event('DOMContentLoaded'));
+    await flush();
+    expect(iframes(element)).toHaveLength(1);
+    expect(element.querySelector('iframe')?.getAttribute('src')).toContain(
+      'youtube',
+    );
+    expect(element.querySelectorAll('p')).toHaveLength(1);
+    expect(element.querySelector('p')?.parentElement).not.toBe(element);
+  });
 });

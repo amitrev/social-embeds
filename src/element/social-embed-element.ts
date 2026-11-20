@@ -44,6 +44,7 @@ export class SocialEmbedElement extends Base {
   #key: string | undefined;
   #cleanup = () => {};
   #token = 0;
+  #waiting = false;
 
   constructor() {
     super();
@@ -66,6 +67,21 @@ export class SocialEmbedElement extends Base {
 
   connectedCallback(): void {
     if (this.style.display === '') this.style.display = 'block';
+    // While the parser streams, the children after the open tag do not exist yet.
+    if (this.#placeholder === undefined && document.readyState === 'loading') {
+      if (!this.#waiting) {
+        this.#waiting = true;
+        document.addEventListener(
+          'DOMContentLoaded',
+          () => {
+            this.#waiting = false;
+            if (this.isConnected) this.connectedCallback();
+          },
+          { once: true },
+        );
+      }
+      return;
+    }
     this.#placeholder ??= capture(this);
     this.#observer ??= new MutationObserver(() => {
       this.#update();
@@ -111,7 +127,9 @@ export class SocialEmbedElement extends Base {
     const token = this.#token;
     const dispatch = (event: Event) => {
       queueMicrotask(() => {
-        if (token === this.#token) this.dispatchEvent(event);
+        // Runs before a same-task removal's cleanup microtask, so the token alone is not enough.
+        if (token === this.#token && this.isConnected)
+          this.dispatchEvent(event);
       });
     };
     const onError = (error: Error) => {
