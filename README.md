@@ -273,7 +273,7 @@ A component checks an `embed` before using it: its `url` must be the exact URL `
 | `onError`     | `(error: Error) => void` |              | Called on invalid input, a script that fails to load, or a post that does not render. Components never throw.                                                                                                                                                                                                     |
 | `...rest`     | `ComponentProps<'div'>`  |              | Passed to the wrapper `div` (`className`, `style`, `data-*`, …).                                                                                                                                                                                                                                                  |
 
-Script-based embeds try to render three times, waiting 15 s each time, 1 s and then 2 s apart, before `onError` reports the failure. Telegram, Reddit, Bluesky and Tumblr frames that report no height within 15 s show at their starting height, and `onError` reports it. Bluesky's and Tumblr's frames report only once they are painted, so with `lazy={false}` an embed far below the fold can report this before it is scrolled to, and then still take its height.
+Script-based embeds try to render three times, waiting 15 s each time, 1 s and then 2 s apart, before `onError` reports the failure. Telegram, Reddit, Bluesky and Tumblr frames that report no height within 15 s show at their starting height, and `onError` reports it. Frames report their height only once painted, so the 15 s start when the embed comes near the viewport, also with `lazy={false}`.
 
 ## Platforms
 

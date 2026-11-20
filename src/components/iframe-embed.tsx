@@ -66,6 +66,9 @@ export function IframeEmbed({
   const frame = useRef<HTMLDivElement>(null);
   const iframe = useRef<HTMLIFrameElement>(null);
   const near = useNearViewport(frame, lazy);
+  // Frames post their height only once painted, so with lazy off the timeout still waits for the frame to be near.
+  const inView = useNearViewport(frame, !lazy && messageHeight !== undefined);
+  const heard = useRef(false);
   const [loaded, setLoaded] = useState(false);
   const [reportedHeight, setReportedHeight] = useState<number>();
   const reported = useRef(false);
@@ -84,7 +87,7 @@ export function IframeEmbed({
   useEffect(() => {
     if (!near || !messageHeight) return;
     const { origin, read } = messageHeight;
-    let heard = false;
+    heard.current = false;
     const listen = (event: MessageEvent) => {
       // Security: only the frame itself, from the platform's own origin.
       if (event.origin !== origin) return;
@@ -101,23 +104,29 @@ export function IframeEmbed({
         !(value > 0 && value <= MAX_REPORTED_HEIGHT)
       )
         return;
-      heard = true;
+      heard.current = true;
       setReportedHeight(Math.ceil(value));
       report();
     };
     window.addEventListener('message', listen);
+    return () => {
+      window.removeEventListener('message', listen);
+    };
+  }, [near, messageHeight, report]);
+
+  useEffect(() => {
+    if (!near || !inView || !messageHeight) return;
     const timer = setTimeout(() => {
-      if (heard) return;
+      if (heard.current) return;
       setLoaded(true);
       callbacks.current.onError?.(
         new Error(`social-embeds: ${title} did not report its height`),
       );
     }, HEIGHT_TIMEOUT_MS);
     return () => {
-      window.removeEventListener('message', listen);
       clearTimeout(timer);
     };
-  }, [near, messageHeight, title, report]);
+  }, [near, inView, messageHeight, title]);
 
   const aspectWidth = size?.width ?? ratio.width;
   const aspectHeight = size?.height ?? ratio.height;
