@@ -1,29 +1,13 @@
+import { blueskyPlan, type BlueskyOptions } from '../core/plans/bluesky';
 import { useReportError } from './hooks';
-import { IframeEmbed, type MessageHeight } from './iframe-embed';
-import {
-  type EmbedSource,
-  query,
-  resolveEmbed,
-  type SharedProps,
-} from './shared';
+import { IframeEmbed, planProps } from './iframe-embed';
+import { type EmbedSource, resolveEmbed, type SharedProps } from './shared';
 
-export type BlueskyOptions = {
-  colorMode?: 'light' | 'dark' | 'system';
-};
+export type { BlueskyOptions };
 
 export type BlueskyEmbedProps = EmbedSource &
   Omit<SharedProps, keyof BlueskyOptions> &
   BlueskyOptions;
-
-/** The frame posts `{ height }` once it has painted (docs/decisions.md D70). */
-const BLUESKY_HEIGHT: MessageHeight = {
-  origin: 'https://embed.bsky.app',
-  read(data) {
-    const height = (data as { height?: unknown } | null)?.height;
-    return typeof height === 'number' ? height : undefined;
-  },
-};
-const START_HEIGHT = 300;
 
 /**
  * At most 600px wide by default, Bluesky's oEmbed width. Renders the frame `embed.js` would
@@ -35,39 +19,33 @@ export function BlueskyEmbed(props: BlueskyEmbedProps) {
     url,
     embed: given,
     onError,
-    maxWidth = 600,
+    maxWidth,
     colorMode,
     placeholder,
     ...shared
   } = props;
   const { embed, error } = resolveEmbed(url, given, 'bluesky');
-  useReportError(error, onError);
-  if (!embed) return null;
+  const plan = embed ? blueskyPlan(embed, { colorMode }) : undefined;
+  useReportError(
+    error ?? (plan?.kind === 'error' ? plan.message : undefined),
+    onError,
+  );
+  if (plan?.kind !== 'iframe') return null;
 
-  const mode = colorMode ?? embed.options.colorMode;
+  const { fallbackHtml, ...frame } = planProps(plan);
   return (
     <IframeEmbed
       {...shared}
+      {...frame}
       onError={onError}
-      maxWidth={maxWidth}
+      maxWidth={maxWidth ?? plan.maxWidth}
       placeholder={
         placeholder ??
-        (embed.fallbackHtml === undefined ? undefined : (
+        (fallbackHtml === undefined ? undefined : (
           // Verified by resolveEmbed: only what the parser's whitelist rebuilds.
-          <blockquote
-            dangerouslySetInnerHTML={{ __html: embed.fallbackHtml }}
-          />
+          <blockquote dangerouslySetInnerHTML={{ __html: fallbackHtml }} />
         ))
       }
-      src={`https://embed.bsky.app/embed/${embed.id}${query(
-        typeof mode === 'string' ? [['colorMode', mode]] : undefined,
-      )}`}
-      title="Bluesky post"
-      allow=""
-      scrolling="no"
-      ratio={{ width: 1, height: 1 }}
-      messageHeight={BLUESKY_HEIGHT}
-      startHeight={START_HEIGHT}
     />
   );
 }
