@@ -1,5 +1,11 @@
 # social-embeds
 
+## 0.5.2
+
+### Patch Changes
+
+- 6f55068: README examples use official or classic, neutral sample posts.
+
 ## 0.5.1
 
 ### Patch Changes
