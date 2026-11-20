@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { URLS } from '../../playground/samples';
 import { SocialEmbed } from '../../src';
 import '../../src/element';
-import { parseEmbed } from '../../src/parser';
+import { type Platform, parseEmbed } from '../../src/parser';
 import { installObserver } from '../components/helpers';
 
 vi.mock('../../src/loader/platform-scripts', () => ({
@@ -32,9 +32,39 @@ const WRAPPER_STYLES = [
   'aspect-ratio',
   'height',
   'max-height',
+  'border-radius',
+  'overflow',
+  'display',
+  'position',
 ] as const;
 
+const PLATFORMS = {
+  x: true,
+  instagram: true,
+  threads: true,
+  facebook: true,
+  tiktok: true,
+  youtube: true,
+  telegram: true,
+  snapchat: true,
+  linkedin: true,
+  reddit: true,
+  pinterest: true,
+  spotify: true,
+  vimeo: true,
+  twitch: true,
+  dailymotion: true,
+  bluesky: true,
+  soundcloud: true,
+  applemusic: true,
+  applepodcasts: true,
+  tumblr: true,
+  kick: true,
+  giphy: true,
+} satisfies Record<Platform, true>;
+
 type Rendered = {
+  kind: 'iframe' | 'script' | 'error' | 'none';
   iframe: Record<string, string | null> | null;
   container: string | null;
   placeholder: string;
@@ -45,7 +75,9 @@ type Rendered = {
 const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
 
 function placeholderKind(layer: Element | null | undefined): string {
-  const skeleton = layer?.querySelector('[aria-hidden="true"]');
+  const skeleton = layer?.matches('[aria-hidden="true"]')
+    ? layer
+    : layer?.querySelector('[aria-hidden="true"]');
   if (skeleton instanceof HTMLElement)
     return `skeleton:${skeleton.style.minHeight}`;
   if (layer?.querySelector('blockquote')) return 'blockquote';
@@ -57,14 +89,16 @@ function describeDom(wrapper: Element | null, error: string | null): Rendered {
   const iframe = wrapper?.querySelector('iframe') ?? null;
   const frame = wrapper?.firstElementChild;
   const container = iframe || !wrapper ? null : frame;
+  // Iframe embeds: the frame's child that is not the iframe. Script embeds: the wrapper's second child.
   const layer = iframe
-    ? frame?.lastElementChild
+    ? ([...(frame?.children ?? [])].find((child) => child !== iframe) ?? null)
     : (wrapper?.children[1] ?? null);
   const styles: Record<string, string> = {};
   if (wrapper instanceof HTMLElement)
     for (const name of WRAPPER_STYLES)
       styles[name] = wrapper.style.getPropertyValue(name);
   return {
+    kind: iframe ? 'iframe' : container ? 'script' : error ? 'error' : 'none',
     iframe: iframe
       ? Object.fromEntries(
           IFRAME_ATTRIBUTES.map((name) => [name, iframe.getAttribute(name)]),
@@ -125,30 +159,76 @@ const skipped = entries
   .filter(([, html]) => parseEmbed(html) === null)
   .map(([path]) => path.replace('../fixtures/', ''));
 
-const urls = Object.entries(URLS).flatMap(([platform, samples]) =>
-  samples.map((sample) => [`${platform} ${sample.label}`, sample.value]),
-);
+type Case = { label: string; platform: Platform; source: Source };
+type Source = { html: string } | { url: string };
+
+const cases: Case[] = [
+  ...parsed.map(([path, html]) => ({
+    label: path,
+    platform: parseEmbed(html)?.platform as Platform,
+    source: { html },
+  })),
+  ...Object.entries(URLS).flatMap(([platform, samples]) =>
+    samples.map((sample) => ({
+      label: `URL ${platform} ${sample.label}`,
+      platform: platform as Platform,
+      source: { url: sample.value },
+    })),
+  ),
+];
+
+const seen = { iframe: 0, script: 0, error: [] as string[] };
+const platforms = new Set<Platform>();
+
+// Nothing has loaded, so a placeholder must be showing, unless the markup is the fallback.
+function check(side: Rendered): void {
+  if (side.kind === 'iframe') {
+    expect(side.iframe?.src).toBeTruthy();
+    expect(side.iframe?.title).toBeTruthy();
+    expect(side.iframe?.allow).not.toBeNull();
+    expect(side.placeholder).toMatch(/^(skeleton:|blockquote)/);
+  } else if (side.kind === 'script') {
+    expect(side.container).toBeTruthy();
+    if (side.placeholder === 'none')
+      expect(side.container).toContain('<blockquote');
+    else expect(side.placeholder).toMatch(/^skeleton:/);
+  } else {
+    expect(side.kind).toBe('error');
+    expect(side.error).toBeTruthy();
+    expect(side.container).toBeNull();
+    expect(side.iframe).toBeNull();
+  }
+}
 
 describe('<social-embed> and <SocialEmbed>', () => {
   it('skips only the fixtures that are not embed code', () => {
-    expect(skipped.sort()).toEqual([]);
+    expect([...skipped].sort()).toEqual([]);
     expect(parsed).toHaveLength(53);
   });
 
-  it.each(parsed.map(([path, html]) => [path, html]))(
+  it.each(cases.map((item) => [item.label, item] as const))(
     'renders the same for %s',
-    async (_path, html) => {
-      const react = await viaReact({ html });
+    async (_label, { label, platform, source }) => {
+      const react = await viaReact(source);
       cleanup();
-      const element = await viaElement({ html });
+      const element = await viaElement(source);
+      check(react);
+      check(element);
       expect(element).toEqual(react);
+      platforms.add(platform);
+      if (react.kind === 'error') seen.error.push(label);
+      else seen[react.kind as 'iframe' | 'script'] += 1;
     },
   );
 
-  it.each(urls)('renders the same for the URL %s', async (_label, url) => {
-    const react = await viaReact({ url });
-    cleanup();
-    const element = await viaElement({ url });
-    expect(element).toEqual(react);
+  it('covered every platform and the known case kinds', () => {
+    expect([...platforms].sort()).toEqual(Object.keys(PLATFORMS).sort());
+    expect(seen.iframe).toBe(63);
+    expect(seen.script).toBe(23);
+    expect(seen.error).toEqual([
+      '../fixtures/dailymotion/oembed.html',
+      'URL dailymotion Video, no Player ID: reports an error',
+      'URL bluesky Post, by handle: reports a lookup error',
+    ]);
   });
 });
