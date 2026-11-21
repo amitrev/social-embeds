@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { parseEmbed, parseIframe } from '../../src/parser';
+import { checkIframe } from '../../src/parser/iframe';
 import { descendants, parseHtml } from '../../src/parser/html';
 import { platforms } from '../../src/parser/platforms';
 import { parseUrl } from '../../src/parser/url';
@@ -30,8 +31,11 @@ describe('frames of named platforms', () => {
     expect(url && parser?.ownsFrame?.(url)).toBe(true);
   });
 
-  it.each(frames)('$path: is never a generic embed', ({ html }) => {
+  it.each(frames)('$path: is never a generic embed', ({ html, src }) => {
     expect(parseIframe(html)).toBeNull();
+    expect(
+      checkIframe({ src, allow: '', allowFullscreen: false, size: {} }),
+    ).toBeNull();
   });
 
   it('covers every platform that owns frames', () => {
@@ -72,6 +76,23 @@ describe('frames of named platforms', () => {
       'https://geo.dailymotion.com/player.html?video=bad',
     ],
     ['a TikTok player with a bad id', 'https://www.tiktok.com/player/v1/abc'],
+    [
+      'a YouTube embed behind a double slash',
+      'https://www.youtube.com//embed/!!bad',
+    ],
+    [
+      'a YouTube embed with an escaped letter',
+      'https://www.youtube.com/%65mbed/!!bad',
+    ],
+    ['a YouTube embed path in capitals', 'https://www.youtube.com/EMBED/!!bad'],
+    [
+      'a Facebook plugin behind a double slash',
+      'https://www.facebook.com//plugins/post.php?href=x',
+    ],
+    [
+      'a Facebook plugin path in capitals',
+      'https://www.facebook.com/Plugins/post.php?href=x',
+    ],
   ])('keeps %s off the generic path', (_, src) => {
     expect(parseIframe(`<iframe src="${src}"></iframe>`)).toBeNull();
   });

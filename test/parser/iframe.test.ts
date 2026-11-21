@@ -65,8 +65,23 @@ describe('parseIframe', () => {
       'an encoded dot segment',
       '<iframe src="https://example.com/a/.%2E/b"></iframe>',
     ],
+    [
+      'a double slash in the path',
+      '<iframe src="https://example.com//x"></iframe>',
+    ],
+    [
+      'an escaped unreserved character in the path',
+      '<iframe src="https://example.com/%7Euser"></iframe>',
+    ],
   ])('rejects a src with %s', (_, html) => {
     expect(parseIframe(html)).toBeNull();
+  });
+
+  it('keeps escaped reserved characters in the path, and any escape in the query', () => {
+    expect(
+      parseIframe('<iframe src="https://example.com/a%20b%2Fc?q=%41"></iframe>')
+        ?.src,
+    ).toBe('https://example.com/a%20b%2Fc?q=%41');
   });
 
   it('drops srcdoc, handlers and the script beside the iframe', () => {
@@ -201,33 +216,45 @@ describe('parseIframe size', () => {
     });
   });
 
-  it("reads the wrapper's padding-bottom ratio last", () => {
-    const wrapped = (style: string) =>
-      parseIframe(
-        `<div style="position: relative; padding-bottom: 75%; height: 0;"><iframe src="https://example.com/" ${style}></iframe></div>`,
-      )?.size;
-    expect(wrapped('')).toEqual({ width: 4, height: 3 });
-    expect(wrapped('style="width: 100%; height: 100%"')).toEqual({
-      width: 4,
-      height: 3,
+  it("reads the wrapper's padding-bottom as a ratio, never as a size", () => {
+    const wrapped = (attributes: string, percent = '75%') => {
+      const parsed = parseIframe(
+        `<div style="position: relative; padding-bottom: ${percent}; height: 0;"><iframe src="https://example.com/" ${attributes}></iframe></div>`,
+      );
+      return { size: parsed?.size, ratio: parsed?.ratio };
+    };
+    expect(wrapped('')).toEqual({ size: {}, ratio: { width: 4, height: 3 } });
+    expect(wrapped('', '56.25%')).toEqual({
+      size: {},
+      ratio: { width: 16, height: 9 },
     });
-    expect(wrapped('width="640" height="360"')).toEqual({
-      width: 640,
-      height: 360,
+    expect(wrapped('style="width: 100%; height: 100%"')).toEqual({
+      size: {},
+      ratio: { width: 4, height: 3 },
     });
   });
 
-  it('reads no ratio from a wrapper that is not a ratio box', () => {
-    expect(
-      parseIframe(
-        '<div class="embed" style="padding-bottom: 75%"><iframe src="https://example.com/"></iframe></div>',
-      )?.size,
-    ).toEqual({});
-    expect(
-      parseIframe(
-        '<div style="padding-bottom: 75%"><iframe src="https://example.com/"></iframe><p>Caption</p></div>',
-      )?.size,
-    ).toEqual({});
+  it('reads no ratio when the iframe has a size', () => {
+    const parsed = parseIframe(
+      '<div style="position: relative; padding-bottom: 75%; height: 0;"><iframe src="https://example.com/" width="640" height="360"></iframe></div>',
+    );
+    expect(parsed?.size).toEqual({ width: 640, height: 360 });
+    expect(parsed).not.toHaveProperty('ratio');
+  });
+
+  it.each([
+    [
+      'an attribute besides the style',
+      '<div class="embed" style="padding-bottom: 75%"><iframe src="https://example.com/"></iframe></div>',
+    ],
+    [
+      'a sibling of the iframe',
+      '<div style="padding-bottom: 75%"><iframe src="https://example.com/"></iframe><p>Caption</p></div>',
+    ],
+  ])('reads no ratio from a wrapper with %s', (_, html) => {
+    const parsed = parseIframe(html);
+    expect(parsed?.size).toEqual({});
+    expect(parsed).not.toHaveProperty('ratio');
   });
 });
 
@@ -283,7 +310,8 @@ describe('generic embed code fixtures', () => {
         src: 'https://www.loom.com/embed/e5b8c04bca094dd8a5507925ab887002?hideEmbedTopBar=true&t=20s',
         allow: '',
         allowFullscreen: true,
-        size: { width: 10_000, height: 5607 },
+        size: {},
+        ratio: { width: 10_000, height: 5607 },
       },
     ],
     [
@@ -366,6 +394,26 @@ describe('checkIframe', () => {
       sandbox: 'allow-scripts',
       size: { height: 360 },
     });
+  });
+
+  it('rejects a host-built value for a frame a named platform owns', () => {
+    expect(
+      checkIframe({ ...embed, src: 'https://www.youtube.com/embed/abc' }),
+    ).toBeNull();
+  });
+
+  it('keeps a ratio of two positive finite numbers only', () => {
+    const ratio = (value: unknown) =>
+      checkIframe({ ...embed, ratio: value as ParsedIframe['ratio'] })?.ratio;
+    expect(ratio({ width: 16, height: 9 })).toEqual({ width: 16, height: 9 });
+    expect(ratio({ width: 1.5, height: 1 })).toEqual({ width: 1.5, height: 1 });
+    expect(ratio({ width: 0, height: 9 })).toBeUndefined();
+    expect(ratio({ width: 16, height: -9 })).toBeUndefined();
+    expect(ratio({ width: Infinity, height: 9 })).toBeUndefined();
+    expect(ratio({ width: Number.NaN, height: 9 })).toBeUndefined();
+    expect(ratio({ width: '16', height: 9 })).toBeUndefined();
+    expect(ratio({ width: 16 })).toBeUndefined();
+    expect(ratio('16:9')).toBeUndefined();
   });
 
   it('rejects a value that is not an object', () => {

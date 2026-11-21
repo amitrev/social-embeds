@@ -46,7 +46,9 @@ const FEATURES = new Set([
 const HOST = '[a-z0-9-]+(?:\\.[a-z0-9-]+)*(?::\\d{1,5})?';
 const SRC = new RegExp(`^(?:https:)?//${HOST}(?:[/?#]|$)`, 'i');
 const ORIGIN = new RegExp(`^(?:\\*|'self'|'src'|'none'|https://${HOST})$`, 'i');
-const DOT_SEGMENT = /\/(?:\.|%2e){1,2}(?:\/|$)/i;
+// Dot segments, `//` and escaped unreserved characters, which browsers or servers rewrite.
+const REWRITTEN_PATH =
+  /\/\.{1,2}(?:\/|$)|\/\/|%(?:2[de]|3\d|[46][1-9a-f]|[57][\da]|5f|7e)/i;
 const ASCII_WHITESPACE = /[\t\n\f\r ]+/;
 const STYLE_SIZE = /^\s*(width|height)\s*:(.*)$/is;
 const PX = /^(\d+)px$/i;
@@ -61,7 +63,8 @@ export type ParsedIframe = {
   referrerPolicy?: (typeof REFERRER_POLICIES)[number];
   sandbox?: string; // '' still sandboxes the frame fully
   scrolling?: 'no';
-  size: { width?: number; height?: number }; // px; a wrapper's ratio when that is all there is
+  size: { width?: number; height?: number }; // px
+  ratio?: { width: number; height: number }; // a wrapper's padding-bottom, read only without a size
 };
 
 type Unchecked = { readonly [K in keyof ParsedIframe]?: unknown };
@@ -83,6 +86,7 @@ export function parseIframe(html: string): ParsedIframe | null {
   const parent = elements.find((element) => element.children.includes(iframe));
 
   const { attrs } = iframe;
+  const size = sizeOf(iframe) ?? styleSize(iframe);
   const candidate: Unchecked = {
     src: attrs.get('src'),
     title: attrs.get('title'),
@@ -91,28 +95,20 @@ export function parseIframe(html: string): ParsedIframe | null {
     referrerPolicy: attrs.get('referrerpolicy'),
     sandbox: attrs.get('sandbox'),
     scrolling: attrs.get('scrolling'),
-    size:
-      sizeOf(iframe) ??
-      styleSize(iframe) ??
-      (parent && unwrapRatio(parent, WRAPPER)?.size) ??
-      {},
+    size: size ?? {},
+    ratio: size ? undefined : parent && unwrapRatio(parent, WRAPPER)?.size,
   };
-  // checkIframe reads every field as unknown.
-  const embed = checkIframe(candidate as ParsedIframe);
-  const url = embed && parseUrl(embed.src);
-  if (!embed || !url) return null;
-  // A port would hide the platform's host.
-  const host = url.host.replace(/:\d+$/, '');
-  return platforms.some((platform) => platform.ownsFrame?.({ ...url, host }))
-    ? null
-    : embed;
+  return check(candidate);
 }
 
-/** Re-checks a value a host built itself; `null` when its `src` is unsafe. */
+/** Re-checks a value a host built or stored; `null` when its `src` is unsafe or a named platform's. */
 export function checkIframe(embed: ParsedIframe): ParsedIframe | null {
-  const value: unknown = embed;
+  return check(embed);
+}
+
+function check(value: unknown): ParsedIframe | null {
   if (typeof value !== 'object' || value === null) return null;
-  const raw = value as Unchecked;
+  const raw: Unchecked = value;
   const src = checkSrc(raw.src);
   if (src === null) return null;
   const title = typeof raw.title === 'string' ? raw.title.trim() : '';
@@ -123,6 +119,7 @@ export function checkIframe(embed: ParsedIframe): ParsedIframe | null {
   const referrerPolicy = REFERRER_POLICIES.find(
     (keyword) => keyword === policy,
   );
+  const ratio = checkRatio(raw.ratio);
   return {
     src,
     ...(title ? { title } : {}),
@@ -137,6 +134,7 @@ export function checkIframe(embed: ParsedIframe): ParsedIframe | null {
       ? { scrolling: 'no' as const }
       : {}),
     size: checkSize(raw.size),
+    ...(ratio ? { ratio } : {}),
   };
 }
 
@@ -144,8 +142,14 @@ function checkSrc(value: unknown): string | null {
   if (typeof value !== 'string') return null;
   const src = value.trim();
   const url = SRC.test(src) && !src.includes('\\') ? parseUrl(src) : null;
-  // Browsers resolve these, so the frame's real path could slip past `ownsFrame`.
-  if (!url || DOT_SEGMENT.test(url.path)) return null;
+  if (!url || REWRITTEN_PATH.test(url.path)) return null;
+  // A port or capitals in the path would hide a platform's frame from `ownsFrame`.
+  const frame = {
+    ...url,
+    host: url.host.replace(/:\d+$/, ''),
+    path: url.path.toLowerCase(),
+  };
+  if (platforms.some((platform) => platform.ownsFrame?.(frame))) return null;
   return src.startsWith('//') ? `https:${src}` : src;
 }
 
@@ -172,9 +176,21 @@ function checkSandbox(value: string): string {
   return [...new Set(keywords)].join(' ');
 }
 
+function checkRatio(value: unknown): ParsedIframe['ratio'] {
+  if (typeof value !== 'object' || value === null) return undefined;
+  const { width, height }: { width?: unknown; height?: unknown } = value;
+  return isPositive(width) && isPositive(height)
+    ? { width, height }
+    : undefined;
+}
+
+function isPositive(value: unknown): value is number {
+  return typeof value === 'number' && Number.isFinite(value) && value > 0;
+}
+
 function checkSize(value: unknown): ParsedIframe['size'] {
   if (typeof value !== 'object' || value === null) return {};
-  const { width, height } = value as { width?: unknown; height?: unknown };
+  const { width, height }: { width?: unknown; height?: unknown } = value;
   const checkedWidth =
     typeof width === 'number' ? pixels(String(width)) : undefined;
   const checkedHeight =
