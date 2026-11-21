@@ -1,6 +1,6 @@
 import { frameStyle } from '../core/layout';
 import type { IframePlan } from '../core/plan';
-import { HEIGHT_TIMEOUT_MS, MAX_REPORTED_HEIGHT } from '../core/timing';
+import { FRAME_TIMEOUT_MS, MAX_REPORTED_HEIGHT } from '../core/timing';
 import { applyStyle, type MountOptions, skeleton } from './dom';
 import { whenNear } from './near';
 
@@ -41,7 +41,6 @@ export function mountIframe(
   host.append(wrapper);
 
   let iframe: HTMLIFrameElement | undefined;
-  let heard = false;
   let reported = false;
   let timer: ReturnType<typeof setTimeout> | undefined;
   const cancels: (() => void)[] = [];
@@ -67,19 +66,17 @@ export function mountIframe(
       !(value > 0 && value <= MAX_REPORTED_HEIGHT)
     )
       return;
-    heard = true;
     applyStyle(wrapper, { height: Math.ceil(value) });
     report();
   };
 
+  const failure = messageHeight ? 'did not report its height' : 'did not load';
   const startTimer = () => {
     timer = setTimeout(() => {
-      if (heard) return;
+      if (reported) return;
       layer.remove();
-      onError(
-        new Error(`social-embeds: ${plan.title} did not report its height`),
-      );
-    }, HEIGHT_TIMEOUT_MS);
+      onError(new Error(`social-embeds: ${plan.title} ${failure}`));
+    }, FRAME_TIMEOUT_MS);
   };
 
   const create = () => {
@@ -110,12 +107,12 @@ export function mountIframe(
 
   if (eager) {
     create();
-    if (messageHeight) cancels.push(whenNear(frame, false, startTimer));
+    cancels.push(whenNear(frame, false, startTimer));
   } else {
     cancels.push(
       whenNear(frame, false, () => {
         create();
-        if (messageHeight) startTimer();
+        startTimer();
       }),
     );
   }

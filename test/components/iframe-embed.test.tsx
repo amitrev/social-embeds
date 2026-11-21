@@ -155,6 +155,84 @@ describe('IframeEmbed sized by messages', () => {
   });
 });
 
+describe('IframeEmbed sized by its aspect ratio', () => {
+  function renderFrame(props: Partial<Parameters<typeof IframeEmbed>[0]> = {}) {
+    const view = render(
+      <IframeEmbed
+        src="https://www.tiktok.com/player/v1/7704834703446117662"
+        title="TikTok video"
+        allow=""
+        ratio={{ width: 9, height: 16 }}
+        {...props}
+      />,
+    );
+    const iframe = () =>
+      view.container.querySelector('iframe') as HTMLIFrameElement;
+    return { ...view, iframe };
+  }
+
+  it('reports an error and shows the frame when the iframe never loads', () => {
+    vi.useFakeTimers();
+    const onError = vi.fn();
+    const { getByTestId } = renderFrame({
+      onError,
+      placeholder: <p data-testid="placeholder" />,
+    });
+    lastObserver().enter();
+    act(() => {
+      vi.advanceTimersByTime(15_000);
+    });
+    expect(onError).toHaveBeenCalledWith(
+      new Error('social-embeds: TikTok video did not load'),
+    );
+    expect(() => getByTestId('placeholder')).toThrow();
+  });
+
+  it('does not time out once the iframe has loaded', () => {
+    vi.useFakeTimers();
+    const onError = vi.fn();
+    const onLoad = vi.fn();
+    const { iframe } = renderFrame({ onError, onLoad });
+    lastObserver().enter();
+    fireEvent.load(iframe());
+    act(() => {
+      vi.advanceTimersByTime(60_000);
+    });
+    expect(onError).not.toHaveBeenCalled();
+    expect(onLoad).toHaveBeenCalledTimes(1);
+  });
+
+  it('still reports a load that arrives after the timeout', () => {
+    vi.useFakeTimers();
+    const onError = vi.fn();
+    const onLoad = vi.fn();
+    const { iframe } = renderFrame({ onError, onLoad });
+    lastObserver().enter();
+    act(() => {
+      vi.advanceTimersByTime(15_000);
+    });
+    fireEvent.load(iframe());
+    expect(onError).toHaveBeenCalledTimes(1);
+    expect(onLoad).toHaveBeenCalledTimes(1);
+  });
+
+  it('with lazy off, starts the load timeout only when the frame comes near', () => {
+    vi.useFakeTimers();
+    const onError = vi.fn();
+    renderFrame({ onError, lazy: false });
+    act(() => {
+      vi.advanceTimersByTime(60_000);
+    });
+    expect(onError).not.toHaveBeenCalled();
+
+    lastObserver().enter();
+    act(() => {
+      vi.advanceTimersByTime(15_000);
+    });
+    expect(onError).toHaveBeenCalledTimes(1);
+  });
+});
+
 describe('IframeEmbed with the page host in its src', () => {
   // Twitch plays only when `parent` names the embedding page (docs/decisions.md D62).
   it('adds the host as the named parameter when it creates the iframe', () => {

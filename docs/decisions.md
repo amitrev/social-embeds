@@ -1012,6 +1012,12 @@ Evidence (playground, 375 px viewport, 343 px column, wrapper `display:flex; ali
 - **Not `width:100%` on the container alone:** in a flex row it shares the row with the skeleton, so it was 188 px and Facebook drew its 350 px minimum (last row).
 - **The element has the same box.** Its wrapper is package-owned and the host's classes land on `<social-embed>`, so it never had the bug; the box keeps one DOM for both, which the parity test compares.
 
+### D91. Iframe embeds time out when they do not load
+
+Iframe embeds that do not report their height (all but Telegram, Reddit, Bluesky and Tumblr) called `onLoad` on the iframe's `load` event and had no timeout. In Firefox on the `/element` demo, TikTok, Snapchat and LinkedIn stayed at "waiting" (reported by the maintainer, 2026-11-20). The same page showed X's `widgets.js did not initialise` and Facebook's `could not load …/sdk.js`, which fits Firefox's tracking protection blocking those hosts; its shield panel was not checked. The frames never fired `load`, and an iframe fires no `error`, so the host could not show a fallback.
+
+These frames now get the D81 timeout, started the same way: 15 s from when the frame comes within 200 px of the viewport, also with `lazy={false}`. Without a `load` by then, the placeholder goes and `onError` (the element's `error` event) reports `social-embeds: {title} did not load`. A `load` that arrives later still calls `onLoad`, as a late height does (D78). With `lazy` off, the near-viewport observer for the timeout is now created for every iframe embed. The constant is renamed `FRAME_TIMEOUT_MS`.
+
 ## Open VERIFY items
 
 | ID  | Item                                            | Milestone | Status                                          |
