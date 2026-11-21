@@ -1,5 +1,12 @@
 # social-embeds
 
+## 0.6.1
+
+### Patch Changes
+
+- 08011c3: Iframe embeds that do not load within 15 s of coming near the viewport now report `social-embeds: {title} did not load` through `onError` and the element's `error` event. A frame the browser blocked, such as TikTok, Snapchat or LinkedIn under Firefox's tracking protection, used to stay on its placeholder with no event. A load that arrives later still calls `onLoad`.
+- fb18905: Script embeds (X, Instagram, Threads, Facebook, Pinterest) keep their full width when the host gives the wrapper layout classes such as `flex justify-center`. A Facebook post in a `flex justify-center` wrapper was drawn 552 px wide and cut off on phones.
+
 ## 0.6.0
 
 ### Minor Changes
