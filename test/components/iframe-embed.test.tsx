@@ -339,20 +339,77 @@ describe('IframeEmbed with its size in the src', () => {
     expect(iframe()?.getAttribute('src')).toContain('width=500&height=375');
   });
 
-  it('rebuilds the src in the same iframe when the rounded width changes, and only then', () => {
+  it('rebuilds a new iframe once the width has settled, removing the old one', () => {
+    vi.useFakeTimers();
+    const { container, iframe } = renderSizedSrc();
+    const observer = lastResizeObserver();
+    observer.resize(600);
+    const first = iframe();
+    observer.resize(375);
+    act(() => {
+      vi.advanceTimersByTime(199);
+    });
+    expect(iframe()).toBe(first);
+    act(() => {
+      vi.advanceTimersByTime(1);
+    });
+    expect(iframe()).not.toBe(first);
+    expect(first?.isConnected).toBe(false);
+    expect(container.querySelectorAll('iframe')).toHaveLength(1);
+    expect(iframe()?.getAttribute('src')).toBe(
+      'https://embedr.flickr.com/photos/1?width=375&height=281&header=true',
+    );
+  });
+
+  it('rebuilds once, at the last width, after several changes within 200 ms', () => {
+    vi.useFakeTimers();
     const { iframe } = renderSizedSrc();
     const observer = lastResizeObserver();
     observer.resize(600);
     const first = iframe();
-    const setAttribute = vi.spyOn(first as HTMLIFrameElement, 'setAttribute');
+    for (const width of [500, 450, 400]) {
+      observer.resize(width);
+      act(() => {
+        vi.advanceTimersByTime(150);
+      });
+      expect(iframe()).toBe(first);
+    }
+    act(() => {
+      vi.advanceTimersByTime(50);
+    });
+    const second = iframe();
+    expect(second).not.toBe(first);
+    expect(second?.getAttribute('src')).toContain('width=400&height=300');
+    act(() => {
+      vi.advanceTimersByTime(1000);
+    });
+    expect(iframe()).toBe(second);
+  });
+
+  it('does not rebuild when the rounded width stays or comes back', () => {
+    vi.useFakeTimers();
+    const { iframe } = renderSizedSrc();
+    const observer = lastResizeObserver();
+    observer.resize(600);
+    const first = iframe();
     observer.resize(600.4);
-    expect(setAttribute).not.toHaveBeenCalled();
-    observer.resize(375);
+    observer.resize(500);
+    observer.resize(600);
+    act(() => {
+      vi.advanceTimersByTime(1000);
+    });
     expect(iframe()).toBe(first);
-    expect(setAttribute).toHaveBeenCalledTimes(1);
-    expect(first?.getAttribute('src')).toBe(
-      'https://embedr.flickr.com/photos/1?width=375&height=281&header=true',
-    );
+  });
+
+  it('does not rebuild after an unmount while a rebuild is pending', () => {
+    vi.useFakeTimers();
+    const { unmount } = renderSizedSrc();
+    const observer = lastResizeObserver();
+    observer.resize(600);
+    observer.resize(400);
+    expect(vi.getTimerCount()).toBe(1);
+    unmount();
+    expect(vi.getTimerCount()).toBe(0);
   });
 
   it('ignores a box without a width', () => {
@@ -362,6 +419,7 @@ describe('IframeEmbed with its size in the src', () => {
   });
 
   it('keeps the placeholder until the frame loads, and not after a rebuild', () => {
+    vi.useFakeTimers();
     const onLoad = vi.fn();
     const { iframe, getByTestId } = renderSizedSrc({
       onLoad,
@@ -370,11 +428,17 @@ describe('IframeEmbed with its size in the src', () => {
     const observer = lastResizeObserver();
     observer.resize(600);
     expect(getByTestId('placeholder')).toBeTruthy();
-    fireEvent.load(iframe() as HTMLIFrameElement);
+    const first = iframe() as HTMLIFrameElement;
+    fireEvent.load(first);
     expect(() => getByTestId('placeholder')).toThrow();
     observer.resize(400);
-    fireEvent.load(iframe() as HTMLIFrameElement);
+    act(() => {
+      vi.advanceTimersByTime(200);
+    });
+    const second = iframe() as HTMLIFrameElement;
+    expect(second).not.toBe(first);
     expect(() => getByTestId('placeholder')).toThrow();
+    fireEvent.load(second);
     expect(onLoad).toHaveBeenCalledTimes(1);
   });
 
@@ -395,6 +459,22 @@ describe('IframeEmbed with its size in the src', () => {
     expect(iframe()?.getAttribute('src')).toBe(
       'https://embedr.flickr.com/photos/1?width=500&height=375&header=true',
     );
+  });
+
+  it('still creates the frame for a width that arrives after the timeout', () => {
+    vi.useFakeTimers();
+    const onError = vi.fn();
+    const onLoad = vi.fn();
+    const { iframe } = renderSizedSrc({ onError, onLoad });
+    lastObserver().enter();
+    act(() => {
+      vi.advanceTimersByTime(15_000);
+    });
+    expect(onError).toHaveBeenCalledTimes(1);
+    lastResizeObserver().resize(600);
+    expect(iframe()?.getAttribute('src')).toContain('width=600&height=450');
+    fireEvent.load(iframe() as HTMLIFrameElement);
+    expect(onLoad).toHaveBeenCalledTimes(1);
   });
 
   it('times out as a frame that did not load when the box never has a width', () => {

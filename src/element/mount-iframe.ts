@@ -79,12 +79,9 @@ export function mountIframe(
     }, FRAME_TIMEOUT_MS);
   };
 
-  const address = (src: string) =>
-    plan.hostParam ? withHost(src, plan.hostParam) : src;
-
   const create = (src: string) => {
     const element = document.createElement('iframe');
-    element.src = address(src);
+    element.src = plan.hostParam ? withHost(src, plan.hostParam) : src;
     element.title = plan.title;
     element.setAttribute('allow', plan.allow);
     if (plan.allowFullscreen !== false)
@@ -102,8 +99,10 @@ export function mountIframe(
     element.addEventListener('load', () => {
       if (!messageHeight) report();
     });
+    // A new src on a loaded frame would add a history entry; a new frame adds none.
+    if (iframe) iframe.replaceWith(element);
+    else frame.prepend(element);
     iframe = element;
-    frame.insertBefore(element, layer);
     if (messageHeight) window.addEventListener('message', listen);
   };
 
@@ -114,9 +113,7 @@ export function mountIframe(
     }
     cancels.push(
       watchWidth(frame, (width) => {
-        const src = srcWithSize(plan, width);
-        if (iframe) iframe.src = address(src);
-        else create(src);
+        create(srcWithSize(plan, width));
       }),
     );
   };

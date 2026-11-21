@@ -74,6 +74,7 @@ beforeEach(() => {
 
 afterEach(() => {
   cleanup();
+  vi.useRealTimers();
   vi.unstubAllGlobals();
 });
 
@@ -315,13 +316,17 @@ describe('FlickrEmbed', () => {
     expect(onLoad).toHaveBeenCalledTimes(1);
   });
 
-  it('rebuilds the frame when the box width changes', () => {
+  it('rebuilds the frame once the box width has settled', () => {
+    vi.useFakeTimers();
     const { container } = render(
       <FlickrEmbed embed={parsed(flickrHeaderFooter)} lazy={false} />,
     );
     const observer = lastResizeObserver();
     observer.resize(800);
     observer.resize(375);
+    act(() => {
+      vi.advanceTimersByTime(200);
+    });
     expect(container.querySelector('iframe')?.getAttribute('src')).toBe(
       'https://embedr.flickr.com/photos/55618331478?width=375&height=211&header=true&footer=true',
     );

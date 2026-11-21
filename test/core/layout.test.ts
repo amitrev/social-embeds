@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { IframePlan } from '../../src/core/plan';
-import { frameStyle, srcWithSize } from '../../src/core/layout';
+import { frameStyle, srcWithSize, watchWidth } from '../../src/core/layout';
 
 const plan = (extra: Partial<IframePlan> = {}): IframePlan => ({
   kind: 'iframe',
@@ -126,5 +126,114 @@ describe('srcWithSize', () => {
     expect(
       srcWithSize(plan({ size: { width: 4096, height: 2301 } }), 375),
     ).toBe('https://example.com/embed?width=375&height=211');
+  });
+});
+
+describe('watchWidth', () => {
+  class StubResizeObserver {
+    static last: StubResizeObserver | undefined;
+    observing = false;
+
+    constructor(
+      private readonly callback: (
+        entries: { contentRect: { width: number } }[],
+      ) => void,
+    ) {
+      StubResizeObserver.last = this;
+    }
+
+    observe() {
+      this.observing = true;
+    }
+
+    disconnect() {
+      this.observing = false;
+    }
+
+    resize(width: number) {
+      this.callback([{ contentRect: { width } }]);
+    }
+  }
+
+  const element = {} as Element;
+
+  function watch() {
+    const onWidth = vi.fn();
+    const stop = watchWidth(element, onWidth);
+    const observer = StubResizeObserver.last;
+    if (!observer) throw new Error('no ResizeObserver was created');
+    return { onWidth, stop, observer };
+  }
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.stubGlobal('ResizeObserver', StubResizeObserver);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.unstubAllGlobals();
+  });
+
+  it('reports the first rounded width at once, ignoring a zero width', () => {
+    const { onWidth, observer } = watch();
+    expect(observer.observing).toBe(true);
+    observer.resize(0);
+    expect(onWidth).not.toHaveBeenCalled();
+    observer.resize(599.6);
+    expect(onWidth).toHaveBeenCalledWith(600);
+  });
+
+  it('reports a later width once it has been stable for 200 ms', () => {
+    const { onWidth, observer } = watch();
+    observer.resize(600);
+    observer.resize(375);
+    vi.advanceTimersByTime(199);
+    expect(onWidth).toHaveBeenCalledTimes(1);
+    vi.advanceTimersByTime(1);
+    expect(onWidth).toHaveBeenLastCalledWith(375);
+    expect(onWidth).toHaveBeenCalledTimes(2);
+  });
+
+  it('reports only the last of several widths within 200 ms', () => {
+    const { onWidth, observer } = watch();
+    observer.resize(600);
+    for (const width of [500, 450, 400]) {
+      observer.resize(width);
+      vi.advanceTimersByTime(150);
+    }
+    vi.advanceTimersByTime(50);
+    expect(onWidth.mock.calls).toEqual([[600], [400]]);
+  });
+
+  it('reports nothing when the rounded width stays or comes back', () => {
+    const { onWidth, observer } = watch();
+    observer.resize(600);
+    observer.resize(600.4);
+    observer.resize(500);
+    observer.resize(0);
+    observer.resize(600);
+    vi.advanceTimersByTime(1000);
+    expect(onWidth).toHaveBeenCalledTimes(1);
+  });
+
+  it('stops observing and drops a pending width on cleanup', () => {
+    const { onWidth, observer, stop } = watch();
+    observer.resize(600);
+    observer.resize(400);
+    stop();
+    vi.advanceTimersByTime(1000);
+    expect(observer.observing).toBe(false);
+    expect(onWidth).toHaveBeenCalledTimes(1);
+  });
+
+  it('measures once without ResizeObserver', () => {
+    vi.stubGlobal('ResizeObserver', undefined);
+    const onWidth = vi.fn();
+    watchWidth(
+      { getBoundingClientRect: () => ({ width: 500.2 }) } as Element,
+      onWidth,
+    );
+    expect(onWidth).toHaveBeenCalledWith(500);
   });
 });

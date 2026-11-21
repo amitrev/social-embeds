@@ -4,3 +4,4 @@ export const MAX_REPORTED_HEIGHT = 50_000; // px
 export const RENDER_ATTEMPTS = 3;
 export const RENDER_TIMEOUT_MS = 15_000; // for each attempt
 export const RETRY_DELAY_MS = 1000; // doubles with each attempt
+export const WIDTH_SETTLE_MS = 200; // a new box width waits this long before a frame is rebuilt

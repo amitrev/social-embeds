@@ -191,6 +191,8 @@ export function IframeEmbed({
       <div ref={frame} style={FILL}>
         {near && frameSrc !== undefined && (
           <iframe
+            // A new src on a loaded frame would add a history entry; a new frame adds none.
+            key={sizeInSrc ? frameSrc : undefined}
             ref={iframe}
             src={hostParam ? withHost(frameSrc, hostParam) : frameSrc}
             title={title}

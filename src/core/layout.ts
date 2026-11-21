@@ -1,4 +1,5 @@
 import type { IframePlan } from './plan';
+import { WIDTH_SETTLE_MS } from './timing';
 
 export type FrameLayout = {
   width?: number | string;
@@ -63,17 +64,30 @@ export function srcWithSize(
   return `${path}?width=${String(width)}&height=${String(height)}${rest}`;
 }
 
-/** Calls `onWidth` with the element's rounded width once it has one, and again whenever it changes. */
+/**
+ * Calls `onWidth` with the element's rounded width once it has one, then with each new width
+ * that has held for WIDTH_SETTLE_MS, so a resize rebuilds the frame once.
+ */
 export function watchWidth(
   element: Element,
   onWidth: (width: number) => void,
 ): () => void {
   let last: number | undefined;
+  let timer: ReturnType<typeof setTimeout> | undefined;
   const take = (width: number) => {
     const rounded = Math.round(width);
-    if (rounded <= 0 || rounded === last) return;
-    last = rounded;
-    onWidth(rounded);
+    if (rounded <= 0) return;
+    clearTimeout(timer);
+    if (rounded === last) return;
+    if (last === undefined) {
+      last = rounded;
+      onWidth(rounded);
+      return;
+    }
+    timer = setTimeout(() => {
+      last = rounded;
+      onWidth(rounded);
+    }, WIDTH_SETTLE_MS);
   };
   if (typeof ResizeObserver === 'undefined') {
     take(element.getBoundingClientRect().width);
@@ -85,5 +99,6 @@ export function watchWidth(
   observer.observe(element);
   return () => {
     observer.disconnect();
+    clearTimeout(timer);
   };
 }
