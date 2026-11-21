@@ -20,16 +20,16 @@ Skipped (maintainer, 2026-11-21): Mastodon, and Russian platforms (OK.ru, VK).
 
 One release, 0.7.0 (my call): `Platform` gains seven names and the parser gains a public function, so a minor bump.
 
-| Platform       | Embed                                                                          | URL input                   |
-| -------------- | ------------------------------------------------------------------------------ | --------------------------- |
-| Generic iframe | the pasted iframe, rebuilt from checked attributes                             | no: embed code only         |
-| Truth Social   | iframe `truthsocial.com/…/embed` (expected), height from the frame             | yes (VERIFY the embed path) |
-| Imgur          | blockquote + `s.imgur.com/min/embed.js`, height from the frame                 | yes                         |
-| Tenor          | div + `tenor.com/embed.js`, or iframe `tenor.com/embed/{id}`                   | yes                         |
-| Streamable     | iframe `streamable.com/e/{id}` in a responsive div                             | yes                         |
-| Strava         | placeholder div + `strava-embeds.com/embed.js`                                 | yes                         |
-| Flickr         | `a[data-flickr-embed]` + `client-code.js`; the package builds the embedr frame | yes                         |
-| Rumble         | iframe `rumble.com/embed/{embedId}/`                                           | no: needs a lookup (VERIFY) |
+| Platform       | Embed                                                                          | URL input                |
+| -------------- | ------------------------------------------------------------------------------ | ------------------------ |
+| Generic iframe | the pasted iframe, rebuilt from checked attributes                             | no: embed code only      |
+| Truth Social   | iframe `truthsocial.com/…/embed` (expected), height from the frame             | yes (D93)                |
+| Imgur          | blockquote + `s.imgur.com/min/embed.js`, height from the frame                 | yes                      |
+| Tenor          | div + `tenor.com/embed.js`, or iframe `tenor.com/embed/{id}`                   | yes                      |
+| Streamable     | iframe `streamable.com/e/{id}` in a responsive div                             | yes                      |
+| Strava         | placeholder div + `strava-embeds.com/embed.js`                                 | yes                      |
+| Flickr         | `a[data-flickr-embed]` + `client-code.js`; the package builds the embedr frame | yes                      |
+| Rumble         | iframe `rumble.com/embed/{embedId}/`                                           | no: needs a lookup (D99) |
 
 ## 2. Approaches
 
@@ -77,7 +77,7 @@ Mechanisms below are from each platform's public docs and oEmbed, as expected on
 - **URL input:** `truthsocial.com/@{user}/posts/{id}`; `www.` host. The numeric id is the post; the user name is kept for the canonical URL.
 - **Rendering:** the iframe, with its height from the frame. Truth Social's frame posts `{type: 'setHeight', id, height}` on its own, without being asked, so `MessageHeight` needs no request: the existing origin and source check is enough (D93, D100). A video post reports its height before the video is sized, so embed code whose iframe has the class `truthsocial-video` adds 165 px to the reported height, as Truth Social's own `embed.js` does; a URL cannot tell a video post and takes the reported height. Vertical videos stay cut off, as in Truth Social's own embed (D100).
 - **Options:** none known.
-- **VERIFY:** the Embed menu's exact code and embed path; the message format, and whether the frame waits to be asked; what a deleted post shows; whether Cloudflare's bot check ever blocks the frame for real visitors.
+- **VERIFY:** the Embed menu's exact code and embed path; the message format, and whether the frame waits to be asked; what a deleted post shows; whether Cloudflare's bot check ever blocks the frame for real visitors. Resolved in D93; the Cloudflare check could not be verified for real visitors.
 
 ### 4.2 Imgur
 
@@ -85,8 +85,8 @@ Mechanisms below are from each platform's public docs and oEmbed, as expected on
 - **URL input:** `imgur.com/{id}`, `imgur.com/a/{id}`, `imgur.com/gallery/{slug}-{id}` and `imgur.com/gallery/{id}`; `i.imgur.com/{id}.{ext}` gives the image id; `m.` and `www.` hosts.
 - **Rendering:** the iframe `embed.js` creates (`imgur.com/{id}/embed?pub=true…`, expected), with its height from the frame.
 - **Fallback content:** the title link. Whitelisted (D35).
-- **Options:** `data-context` (show the post's description), if VERIFY confirms it.
-- **VERIFY:** the frame's URL and message format; gallery vs album ids; what a mature-content post shows logged out.
+- **Options:** `data-context`: `false` hides the post's title and description (D94).
+- **VERIFY:** the frame's URL and message format; gallery vs album ids; what a mature-content post shows logged out. Resolved in D94; mature posts not verified.
 
 ### 4.3 Tenor
 
@@ -94,7 +94,7 @@ Mechanisms below are from each platform's public docs and oEmbed, as expected on
 - **URL input:** `tenor.com/view/{slug}-gif-{id}`, with an optional locale segment (`tenor.com/{lang}/view/…`). `media.tenor.com/…` file URLs carry another id: `null`.
 - **Rendering:** an iframe `tenor.com/embed/{id}`, the aspect ratio from `data-aspect-ratio`; a URL carries none, so 1.33, the default of Tenor's own `embed.js` (D95).
 - **Kind:** `video`, as Giphy.
-- **VERIFY:** that `tenor.com/embed/{id}` renders on its own, without `embed.js`; the Embed dialog's code.
+- **VERIFY:** that `tenor.com/embed/{id}` renders on its own, without `embed.js`; the Embed dialog's code. Resolved in D95.
 
 ### 4.4 Streamable
 
@@ -102,16 +102,16 @@ Mechanisms below are from each platform's public docs and oEmbed, as expected on
 - **URL input:** `streamable.com/{id}`, `streamable.com/e/{id}`.
 - **Rendering:** the iframe in an aspect-ratio box. The ratio comes from the wrapper's `padding-bottom`; a URL gives 16:9. The wrapper needs a narrow exception to D14, as Giphy's: accepted and dropped.
 - **The player's "Copy embed code"** writes the iframe followed by one `</div>` it never opens. It is accepted: Streamable's parser tolerates exactly that one trailing unmatched `</div>`, for Streamable only; any other unmatched end tag is still rejected (D96).
-- **Options:** the player parameters, after VERIFY (`autoplay`, `muted`, `loop`, …).
-- **VERIFY:** the Embed dialog's code and parameters; what an expired or deleted video shows.
+- **Options:** the player parameters `loop`, `autoplay`, `nocontrols`, `hd` and `muted` (D96).
+- **VERIFY:** the Embed dialog's code and parameters; what an expired or deleted video shows. Resolved in D96; the owner's Embed dialog and an expired video not verified.
 
 ### 4.5 Strava
 
 - **Embed code** (Share → Embed on an activity or route, expected): `<div class="strava-embed-placeholder" data-embed-type="activity" data-embed-id="{id}" data-style="standard" data-from-embed="false"></div><script src="https://strava-embeds.com/embed.js"></script>`.
 - **URL input:** `www.strava.com/activities/{id}` and `www.strava.com/routes/{id}`. `strava.app.link/…` short links need a redirect: `null`.
 - **Rendering:** the frame that `embed.js` creates (`strava-embeds.com/{type}/{id}?…`, expected), with its height from the frame if it reports one, else the script.
-- **Options:** `data-style` (`standard`, `minimal`) and any others VERIFY finds. `data-embed-type` and `data-embed-id` are content, never options (D68).
-- **VERIFY:** the frame URL and height messages; which embed types exist (activity, route, segment?); what a private or deleted activity shows.
+- **Options:** `data-style` (`standard`, `minimal`), `data-full-width` for routes and `data-map-hash` (D97). `data-embed-type` and `data-embed-id` are content, never options (D68).
+- **VERIFY:** the frame URL and height messages; which embed types exist (activity, route, segment?); what a private or deleted activity shows. Resolved in D97; the Embed dialogs need a signed-in account and were not seen.
 
 ### 4.6 Flickr
 
@@ -119,15 +119,15 @@ Mechanisms below are from each platform's public docs and oEmbed, as expected on
 - **URL input:** `www.flickr.com/photos/{user}/{id}`, with or without `/in/…`; `flic.kr/p/{code}`, whose code is the photo id in Flickr's base-58 alphabet, decoded without a network call (my call); albums `…/photos/{user}/albums/{id}`.
 - **Rendering:** the package builds the frame `https://embedr.flickr.com/photos/{id}?width={px}&height={px}` (`/photosets/{id}` for albums) on the client, from the box's pixel width and the photo's ratio, and rebuilds it when the box width changes (maintainer, 2026-11-21). Flickr's own script frames no URL: it writes Flickr's HTML into a same-origin iframe, so it is accepted in embed code and never loaded (D98, D100). The image's `width` and `height` give the aspect ratio. The frame works from the id alone, so URLs render too, at 4:3.
 - **Fallback content:** the linked image, shown until the frame loads (D34). Whitelisted: `a[href]` to `flickr.com` and `img` whose `src` is on `live.staticflickr.com` or `farm*.staticflickr.com` (my call).
-- **VERIFY:** the embedr frame URL, and whether it works from an id alone; album embeds; the default aspect ratio for a URL.
+- **VERIFY:** the embedr frame URL, and whether it works from an id alone; album embeds; the default aspect ratio for a URL. Resolved in D98 and D100.
 
 ### 4.7 Rumble
 
 - **Embed code** (Embed on a video, expected): `<iframe class="rumble" width="640" height="360" src="https://rumble.com/embed/{embedId}/?pub={pubId}" frameborder="0" allowfullscreen></iframe>`.
-- **URL input:** the page URL `rumble.com/{pageId}-{slug}.html` carries a different id from the embed id (VERIFY), so it renders nothing, and `onError` reports `social-embeds: a Rumble URL needs a lookup: use the embed code` (the wave 4 message shape). `matchUrl` accepts `rumble.com/embed/{embedId}/` as the canonical URL, as Bluesky's DID URLs.
+- **URL input:** the page URL `rumble.com/{pageId}-{slug}.html` carries a different id from the embed id (confirmed in D99), so it renders nothing, and `onError` reports `social-embeds: a Rumble URL needs a lookup: use the embed code` (the wave 4 message shape). `matchUrl` accepts `rumble.com/embed/{embedId}/` as the canonical URL, as Bluesky's DID URLs.
 - **Rendering:** the iframe, aspect ratio from `width`/`height`, else 16:9.
-- **Options:** `pub` (Rumble's publisher id, kept as given, never added) and player parameters VERIFY finds.
-- **VERIFY:** that page and embed ids really differ; the Embed dialog's code; Rumble's script player (`embedJS`) is not accepted, iframe only.
+- **Options:** `pub` (Rumble's publisher id, kept as given, never added). No player parameters were found (D99).
+- **VERIFY:** that page and embed ids really differ; the Embed dialog's code; Rumble's script player (`embedJS`) is not accepted, iframe only. Resolved in D99.
 
 ## 5. Shared changes
 
