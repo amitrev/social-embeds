@@ -94,6 +94,10 @@ export {
 } from './components/kick-embed';
 export { GiphyEmbed, type GiphyEmbedProps } from './components/giphy-embed';
 export {
+  GenericIframeEmbed,
+  type GenericIframeEmbedProps,
+} from './components/generic-iframe-embed';
+export {
   BlueskyEmbed,
   type BlueskyEmbedProps,
   type BlueskyOptions,

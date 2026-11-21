@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { URLS } from '../../playground/samples';
 import { SocialEmbed } from '../../src';
 import '../../src/element';
-import { type Platform, parseEmbed } from '../../src/parser';
+import { type Platform, parseEmbed, parseIframe } from '../../src/parser';
 import { installObserver } from '../components/helpers';
 
 vi.mock('../../src/loader/platform-scripts', () => ({
@@ -156,17 +156,29 @@ afterEach(() => {
 
 const entries = Object.entries(fixtures);
 const parsed = entries.filter(([, html]) => parseEmbed(html) !== null);
+const generic = entries.filter(
+  ([path, html]) =>
+    path.startsWith('../fixtures/generic/') &&
+    parseEmbed(html) === null &&
+    parseIframe(html) !== null,
+);
 const skipped = entries
   .filter(([, html]) => parseEmbed(html) === null)
+  .filter(([path]) => !generic.some(([kept]) => kept === path))
   .map(([path]) => path.replace('../fixtures/', ''));
 
-type Case = { label: string; platform: Platform; source: Source };
+type Case = { label: string; platform: Platform | 'generic'; source: Source };
 type Source = { html: string } | { url: string };
 
 const cases: Case[] = [
   ...parsed.map(([path, html]) => ({
     label: path,
     platform: parseEmbed(html)?.platform as Platform,
+    source: { html },
+  })),
+  ...generic.map(([path, html]) => ({
+    label: path,
+    platform: 'generic' as const,
     source: { html },
   })),
   ...Object.entries(URLS).flatMap(([platform, samples]) =>
@@ -179,7 +191,7 @@ const cases: Case[] = [
 ];
 
 const seen = { iframe: 0, script: 0, error: [] as string[] };
-const platforms = new Set<Platform>();
+const platforms = new Set<Platform | 'generic'>();
 
 // Nothing has loaded, so a placeholder must be showing, unless the markup is the fallback.
 function check(side: Rendered): void {
@@ -210,14 +222,6 @@ describe('<social-embed> and <SocialEmbed>', () => {
       'flickr/embed-dialog.html',
       'flickr/oembed-album.html',
       'flickr/oembed.html',
-      'generic/bandcamp-embed.html',
-      'generic/codepen-oembed.html',
-      'generic/datawrapper-oembed.html',
-      'generic/deezer-oembed.html',
-      'generic/google-maps-embed.html',
-      'generic/loom-responsive.html',
-      'generic/mixcloud-oembed.html',
-      'generic/ted-oembed.html',
       'imgur/embed-dialog-album-hide-title.html',
       'imgur/embed-dialog-album.html',
       'imgur/oembed-album.html',
@@ -236,6 +240,7 @@ describe('<social-embed> and <SocialEmbed>', () => {
       'truthsocial/oembed-text.html',
     ]);
     expect(parsed).toHaveLength(53);
+    expect(generic).toHaveLength(8);
   });
 
   it.each(cases.map((item) => [item.label, item] as const))(
@@ -254,8 +259,10 @@ describe('<social-embed> and <SocialEmbed>', () => {
   );
 
   it('covered every platform and the known case kinds', () => {
-    expect([...platforms].sort()).toEqual(Object.keys(PLATFORMS).sort());
-    expect(seen.iframe).toBe(63);
+    expect([...platforms].sort()).toEqual(
+      [...Object.keys(PLATFORMS), 'generic'].sort(),
+    );
+    expect(seen.iframe).toBe(71);
     expect(seen.script).toBe(23);
     expect(seen.error).toEqual([
       '../fixtures/dailymotion/oembed.html',

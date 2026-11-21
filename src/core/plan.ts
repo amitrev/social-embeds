@@ -13,8 +13,11 @@ export type IframePlan = {
   src: string;
   title: string;
   allow: string;
-  referrerPolicy?: 'strict-origin-when-cross-origin';
+  /** Default `true`. */
+  allowFullscreen?: boolean;
+  referrerPolicy?: Exclude<ReferrerPolicy, ''>;
   scrolling?: 'no';
+  /** `''` sandboxes the frame fully. */
   sandbox?: string;
   /** Used when the input carries no size. */
   ratio: { width: number; height: number };

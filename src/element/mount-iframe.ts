@@ -86,7 +86,8 @@ export function mountIframe(
       : plan.src;
     element.title = plan.title;
     element.setAttribute('allow', plan.allow);
-    element.setAttribute('allowfullscreen', '');
+    if (plan.allowFullscreen !== false)
+      element.setAttribute('allowfullscreen', '');
     if (plan.referrerPolicy) element.referrerPolicy = plan.referrerPolicy;
     if (plan.scrolling) element.setAttribute('scrolling', plan.scrolling);
     if (plan.sandbox !== undefined)

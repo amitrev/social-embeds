@@ -17,7 +17,8 @@ type IframeEmbedProps = FrameProps & {
   src: string;
   title: string;
   allow: string;
-  referrerPolicy?: 'strict-origin-when-cross-origin';
+  allowFullscreen?: boolean;
+  referrerPolicy?: Exclude<ReferrerPolicy, ''>;
   scrolling?: 'no';
   sandbox?: string;
   /** Used when the input carries no size. */
@@ -49,6 +50,7 @@ export function IframeEmbed({
   src,
   title,
   allow,
+  allowFullscreen = true,
   referrerPolicy,
   scrolling,
   sandbox,
@@ -162,7 +164,7 @@ export function IframeEmbed({
             src={hostParam ? withHost(src, hostParam) : src}
             title={title}
             allow={allow}
-            allowFullScreen
+            allowFullScreen={allowFullscreen}
             referrerPolicy={referrerPolicy}
             // eslint-disable-next-line @typescript-eslint/no-deprecated -- Facebook's own embed code sets it
             scrolling={scrolling}

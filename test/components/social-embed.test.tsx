@@ -1,6 +1,7 @@
 import { cleanup, render } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { SocialEmbed } from '../../src';
+import { parseIframe } from '../../src/parser';
 import dailymotionOembed from '../fixtures/dailymotion/oembed.html?raw';
 import dailymotion from '../fixtures/dailymotion/player-id-docs.html?raw';
 import fbVideo from '../fixtures/facebook/video-sdk-docs.html?raw';
@@ -24,12 +25,23 @@ import giphy from '../fixtures/giphy/embed-responsive.html?raw';
 import kick from '../fixtures/kick/player-channel.html?raw';
 import soundcloud from '../fixtures/soundcloud/share-visual.html?raw';
 import tumblr from '../fixtures/tumblr/oembed.html?raw';
+import mapsFixture from '../fixtures/generic/google-maps-embed.html?raw';
 import { installObserver } from './helpers';
 
 vi.mock('../../src/loader/platform-scripts', () => ({
   FACEBOOK_SDK_VERSION: 'v26.0',
   loadPlatformScript: vi.fn(() => new Promise(() => {})),
 }));
+
+const generic = Object.fromEntries(
+  Object.entries(
+    import.meta.glob<string>('../fixtures/generic/*.html', {
+      query: '?raw',
+      import: 'default',
+      eager: true,
+    }),
+  ).map(([path, html]) => [path.replace('../fixtures/generic/', ''), html]),
+);
 
 function rendered(container: HTMLElement): string {
   const iframe = container.querySelector('iframe');
@@ -148,7 +160,7 @@ describe('SocialEmbed with embed code', () => {
 
   it('hands unrecognised embed code to fallback, unchanged', () => {
     const html =
-      '<p>Sanitised by the CMS</p><iframe src="https://maps.test"></iframe>';
+      '<p>Sanitised by the CMS</p><img src="https://maps.test/map.png">';
     const fallback = vi.fn((code: string) => (
       <div data-testid="host">{code}</div>
     ));
@@ -170,6 +182,100 @@ describe('SocialEmbed with embed code', () => {
     expect(onError).toHaveBeenCalledTimes(1);
     expect(onError).toHaveBeenCalledWith(
       new Error('social-embeds: unrecognised embed code'),
+    );
+  });
+});
+
+describe('SocialEmbed with generic iframe code', () => {
+  it.each(Object.entries(generic))(
+    'renders the %s code as a generic iframe',
+    (_, html) => {
+      const fallback = vi.fn(() => <p>fallback</p>);
+      const onError = vi.fn();
+      const { container } = render(
+        <SocialEmbed
+          html={html}
+          fallback={fallback}
+          onError={onError}
+          lazy={false}
+        />,
+      );
+      expect(rendered(container)).toBe(
+        `iframe ${parseIframe(html)?.src ?? ''}`,
+      );
+      expect(fallback).not.toHaveBeenCalled();
+      expect(onError).not.toHaveBeenCalled();
+    },
+  );
+
+  it('renders iframe code that used to reach fallback', () => {
+    const fallback = vi.fn(() => <p>fallback</p>);
+    render(<SocialEmbed html={mapsFixture} fallback={fallback} lazy={false} />);
+    expect(fallback).not.toHaveBeenCalled();
+  });
+
+  it('passes the frame props to the generic iframe', () => {
+    const { container } = render(
+      <SocialEmbed
+        html={mapsFixture}
+        className="map"
+        maxWidth={400}
+        height={300}
+        lazy={false}
+      />,
+    );
+    const wrapper = container.firstElementChild as HTMLElement;
+    expect(wrapper.className).toBe('map');
+    expect(wrapper.style.maxWidth).toBe('400px');
+    expect(wrapper.style.height).toBe('300px');
+  });
+
+  it.each([
+    [
+      'a YouTube iframe with a bad id',
+      '<iframe src="https://www.youtube.com/embed/!!bad"></iframe>',
+    ],
+    [
+      'an unknown Facebook plugin',
+      '<iframe src="https://www.facebook.com/plugins/unknown.php?href=x"></iframe>',
+    ],
+    ['an http iframe', '<iframe src="http://example.com/"></iframe>'],
+    ['a javascript: iframe', '<iframe src="javascript:alert(1)"></iframe>'],
+    ['two iframes', `${mapsFixture}${mapsFixture}`],
+    ['code without an iframe', '<p>hello</p>'],
+  ])('hands %s to fallback', (_, html) => {
+    const fallback = vi.fn((code: string) => <p data-testid="host">{code}</p>);
+    const { container, getByTestId } = render(
+      <SocialEmbed html={html} fallback={fallback} lazy={false} />,
+    );
+    expect(fallback).toHaveBeenCalledWith(html);
+    expect(getByTestId('host').textContent).toBe(html);
+    expect(container.querySelector('iframe')).toBeNull();
+  });
+
+  it('reports a rejected iframe without a fallback', () => {
+    const onError = vi.fn();
+    const { container } = render(
+      <SocialEmbed
+        html='<iframe src="http://example.com/"></iframe>'
+        onError={onError}
+      />,
+    );
+    expect(container.innerHTML).toBe('');
+    expect(onError).toHaveBeenCalledWith(
+      new Error('social-embeds: unrecognised embed code'),
+    );
+  });
+
+  it('never renders a URL as a generic iframe', () => {
+    const onError = vi.fn();
+    const url = 'https://www.google.com/maps/embed?pb=x';
+    const { container } = render(
+      <SocialEmbed url={url} onError={onError} lazy={false} />,
+    );
+    expect(container.innerHTML).toBe('');
+    expect(onError).toHaveBeenCalledWith(
+      new Error(`social-embeds: not a supported post URL: ${url}`),
     );
   });
 });
