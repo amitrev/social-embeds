@@ -6,15 +6,14 @@ import { parseUrl, pixels } from './url';
 // Security: only the checked fields of `ParsedIframe` may reach the DOM; `srcdoc`, `on*` handlers
 // and scripts never do, and a `src` that is not https rejects the code (docs/wave-5-brief.md §3).
 
+// Security: only policies no laxer than the browser default; the others send the page's path
+// and query to the frame.
 const REFERRER_POLICIES = [
   'no-referrer',
-  'no-referrer-when-downgrade',
   'origin',
-  'origin-when-cross-origin',
   'same-origin',
   'strict-origin',
   'strict-origin-when-cross-origin',
-  'unsafe-url',
 ] as const;
 
 const SANDBOX_KEYWORDS = new Set([

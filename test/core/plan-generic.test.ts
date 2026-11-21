@@ -109,6 +109,15 @@ describe('genericPlan', () => {
     });
   });
 
+  it('drops a host-built referrer policy that leaks the page URL', () => {
+    expect(
+      genericPlan({
+        ...BASE,
+        referrerPolicy: 'unsafe-url' as ParsedIframe['referrerPolicy'],
+      }),
+    ).not.toHaveProperty('referrerPolicy');
+  });
+
   it('uses a wrapper ratio as the aspect ratio, never as a width', () => {
     const plan = genericPlan({ ...BASE, ratio: { width: 4, height: 3 } });
     expect(plan).toMatchObject({ ratio: { width: 4, height: 3 } });

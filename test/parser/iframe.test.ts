@@ -13,6 +13,15 @@ import ted from '../fixtures/generic/ted-oembed.html?raw';
 const frame = (attributes: string) =>
   parseIframe(`<iframe src="https://example.com/" ${attributes}></iframe>`);
 
+const withPolicy = (policy: string) =>
+  checkIframe({
+    src: 'https://example.com/',
+    allow: '',
+    allowFullscreen: false,
+    size: {},
+    referrerPolicy: policy as ParsedIframe['referrerPolicy'],
+  });
+
 describe('parseIframe', () => {
   it('rebuilds a Google Maps iframe from its checked attributes', () => {
     expect(
@@ -23,7 +32,6 @@ describe('parseIframe', () => {
       src: 'https://www.google.com/maps/embed?pb=x',
       allow: '',
       allowFullscreen: true,
-      referrerPolicy: 'no-referrer-when-downgrade',
       size: { width: 600, height: 450 },
     });
   });
@@ -137,7 +145,29 @@ describe('parseIframe', () => {
     expect(frame('')).not.toHaveProperty('sandbox');
   });
 
-  it('keeps a referrerpolicy from the spec list only', () => {
+  it.each([
+    'no-referrer',
+    'origin',
+    'same-origin',
+    'strict-origin',
+    'strict-origin-when-cross-origin',
+  ])('keeps the strict referrerpolicy %s', (policy) => {
+    expect(frame(`referrerpolicy="${policy}"`)?.referrerPolicy).toBe(policy);
+    expect(withPolicy(policy)?.referrerPolicy).toBe(policy);
+  });
+
+  it.each([
+    'unsafe-url',
+    'no-referrer-when-downgrade',
+    'origin-when-cross-origin',
+  ])('drops %s, which sends the page’s full URL to the frame', (policy) => {
+    expect(frame(`referrerpolicy="${policy}"`)).not.toHaveProperty(
+      'referrerPolicy',
+    );
+    expect(withPolicy(policy)).not.toHaveProperty('referrerPolicy');
+  });
+
+  it('reads referrerpolicy case-insensitively and drops unknown values', () => {
     expect(frame('referrerpolicy="Origin"')?.referrerPolicy).toBe('origin');
     expect(frame('referrerpolicy="always"')).not.toHaveProperty(
       'referrerPolicy',
@@ -421,9 +451,15 @@ describe('checkIframe', () => {
     expect(checkIframe('x' as unknown as ParsedIframe)).toBeNull();
   });
 
-  it("types referrerPolicy as the DOM's keywords", () => {
+  it("types referrerPolicy as the DOM's strict keywords", () => {
     expectTypeOf<NonNullable<ParsedIframe['referrerPolicy']>>().toEqualTypeOf<
-      Exclude<ReferrerPolicy, ''>
+      Exclude<
+        ReferrerPolicy,
+        | ''
+        | 'unsafe-url'
+        | 'no-referrer-when-downgrade'
+        | 'origin-when-cross-origin'
+      >
     >();
   });
 });
