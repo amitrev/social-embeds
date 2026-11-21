@@ -684,6 +684,16 @@ describe('streamablePlan', () => {
     });
   });
 
+  it('ignores inherited object names in parsed options', () => {
+    const embed = fromUrl('https://streamable.com/abc123', 'streamable');
+    expect(
+      streamablePlan(
+        { ...embed, options: { constructor: 'x', toString: 'y', muted: 1 } },
+        {},
+      ),
+    ).toMatchObject({ src: 'https://streamable.com/e/abc123?muted=1' });
+  });
+
   it('ignores parsed options that are not player parameters', () => {
     const embed = fromUrl('https://streamable.com/abc123', 'streamable');
     expect(

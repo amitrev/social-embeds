@@ -11,6 +11,8 @@ export type StreamableOptions = {
   nocontrols?: boolean;
 };
 
+const KEPT = new Set(['autoplay', 'hd', 'loop', 'muted', 'nocontrols']);
+
 const PARAMS = {
   autoplay: 'autoplay',
   hd: 'hd',
@@ -23,7 +25,7 @@ export function streamablePlan(
   embed: ParsedEmbed,
   options: StreamableOptions,
 ): Plan | PlanError {
-  const parsed = Object.entries(embed.options).filter(([key]) => key in PARAMS);
+  const parsed = Object.entries(embed.options).filter(([key]) => KEPT.has(key));
   return {
     kind: 'iframe',
     src: `https://streamable.com/e/${embed.id}${query(
