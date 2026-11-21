@@ -20,6 +20,8 @@ type ScriptEmbedProps = SharedProps & {
   label: string;
 };
 
+const LAYER: CSSProperties = { width: '100%' };
+
 function toError(error: unknown): Error {
   return error instanceof Error ? error : new Error(String(error));
 }
@@ -118,15 +120,18 @@ export function ScriptEmbed({
   // Script-based embeds size themselves: the wrapper only limits the width.
   return (
     <div {...rest} style={wrapper}>
-      <div
-        ref={container}
-        // The platform script rewrites this subtree after hydration.
-        suppressHydrationWarning
-        dangerouslySetInnerHTML={{ __html: markup }}
-      />
-      {!hasFallback &&
-        !rendered &&
-        (placeholder ?? <Skeleton minHeight={minHeight} />)}
+      {/* Keeps the host's layout classes off the container, which the scripts measure (docs/decisions.md D90). */}
+      <div style={LAYER}>
+        <div
+          ref={container}
+          // The platform script rewrites this subtree after hydration.
+          suppressHydrationWarning
+          dangerouslySetInnerHTML={{ __html: markup }}
+        />
+        {!hasFallback &&
+          !rendered &&
+          (placeholder ?? <Skeleton minHeight={minHeight} />)}
+      </div>
     </div>
   );
 }

@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { IframePlan } from '../../src/core/plan';
-import { HEIGHT_TIMEOUT_MS, MAX_REPORTED_HEIGHT } from '../../src/core/timing';
+import { FRAME_TIMEOUT_MS, MAX_REPORTED_HEIGHT } from '../../src/core/timing';
 import { mountIframe } from '../../src/element/mount-iframe';
 import { installObserver, lastObserver } from '../components/helpers';
 
@@ -141,6 +141,59 @@ describe('mountIframe', () => {
     );
   });
 
+  describe('without messageHeight', () => {
+    it('errors when the iframe does not load in time', () => {
+      vi.useFakeTimers();
+      const marker = document.createElement('span');
+      mount(base, false, [marker]);
+      lastObserver().enter();
+      vi.advanceTimersByTime(FRAME_TIMEOUT_MS);
+      expect(onError).toHaveBeenCalledWith(
+        new Error('social-embeds: Example post did not load'),
+      );
+      expect(host.contains(marker)).toBe(false);
+    });
+
+    it('starts the timer only after near, even when eager', () => {
+      vi.useFakeTimers();
+      mount(base, true);
+      vi.advanceTimersByTime(FRAME_TIMEOUT_MS * 2);
+      expect(onError).not.toHaveBeenCalled();
+      lastObserver().enter();
+      vi.advanceTimersByTime(FRAME_TIMEOUT_MS);
+      expect(onError).toHaveBeenCalledTimes(1);
+    });
+
+    it('stays quiet after the iframe loaded', () => {
+      vi.useFakeTimers();
+      const { iframe } = mount(base, true);
+      lastObserver().enter();
+      iframe()?.dispatchEvent(new Event('load'));
+      vi.advanceTimersByTime(FRAME_TIMEOUT_MS);
+      expect(onError).not.toHaveBeenCalled();
+      expect(onLoad).toHaveBeenCalledTimes(1);
+    });
+
+    it('still reports a load that arrives after the timeout', () => {
+      vi.useFakeTimers();
+      const { iframe } = mount(base, true);
+      lastObserver().enter();
+      vi.advanceTimersByTime(FRAME_TIMEOUT_MS);
+      iframe()?.dispatchEvent(new Event('load'));
+      expect(onError).toHaveBeenCalledTimes(1);
+      expect(onLoad).toHaveBeenCalledTimes(1);
+    });
+
+    it('cleanup clears the timer', () => {
+      vi.useFakeTimers();
+      const { cleanup } = mount(base, true);
+      lastObserver().enter();
+      cleanup();
+      vi.advanceTimersByTime(FRAME_TIMEOUT_MS);
+      expect(onError).not.toHaveBeenCalled();
+    });
+  });
+
   describe('messageHeight', () => {
     it('starts at the start height and ignores load events', () => {
       const { wrapper, iframe } = mount(sized, true);
@@ -175,7 +228,7 @@ describe('mountIframe', () => {
       const marker = document.createElement('span');
       mount(sized, false, [marker]);
       lastObserver().enter();
-      vi.advanceTimersByTime(HEIGHT_TIMEOUT_MS);
+      vi.advanceTimersByTime(FRAME_TIMEOUT_MS);
       expect(onError).toHaveBeenCalledWith(
         new Error('social-embeds: Telegram post did not report its height'),
       );
@@ -185,10 +238,10 @@ describe('mountIframe', () => {
     it('starts the timer only after near, even when eager', () => {
       vi.useFakeTimers();
       mount(sized, true);
-      vi.advanceTimersByTime(HEIGHT_TIMEOUT_MS * 2);
+      vi.advanceTimersByTime(FRAME_TIMEOUT_MS * 2);
       expect(onError).not.toHaveBeenCalled();
       lastObserver().enter();
-      vi.advanceTimersByTime(HEIGHT_TIMEOUT_MS);
+      vi.advanceTimersByTime(FRAME_TIMEOUT_MS);
       expect(onError).toHaveBeenCalledTimes(1);
     });
 
@@ -197,7 +250,7 @@ describe('mountIframe', () => {
       const { iframe } = mount(sized, true);
       lastObserver().enter();
       post(resize(400), iframe()?.contentWindow);
-      vi.advanceTimersByTime(HEIGHT_TIMEOUT_MS);
+      vi.advanceTimersByTime(FRAME_TIMEOUT_MS);
       expect(onError).not.toHaveBeenCalled();
     });
 
@@ -208,7 +261,7 @@ describe('mountIframe', () => {
       const source = iframe()?.contentWindow;
       cleanup();
       post(resize(400), source);
-      vi.advanceTimersByTime(HEIGHT_TIMEOUT_MS);
+      vi.advanceTimersByTime(FRAME_TIMEOUT_MS);
       expect(wrapper.style.height).toBe('300px');
       expect(onError).not.toHaveBeenCalled();
       expect(host.children).toHaveLength(0);

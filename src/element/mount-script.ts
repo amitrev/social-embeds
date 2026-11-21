@@ -24,12 +24,16 @@ export function mountScript(
     width: options.width ?? '100%',
     maxWidth: options.maxWidth ?? plan.maxWidth,
   });
+  // docs/decisions.md D90
+  const box = document.createElement('div');
+  applyStyle(box, { width: '100%' });
   const container = document.createElement('div');
   container.innerHTML = plan.markup;
-  wrapper.append(container);
+  box.append(container);
   const content: readonly Node[] =
     placeholder.length > 0 ? placeholder : [skeleton(plan.minHeight)];
-  if (!plan.hasFallback) wrapper.append(...content);
+  if (!plan.hasFallback) box.append(...content);
+  wrapper.append(box);
   host.append(wrapper);
 
   let cancelled = false;

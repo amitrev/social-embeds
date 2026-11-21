@@ -5,7 +5,7 @@ import {
   useRef,
   useState,
 } from 'react';
-import { HEIGHT_TIMEOUT_MS, MAX_REPORTED_HEIGHT } from '../core/timing';
+import { FRAME_TIMEOUT_MS, MAX_REPORTED_HEIGHT } from '../core/timing';
 import { frameStyle } from '../core/layout';
 import type { IframePlan, MessageHeight } from '../core/plan';
 import { useNearViewport } from './hooks';
@@ -72,9 +72,8 @@ export function IframeEmbed({
   const frame = useRef<HTMLDivElement>(null);
   const iframe = useRef<HTMLIFrameElement>(null);
   const near = useNearViewport(frame, lazy);
-  // Frames post their height only once painted, so with lazy off the timeout still waits for the frame to be near.
-  const inView = useNearViewport(frame, !lazy && messageHeight !== undefined);
-  const heard = useRef(false);
+  // With lazy off the timeout still waits for the frame to be near (docs/decisions.md D81, D91).
+  const inView = useNearViewport(frame, !lazy);
   const [loaded, setLoaded] = useState(false);
   const [reportedHeight, setReportedHeight] = useState<number>();
   const reported = useRef(false);
@@ -93,7 +92,6 @@ export function IframeEmbed({
   useEffect(() => {
     if (!near || !messageHeight) return;
     const { origin, read } = messageHeight;
-    heard.current = false;
     const listen = (event: MessageEvent) => {
       // Security: only the frame itself, from the platform's own origin.
       if (event.origin !== origin) return;
@@ -110,7 +108,6 @@ export function IframeEmbed({
         !(value > 0 && value <= MAX_REPORTED_HEIGHT)
       )
         return;
-      heard.current = true;
       setReportedHeight(Math.ceil(value));
       report();
     };
@@ -121,14 +118,17 @@ export function IframeEmbed({
   }, [near, messageHeight, report]);
 
   useEffect(() => {
-    if (!near || !inView || !messageHeight) return;
+    if (!near || !inView) return;
+    const failure = messageHeight
+      ? 'did not report its height'
+      : 'did not load';
     const timer = setTimeout(() => {
-      if (heard.current) return;
+      if (reported.current) return;
       setLoaded(true);
       callbacks.current.onError?.(
-        new Error(`social-embeds: ${title} did not report its height`),
+        new Error(`social-embeds: ${title} ${failure}`),
       );
-    }, HEIGHT_TIMEOUT_MS);
+    }, FRAME_TIMEOUT_MS);
     return () => {
       clearTimeout(timer);
     };

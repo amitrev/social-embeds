@@ -63,8 +63,11 @@ describe('mountScript', () => {
     expect(host.querySelector('#m')?.textContent).toBe('post');
     expect(wrapper.style.width).toBe('100%');
     expect(wrapper.style.maxWidth).toBe('550px');
-    expect(wrapper.children[0]?.querySelector('#m')).not.toBeNull();
-    expect(wrapper.children[1]).toBe(skeletonOf());
+    expect(wrapper.children).toHaveLength(1);
+    const box = wrapper.firstElementChild as HTMLElement;
+    expect(box.style.width).toBe('100%');
+    expect(box.children[0]?.querySelector('#m')).not.toBeNull();
+    expect(box.children[1]).toBe(skeletonOf());
     expect((skeletonOf() as HTMLElement).style.minHeight).toBe('240px');
     expect(load).not.toHaveBeenCalled();
     lastObserver().enter();

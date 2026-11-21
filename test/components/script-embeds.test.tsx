@@ -33,8 +33,12 @@ function parsed(html: string): ParsedEmbed {
   return embed;
 }
 
+function platformBox(container: HTMLElement): Element | null | undefined {
+  return container.firstElementChild?.firstElementChild?.firstElementChild;
+}
+
 function markupOf(container: HTMLElement): string {
-  return container.firstElementChild?.firstElementChild?.innerHTML ?? '';
+  return platformBox(container)?.innerHTML ?? '';
 }
 
 async function enter() {
@@ -102,7 +106,7 @@ describe('XEmbed', () => {
     expect(load).toHaveBeenCalledWith('x');
     // The class that widgets.js looks for is added only now (docs/decisions.md D39).
     expect(markupOf(container)).toMatch(/^<blockquote class="twitter-tweet">/);
-    const target = wrapper.firstElementChild;
+    const target = platformBox(container);
     expect(twttr.widgets.load).toHaveBeenCalledWith(target);
 
     const widget = document.createElement('div');
@@ -173,7 +177,7 @@ describe('XEmbed', () => {
       <XEmbed url="https://x.com/jack/status/20" onLoad={onLoad} />,
     );
     await enter();
-    const target = container.firstElementChild?.firstElementChild;
+    const target = platformBox(container);
     unmount();
     twttr.fire(target);
     expect(onLoad).not.toHaveBeenCalled();
@@ -239,7 +243,7 @@ describe('InstagramEmbed', () => {
     const iframe = document.createElement('iframe');
     iframe.className = 'instagram-media instagram-media-rendered';
     act(() => {
-      container.firstElementChild?.firstElementChild?.append(iframe);
+      platformBox(container)?.append(iframe);
     });
     await vi.waitFor(() => {
       expect(onLoad).toHaveBeenCalled();
@@ -277,7 +281,7 @@ describe('ThreadsEmbed', () => {
     expect(markupOf(container)).toMatch(
       /^<blockquote [^>]*class="text-post-media"/,
     );
-    const target = container.firstElementChild?.firstElementChild;
+    const target = platformBox(container);
     act(() => {
       target?.prepend(document.createElement('iframe'));
       target?.querySelector('blockquote')?.remove();
@@ -317,7 +321,7 @@ describe('FacebookEmbed', () => {
     await enter();
     expect(load).toHaveBeenCalledWith('facebook', { locale: 'bg_BG' });
     expect(parse).toHaveBeenCalledWith(
-      container.firstElementChild?.firstElementChild,
+      platformBox(container),
       expect.any(Function),
     );
     expect(onLoad).toHaveBeenCalled();
@@ -329,6 +333,21 @@ describe('FacebookEmbed', () => {
       /^<div class="fb-post" data-href="https:\/\/www\.facebook\.com\/facebook\/posts\/pfbid\w+" data-width="500" data-show-text="true"><\/div>$/,
     );
     expect(container.querySelector('iframe')).toBeNull();
+  });
+
+  it('gives the SDK a full-width box when the host lays the wrapper out as a flex row', () => {
+    const { container } = render(
+      <FacebookEmbed
+        embed={parsed(postIframe)}
+        className="flex items-center justify-center"
+      />,
+    );
+    const wrapper = container.firstElementChild as HTMLElement;
+    expect(wrapper.children).toHaveLength(1);
+    const layer = wrapper.firstElementChild as HTMLElement;
+    expect(layer.style.width).toBe('100%');
+    expect(layer.querySelector('.fb-post')).not.toBeNull();
+    expect(layer.querySelector('[aria-hidden="true"]')).not.toBeNull();
   });
 
   it('renders the fb-video snippet through the SDK, with its locale and fallback', async () => {
@@ -460,7 +479,7 @@ describe('PinterestEmbed', () => {
     );
     await enter();
     expect(load).toHaveBeenCalledWith('pinterest');
-    expect(build).toHaveBeenCalledWith(wrapper.firstElementChild);
+    expect(build).toHaveBeenCalledWith(platformBox(view.container));
     expect(markupOf(view.container)).toBe(
       '<a href="https://www.pinterest.com/pin/424605071145752542/" data-pin-do="embedPin"></a>',
     );
