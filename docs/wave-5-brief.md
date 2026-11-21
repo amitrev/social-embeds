@@ -20,16 +20,16 @@ Skipped (maintainer, 2026-11-21): Mastodon, and Russian platforms (OK.ru, VK).
 
 One release, 0.7.0 (my call): `Platform` gains seven names and the parser gains a public function, so a minor bump.
 
-| Platform       | Embed                                                              | URL input                    |
-| -------------- | ------------------------------------------------------------------ | ---------------------------- |
-| Generic iframe | the pasted iframe, rebuilt from checked attributes                 | no: embed code only          |
-| Truth Social   | iframe `truthsocial.com/…/embed` (expected), height from the frame | yes (VERIFY the embed path)  |
-| Imgur          | blockquote + `s.imgur.com/min/embed.js`, height from the frame     | yes                          |
-| Tenor          | div + `tenor.com/embed.js`, or iframe `tenor.com/embed/{id}`       | yes                          |
-| Streamable     | iframe `streamable.com/e/{id}` in a responsive div                 | yes                          |
-| Strava         | placeholder div + `strava-embeds.com/embed.js`                     | yes                          |
-| Flickr         | `a[data-flickr-embed]` + `embedr.flickr.com/assets/client-code.js` | VERIFY, else embed code only |
-| Rumble         | iframe `rumble.com/embed/{embedId}/`                               | no: needs a lookup (VERIFY)  |
+| Platform       | Embed                                                                          | URL input                   |
+| -------------- | ------------------------------------------------------------------------------ | --------------------------- |
+| Generic iframe | the pasted iframe, rebuilt from checked attributes                             | no: embed code only         |
+| Truth Social   | iframe `truthsocial.com/…/embed` (expected), height from the frame             | yes (VERIFY the embed path) |
+| Imgur          | blockquote + `s.imgur.com/min/embed.js`, height from the frame                 | yes                         |
+| Tenor          | div + `tenor.com/embed.js`, or iframe `tenor.com/embed/{id}`                   | yes                         |
+| Streamable     | iframe `streamable.com/e/{id}` in a responsive div                             | yes                         |
+| Strava         | placeholder div + `strava-embeds.com/embed.js`                                 | yes                         |
+| Flickr         | `a[data-flickr-embed]` + `client-code.js`; the package builds the embedr frame | yes                         |
+| Rumble         | iframe `rumble.com/embed/{embedId}/`                                           | no: needs a lookup (VERIFY) |
 
 ## 2. Approaches
 
@@ -75,7 +75,7 @@ Mechanisms below are from each platform's public docs and oEmbed, as expected on
 
 - **Embed code** (Embed menu on a post, expected, as Mastodon 3.x): `<iframe src="https://truthsocial.com/@{user}/{id}/embed" class="truthsocial-embed" style="max-width: 100%; border: 0" width="600" allowfullscreen="allowfullscreen"></iframe><script src="https://truthsocial.com/embed.js" async="async"></script>`.
 - **URL input:** `truthsocial.com/@{user}/posts/{id}`; `www.` host. The numeric id is the post; the user name is kept for the canonical URL.
-- **Rendering:** the iframe, with its height from the frame. Mastodon's `embed.js` asks each frame for its height (`{type: 'setHeight', id}`) and the frame answers with `{type: 'setHeight', id, height}`. If Truth Social works this way, the frame only answers when asked, which is new: `MessageHeight` gains an optional request the component posts to the frame on `load`, still checked by origin and source (my call).
+- **Rendering:** the iframe, with its height from the frame. Truth Social's frame posts `{type: 'setHeight', id, height}` on its own, without being asked, so `MessageHeight` needs no request: the existing origin and source check is enough (D93, D100). A video post reports its height before the video is sized, so embed code whose iframe has the class `truthsocial-video` adds 165 px to the reported height, as Truth Social's own `embed.js` does; a URL cannot tell a video post and takes the reported height. Vertical videos stay cut off, as in Truth Social's own embed (D100).
 - **Options:** none known.
 - **VERIFY:** the Embed menu's exact code and embed path; the message format, and whether the frame waits to be asked; what a deleted post shows; whether Cloudflare's bot check ever blocks the frame for real visitors.
 
@@ -92,7 +92,7 @@ Mechanisms below are from each platform's public docs and oEmbed, as expected on
 
 - **Embed code** (Share → Embed, expected): `<div class="tenor-gif-embed" data-postid="{id}" data-share-method="host" data-aspect-ratio="1.33" data-width="100%"><a href="https://tenor.com/view/{slug}-gif-{id}">{title}</a></div><script type="text/javascript" async src="https://tenor.com/embed.js"></script>`.
 - **URL input:** `tenor.com/view/{slug}-gif-{id}`, with an optional locale segment (`tenor.com/{lang}/view/…`). `media.tenor.com/…` file URLs carry another id: `null`.
-- **Rendering:** an iframe `tenor.com/embed/{id}`, the aspect ratio from `data-aspect-ratio`; a URL carries none, so 1:1 as Giphy (VERIFY a better default).
+- **Rendering:** an iframe `tenor.com/embed/{id}`, the aspect ratio from `data-aspect-ratio`; a URL carries none, so 1.33, the default of Tenor's own `embed.js` (D95).
 - **Kind:** `video`, as Giphy.
 - **VERIFY:** that `tenor.com/embed/{id}` renders on its own, without `embed.js`; the Embed dialog's code.
 
@@ -101,6 +101,7 @@ Mechanisms below are from each platform's public docs and oEmbed, as expected on
 - **Embed code** (Embed on a video, expected): `<div style="position:relative; width:100%; height:0px; padding-bottom:56.250%"><iframe allow="fullscreen;autoplay" allowfullscreen height="100%" src="https://streamable.com/e/{id}" width="100%" style="border:none; width:100%; height:100%; position:absolute; left:0px; top:0px; overflow:hidden;"></iframe></div>`.
 - **URL input:** `streamable.com/{id}`, `streamable.com/e/{id}`.
 - **Rendering:** the iframe in an aspect-ratio box. The ratio comes from the wrapper's `padding-bottom`; a URL gives 16:9. The wrapper needs a narrow exception to D14, as Giphy's: accepted and dropped.
+- **The player's "Copy embed code"** writes the iframe followed by one `</div>` it never opens. It is accepted: Streamable's parser tolerates exactly that one trailing unmatched `</div>`, for Streamable only; any other unmatched end tag is still rejected (D96).
 - **Options:** the player parameters, after VERIFY (`autoplay`, `muted`, `loop`, …).
 - **VERIFY:** the Embed dialog's code and parameters; what an expired or deleted video shows.
 
@@ -116,8 +117,8 @@ Mechanisms below are from each platform's public docs and oEmbed, as expected on
 
 - **Embed code** (Share → Embed, expected): `<a data-flickr-embed="true" href="https://www.flickr.com/photos/{user}/{id}/in/…" title="{title}"><img src="https://live.staticflickr.com/{server}/{id}_{secret}_b.jpg" width="1024" height="683" alt="{title}"/></a><script async src="//embedr.flickr.com/assets/client-code.js" charset="utf-8"></script>`. Albums link to `…/albums/{id}`.
 - **URL input:** `www.flickr.com/photos/{user}/{id}`, with or without `/in/…`; `flic.kr/p/{code}`, whose code is the photo id in Flickr's base-58 alphabet, decoded without a network call (my call); albums `…/photos/{user}/albums/{id}`.
-- **Rendering:** the script turns the link into an iframe (`embedr.flickr.com/photos/{id}`, expected). The image's `width` and `height` give the aspect ratio. A URL has no image, so it renders only if the embedr frame works from the id alone (VERIFY); else Flickr URLs are embed code only, with the "needs a lookup" error.
-- **Fallback content:** the linked image, shown until the script runs (D34). Whitelisted: `a[href]` to `flickr.com` and `img` whose `src` is on `live.staticflickr.com` or `farm*.staticflickr.com` (my call).
+- **Rendering:** the package builds the frame `https://embedr.flickr.com/photos/{id}?width={px}&height={px}` (`/photosets/{id}` for albums) on the client, from the box's pixel width and the photo's ratio, and rebuilds it when the box width changes (maintainer, 2026-11-21). Flickr's own script frames no URL: it writes Flickr's HTML into a same-origin iframe, so it is accepted in embed code and never loaded (D98, D100). The image's `width` and `height` give the aspect ratio. The frame works from the id alone, so URLs render too, at 4:3.
+- **Fallback content:** the linked image, shown until the frame loads (D34). Whitelisted: `a[href]` to `flickr.com` and `img` whose `src` is on `live.staticflickr.com` or `farm*.staticflickr.com` (my call).
 - **VERIFY:** the embedr frame URL, and whether it works from an id alone; album embeds; the default aspect ratio for a URL.
 
 ### 4.7 Rumble
@@ -132,10 +133,10 @@ Mechanisms below are from each platform's public docs and oEmbed, as expected on
 
 - `Platform` gains `'truthsocial' | 'imgur' | 'tenor' | 'streamable' | 'strava' | 'flickr' | 'rumble'`.
 - `kind`: Truth Social, Imgur, Strava and Flickr `post`; Tenor, Streamable and Rumble `video`.
-- `variant`: `iframe` for Tenor, Streamable and Rumble; Truth Social, Imgur, Strava and Flickr `sdk` or `iframe`, after the mechanism decision (§2).
-- **Height from the frame** reuses Telegram's path; a frame that answers only when asked adds the optional request (§4.1).
-- **Narrow D14 exceptions:** Streamable's wrapper `div`; each platform's script tag next to its markup, as X and Instagram.
-- **"Needs a lookup" errors:** Rumble URLs, and Flickr URLs if VERIFY fails.
+- `variant`: `iframe` for all seven, after the mechanism decision (§2, D100).
+- **Height from the frame** reuses Telegram's path for Truth Social, Imgur and Strava; each frame posts its height unasked (D100). Flickr's frame takes its size from the photo's ratio.
+- **Narrow D14 exceptions:** Streamable's wrapper `div`, and the one trailing `</div>` of its player code; each platform's script tag next to its markup, as X and Instagram.
+- **"Needs a lookup" errors:** Rumble URLs.
 - **The element:** `<social-embed>` gets every platform and the generic path, and the parity test covers them.
 - **Playground:** a page per platform, a generic-iframe page with every fixture, and one of each on `/many` and `/element`.
 - **Samples** follow D80: English, neutral, from each platform's own official account where it has one. Streamable, Strava and Rumble are heavy on sport and politics, so their samples need particular care.
