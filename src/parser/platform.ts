@@ -18,7 +18,14 @@ export type PlatformParser = {
   /** A sibling element after the embed that is the platform's own markup, such as a credit; it is dropped. */
   isOwnExtra?: (element: HtmlElement, embed: ParsedEmbed) => boolean;
   match: (url: ParsedUrl) => ParsedEmbed | null;
+  /** True also for frames `parse` rejects, so generic iframe code never bypasses the platform's checks. */
+  ownsFrame?: (src: ParsedUrl) => boolean;
 };
+
+/** `/embed` holds `/embed` and `/embed/…`, never `/embedded`. */
+export function underPath(path: string, folder: string): boolean {
+  return path === folder || path.startsWith(`${folder}/`);
+}
 
 /** The first attribute present for a key wins. */
 export function attributeOptions(

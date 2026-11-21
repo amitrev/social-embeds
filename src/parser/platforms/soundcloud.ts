@@ -57,6 +57,7 @@ const NOT_SOUNDS = new Set([
   'toptracks',
 ]);
 const SECRET_TOKEN = new RegExp(`^${SECRET}$`);
+const WIDGET_HOST = 'w.soundcloud.com';
 
 function sound(url: string, id: string): Omit<ParsedEmbed, 'options'> {
   return { platform: 'soundcloud', kind: 'post', url, id, variant: 'iframe' };
@@ -121,7 +122,7 @@ export const soundcloud: PlatformParser = {
   parse(root) {
     if (root.tag !== 'iframe') return null;
     const src = parseUrl(root.attrs.get('src') ?? '');
-    if (src?.host !== 'w.soundcloud.com' || !/^\/player\/?$/.test(src.path))
+    if (src?.host !== WIDGET_HOST || !/^\/player\/?$/.test(src.path))
       return null;
     let found = fromApi(parseUrl(src.query.get('url') ?? ''));
     if (!found) return null;
@@ -148,4 +149,5 @@ export const soundcloud: PlatformParser = {
     const found = fromApi(url) ?? fromPage(url);
     return found && { ...found, options: {} };
   },
+  ownsFrame: (src) => src.host === WIDGET_HOST,
 };

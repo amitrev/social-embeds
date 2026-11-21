@@ -69,4 +69,5 @@ export const kick: PlatformParser = {
     const found = channel(url, PAGE_HOSTS) ?? channel(url, PLAYER);
     return found && { ...found, options: {} };
   },
+  ownsFrame: (src) => PLAYER.has(src.host),
 };

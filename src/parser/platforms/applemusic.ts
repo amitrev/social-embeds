@@ -7,6 +7,7 @@ import { parseUrl, type ParsedUrl } from '../url';
 const PATH =
   /^\/([a-z]{2})\/(album|song|playlist)\/(?:[^/]{1,200}\/)?(\d{1,15}|pl\.[A-Za-z0-9-]{1,64})\/?$/;
 const SONG = /^\d{1,15}$/;
+const FRAME_HOST = 'embed.music.apple.com';
 
 function appleContent(
   url: ParsedUrl | null,
@@ -33,7 +34,7 @@ export const applemusic: PlatformParser = {
     if (root.tag !== 'iframe') return null;
     const found = appleContent(
       parseUrl(root.attrs.get('src') ?? ''),
-      'embed.music.apple.com',
+      FRAME_HOST,
     );
     if (!found) return null;
     const { height } = sizeOf(root) ?? {};
@@ -47,4 +48,5 @@ export const applemusic: PlatformParser = {
     const found = appleContent(url, 'music.apple.com');
     return found && { platform: 'applemusic', ...found, options: {} };
   },
+  ownsFrame: (src) => src.host === FRAME_HOST,
 };

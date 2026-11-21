@@ -3,6 +3,7 @@ import {
   type Options,
   type PlatformParser,
   sizeOf,
+  underPath,
   withSize,
 } from '../platform';
 import type { ParsedEmbed } from '../types';
@@ -59,4 +60,5 @@ export const tiktok: PlatformParser = {
     const [, user, id] = VIDEO_PATH.exec(url.path) ?? [];
     return user === undefined || id === undefined ? null : video(id, user);
   },
+  ownsFrame: (src) => HOSTS.has(src.host) && underPath(src.path, '/player'),
 };

@@ -9,6 +9,7 @@ const HOST =
   /^(?:(?:www|[a-z]{2})\.)?pinterest\.(?:[a-z]{2,3}|co\.[a-z]{2}|com\.[a-z]{2})$/;
 const PIN_PATH = /^\/pin\/(?:[A-Za-z0-9-]{0,200}--)?(\d{1,25})\/?$/;
 const PIN_ID = /^\d{1,25}$/;
+const FRAME_HOST = 'assets.pinterest.com';
 const SCRIPT =
   /^(?:https?:)?\/\/assets\.pinterest\.com\/js\/pinit(?:_main)?\.js$/;
 
@@ -51,8 +52,7 @@ export const pinterest: PlatformParser = {
 
     if (root.tag !== 'iframe') return null;
     const src = parseUrl(root.attrs.get('src') ?? '');
-    if (src?.host !== 'assets.pinterest.com' || src.path !== '/ext/embed.html')
-      return null;
+    if (src?.host !== FRAME_HOST || src.path !== '/ext/embed.html') return null;
     const id = src.query.get('id');
     return id !== undefined && PIN_ID.test(id)
       ? { ...pin(id), options: {} }
@@ -63,4 +63,5 @@ export const pinterest: PlatformParser = {
     const found = pinOf(url);
     return found && { ...found, options: {} };
   },
+  ownsFrame: (src) => src.host === FRAME_HOST,
 };

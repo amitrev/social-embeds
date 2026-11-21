@@ -2,6 +2,7 @@ import {
   type Options,
   type PlatformParser,
   sizeOf,
+  underPath,
   withSize,
 } from '../platform';
 import type { ParsedEmbed } from '../types';
@@ -15,11 +16,12 @@ const CONTENT_PATH = new RegExp(
 );
 // utm_source is Spotify's tracking, and si a share id.
 const DROPPED = new Set(['utm_source', 'si']);
+const HOST = 'open.spotify.com';
 
 function content(
   url: ParsedUrl | null,
 ): (Omit<ParsedEmbed, 'options'> & { query: ParsedUrl['query'] }) | null {
-  if (url?.host !== 'open.spotify.com') return null;
+  if (url?.host !== HOST) return null;
   const [, type, id, video] = CONTENT_PATH.exec(url.path) ?? [];
   if (type === undefined || id === undefined) return null;
   return {
@@ -66,4 +68,5 @@ export const spotify: PlatformParser = {
       }
     );
   },
+  ownsFrame: (src) => src.host === HOST && underPath(src.path, '/embed'),
 };

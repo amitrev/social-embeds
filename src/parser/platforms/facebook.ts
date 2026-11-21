@@ -4,6 +4,7 @@ import {
   type Options,
   type PlatformParser,
   sizeOf,
+  underPath,
   withSize,
 } from '../platform';
 import type { ParsedEmbed } from '../types';
@@ -207,4 +208,6 @@ export const facebook: PlatformParser = {
     const found = target(url);
     return found && embed(found, found.kind, 'sdk', {});
   },
+  ownsFrame: (src) =>
+    PLUGIN_HOSTS.has(src.host) && underPath(src.path, '/plugins'),
 };

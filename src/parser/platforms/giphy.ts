@@ -2,6 +2,7 @@ import type { HtmlElement } from '../html';
 import {
   type PlatformParser,
   sizeOf,
+  underPath,
   unwrapRatio,
   withSize,
 } from '../platform';
@@ -81,4 +82,5 @@ export const giphy: PlatformParser = {
     const id = idOf(url);
     return id === undefined ? null : { ...gif(id), options: {} };
   },
+  ownsFrame: (src) => PAGE_HOSTS.has(src.host) && underPath(src.path, '/embed'),
 };

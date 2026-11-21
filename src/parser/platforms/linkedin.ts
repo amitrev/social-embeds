@@ -2,6 +2,7 @@ import {
   type Options,
   type PlatformParser,
   sizeOf,
+  underPath,
   withSize,
 } from '../platform';
 import type { ParsedEmbed } from '../types';
@@ -10,6 +11,7 @@ import { coerce, parseUrl } from '../url';
 // Activity URNs embed the same post as share URNs (docs/decisions.md D53).
 
 const HOST = /^(?:www\.|[a-z]{2}\.)?linkedin\.com$/;
+const FRAME_HOST = 'www.linkedin.com';
 const URN = '(activity|share|ugcPost):(\\d{19})';
 const UPDATE_PATH = new RegExp(`^(?:/embed)?/feed/update/urn:li:${URN}/?$`);
 const POSTS_PATH = new RegExp(
@@ -36,7 +38,7 @@ export const linkedin: PlatformParser = {
   parse(root) {
     if (root.tag !== 'iframe') return null;
     const src = parseUrl(root.attrs.get('src') ?? '');
-    if (src?.host !== 'www.linkedin.com') return null;
+    if (src?.host !== FRAME_HOST) return null;
     const [, type, id] = EMBED_PATH.exec(src.path) ?? [];
     if (type === undefined || id === undefined) return null;
     const options: Options = Object.fromEntries(
@@ -51,4 +53,5 @@ export const linkedin: PlatformParser = {
     const [, type, id] = UPDATE_PATH.exec(path) ?? POSTS_PATH.exec(path) ?? [];
     return type === undefined || id === undefined ? null : post(type, id);
   },
+  ownsFrame: (src) => src.host === FRAME_HOST && underPath(src.path, '/embed'),
 };

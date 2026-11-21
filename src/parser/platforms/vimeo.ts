@@ -26,6 +26,7 @@ const SCRIPT = /^(?:https?:)?\/\/player\.vimeo\.com\/api\/player\.js$/;
 // Vimeo adds these to its own code; they choose nothing about the video.
 const DROPPED = new Set(['h', 'app_id', 'player_id']);
 const START = /^t=(\d+(?:\.\d+)?|(?:\d+h)?(?:\d+m)?(?:\d+s)?)$/;
+const PLAYER_HOST = 'player.vimeo.com';
 
 function video(
   id: string,
@@ -46,7 +47,7 @@ function start(url: ParsedUrl): Options {
 }
 
 function fromPlayer(url: ParsedUrl | null): ParsedEmbed | null {
-  if (url?.host !== 'player.vimeo.com') return null;
+  if (url?.host !== PLAYER_HOST) return null;
   const [, id] = PLAYER_PATH.exec(url.path) ?? [];
   if (id === undefined) return null;
   const hash = url.query.get('h');
@@ -79,4 +80,5 @@ export const vimeo: PlatformParser = {
     }
     return null;
   },
+  ownsFrame: (src) => src.host === PLAYER_HOST,
 };

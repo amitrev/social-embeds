@@ -2,6 +2,7 @@ import {
   type PlatformParser,
   type Options,
   sizeOf,
+  underPath,
   withSize,
 } from '../platform';
 import type { ParsedEmbed } from '../types';
@@ -106,4 +107,7 @@ export const youtube: PlatformParser = {
       options: urlOptions(url, nocookie),
     };
   },
+  ownsFrame: (src) =>
+    NOCOOKIE_HOSTS.has(src.host) ||
+    (YOUTUBE_HOSTS.has(src.host) && underPath(src.path, '/embed')),
 };
