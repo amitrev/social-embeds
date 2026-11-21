@@ -1,4 +1,4 @@
-import { frameStyle } from '../core/layout';
+import { frameStyle, srcWithSize, watchWidth } from '../core/layout';
 import type { IframePlan } from '../core/plan';
 import { FRAME_TIMEOUT_MS, MAX_REPORTED_HEIGHT } from '../core/timing';
 import { applyStyle, type MountOptions, skeleton } from './dom';
@@ -33,7 +33,7 @@ export function mountIframe(
       : [
           plan.fallbackHtml === undefined
             ? skeleton()
-            : fallback(plan.fallbackHtml),
+            : fallback(plan.fallbackHtml, plan.fallbackImage === true),
         ];
   layer.append(...content);
   frame.append(layer);
@@ -79,11 +79,12 @@ export function mountIframe(
     }, FRAME_TIMEOUT_MS);
   };
 
-  const create = () => {
+  const address = (src: string) =>
+    plan.hostParam ? withHost(src, plan.hostParam) : src;
+
+  const create = (src: string) => {
     const element = document.createElement('iframe');
-    element.src = plan.hostParam
-      ? withHost(plan.src, plan.hostParam)
-      : plan.src;
+    element.src = address(src);
     element.title = plan.title;
     element.setAttribute('allow', plan.allow);
     if (plan.allowFullscreen !== false)
@@ -106,13 +107,27 @@ export function mountIframe(
     if (messageHeight) window.addEventListener('message', listen);
   };
 
+  const start = () => {
+    if (!plan.sizeInSrc) {
+      create(plan.src);
+      return;
+    }
+    cancels.push(
+      watchWidth(frame, (width) => {
+        const src = srcWithSize(plan, width);
+        if (iframe) iframe.src = address(src);
+        else create(src);
+      }),
+    );
+  };
+
   if (eager) {
-    create();
+    start();
     cancels.push(whenNear(frame, false, startTimer));
   } else {
     cancels.push(
       whenNear(frame, false, () => {
-        create();
+        start();
         startTimer();
       }),
     );
@@ -126,8 +141,9 @@ export function mountIframe(
   };
 }
 
-function fallback(html: string): HTMLElement {
-  const quote = document.createElement('blockquote');
-  quote.innerHTML = html;
-  return quote;
+function fallback(html: string, image: boolean): HTMLElement {
+  const element = document.createElement(image ? 'div' : 'blockquote');
+  if (image) element.style.height = '100%';
+  element.innerHTML = html;
+  return element;
 }

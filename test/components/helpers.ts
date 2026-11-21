@@ -47,3 +47,53 @@ export function lastObserver(): FakeIntersectionObserver {
   if (!observer) throw new Error('no IntersectionObserver was created');
   return observer;
 }
+
+export class FakeResizeObserver {
+  static instances: FakeResizeObserver[] = [];
+  /** Reported at once on `observe`, as browsers report a laid-out element's first size. */
+  static initialWidth: number | undefined;
+  readonly targets: Element[] = [];
+
+  constructor(private readonly callback: ResizeObserverCallback) {
+    FakeResizeObserver.instances.push(this);
+  }
+
+  observe(target: Element) {
+    this.targets.push(target);
+    const width = FakeResizeObserver.initialWidth;
+    if (width !== undefined) this.report(width);
+  }
+
+  unobserve() {}
+
+  disconnect() {
+    this.targets.length = 0;
+  }
+
+  resize(width: number) {
+    act(() => {
+      this.report(width);
+    });
+  }
+
+  private report(width: number) {
+    if (this.targets.length === 0) return;
+    const entries = this.targets.map(
+      (target) =>
+        ({ target, contentRect: { width } }) as unknown as ResizeObserverEntry,
+    );
+    this.callback(entries, this);
+  }
+}
+
+export function installResizeObserver(initialWidth?: number) {
+  FakeResizeObserver.instances = [];
+  FakeResizeObserver.initialWidth = initialWidth;
+  vi.stubGlobal('ResizeObserver', FakeResizeObserver);
+}
+
+export function lastResizeObserver(): FakeResizeObserver {
+  const observer = FakeResizeObserver.instances.at(-1);
+  if (!observer) throw new Error('no ResizeObserver was created');
+  return observer;
+}

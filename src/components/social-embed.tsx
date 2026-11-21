@@ -1,14 +1,15 @@
 import { type ReactNode, useMemo } from 'react';
-import { matchUrl, parseEmbed, parseIframe, type ParsedEmbed } from '../parser';
-import { planEmbed } from '../core/plan-embed';
+import { matchUrl, parseEmbed, parseIframe } from '../parser';
 import { sourceError } from '../core/resolve';
 import { AppleMusicEmbed, ApplePodcastsEmbed } from './apple-embed';
 import { BlueskyEmbed, type BlueskyOptions } from './bluesky-embed';
 import { DailymotionEmbed, type DailymotionOptions } from './dailymotion-embed';
 import { FacebookEmbed, type FacebookOptions } from './facebook-embed';
+import { FlickrEmbed, type FlickrOptions } from './flickr-embed';
 import { GenericIframeEmbed } from './generic-iframe-embed';
 import { GiphyEmbed } from './giphy-embed';
 import { useReportError } from './hooks';
+import { ImgurEmbed, type ImgurOptions } from './imgur-embed';
 import { InstagramEmbed, type InstagramOptions } from './instagram-embed';
 import { KickEmbed, type KickOptions } from './kick-embed';
 import { LinkedInEmbed, type LinkedInOptions } from './linkedin-embed';
@@ -18,12 +19,14 @@ import type { FrameProps } from './shared';
 import { SnapchatEmbed } from './snapchat-embed';
 import { SoundCloudEmbed, type SoundCloudOptions } from './soundcloud-embed';
 import { SpotifyEmbed } from './spotify-embed';
+import { StravaEmbed, type StravaOptions } from './strava-embed';
 import { StreamableEmbed, type StreamableOptions } from './streamable-embed';
 import { RumbleEmbed } from './rumble-embed';
 import { TenorEmbed } from './tenor-embed';
 import { TelegramEmbed, type TelegramOptions } from './telegram-embed';
 import { ThreadsEmbed, type ThreadsOptions } from './threads-embed';
 import { TikTokEmbed, type TikTokOptions } from './tiktok-embed';
+import { TruthSocialEmbed } from './truthsocial-embed';
 import { TumblrEmbed } from './tumblr-embed';
 import { TwitchEmbed, type TwitchOptions } from './twitch-embed';
 import { VimeoEmbed, type VimeoOptions } from './vimeo-embed';
@@ -53,7 +56,10 @@ type PlatformOption =
   | keyof BlueskyOptions
   | keyof SoundCloudOptions
   | keyof KickOptions
-  | keyof StreamableOptions;
+  | keyof StreamableOptions
+  | keyof ImgurOptions
+  | keyof StravaOptions
+  | keyof FlickrOptions;
 
 export type SocialEmbedProps = SocialEmbedSource &
   Omit<FrameProps, PlatformOption> & {
@@ -210,23 +216,15 @@ export function SocialEmbed(props: SocialEmbedProps) {
       return (
         <RumbleEmbed {...shared} {...frame} onError={onError} embed={embed} />
       );
-    // Placeholders until the components of Tasks 7 and 8 replace them.
     case 'truthsocial':
+      return <TruthSocialEmbed {...shared} onError={onError} embed={embed} />;
     case 'imgur':
+      return <ImgurEmbed {...shared} onError={onError} embed={embed} />;
     case 'strava':
+      return <StravaEmbed {...shared} onError={onError} embed={embed} />;
     case 'flickr':
-      return <UnplannedEmbed embed={embed} onError={onError} />;
+      return (
+        <FlickrEmbed {...shared} {...frame} onError={onError} embed={embed} />
+      );
   }
-}
-
-function UnplannedEmbed(props: {
-  embed: ParsedEmbed;
-  onError: SocialEmbedProps['onError'];
-}) {
-  const plan = planEmbed(props.embed);
-  useReportError(
-    plan.kind === 'error' ? plan.message : undefined,
-    props.onError,
-  );
-  return null;
 }

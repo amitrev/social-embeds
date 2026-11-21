@@ -4,7 +4,7 @@ import { URLS } from '../../playground/samples';
 import { SocialEmbed } from '../../src';
 import '../../src/element';
 import { type Platform, parseEmbed, parseIframe } from '../../src/parser';
-import { installObserver } from '../components/helpers';
+import { installObserver, installResizeObserver } from '../components/helpers';
 
 vi.mock('../../src/loader/platform-scripts', () => ({
   FACEBOOK_SDK_VERSION: 'v26.0',
@@ -88,6 +88,7 @@ function placeholderKind(layer: Element | null | undefined): string {
   if (skeleton instanceof HTMLElement)
     return `skeleton:${skeleton.style.minHeight}`;
   if (layer?.querySelector('blockquote')) return 'blockquote';
+  if (layer?.querySelector('a > img')) return 'image';
   return 'none';
 }
 
@@ -153,6 +154,8 @@ async function viaElement(source: { html: string } | { url: string }) {
 
 beforeEach(() => {
   installObserver();
+  // Frames with their size in the src wait for the box's width (Flickr).
+  installResizeObserver(640);
 });
 
 afterEach(() => {
@@ -206,7 +209,7 @@ function check(side: Rendered): void {
     expect(side.iframe?.src).toBeTruthy();
     expect(side.iframe?.title).toBeTruthy();
     expect(side.iframe?.allow).not.toBeNull();
-    expect(side.placeholder).toMatch(/^(skeleton:|blockquote)/);
+    expect(side.placeholder).toMatch(/^(skeleton:|blockquote|image)/);
   } else if (side.kind === 'script') {
     expect(side.container).toBeTruthy();
     if (side.placeholder === 'none')
@@ -246,24 +249,10 @@ describe('<social-embed> and <SocialEmbed>', () => {
     expect([...platforms].sort()).toEqual(
       [...Object.keys(PLATFORMS), 'generic'].sort(),
     );
-    expect(seen.iframe).toBe(79);
+    expect(seen.iframe).toBe(92);
     expect(seen.script).toBe(23);
     expect(seen.error).toEqual([
       '../fixtures/dailymotion/oembed.html',
-      // Placeholder errors until the remaining wave 5 platforms render.
-      '../fixtures/flickr/embed-dialog-album.html',
-      '../fixtures/flickr/embed-dialog-header-footer.html',
-      '../fixtures/flickr/embed-dialog-slideshow.html',
-      '../fixtures/flickr/embed-dialog.html',
-      '../fixtures/flickr/oembed-album.html',
-      '../fixtures/flickr/oembed.html',
-      '../fixtures/imgur/embed-dialog-album-hide-title.html',
-      '../fixtures/imgur/embed-dialog-album.html',
-      '../fixtures/imgur/oembed-album.html',
-      '../fixtures/imgur/oembed-image.html',
-      '../fixtures/strava/route-derived.html',
-      '../fixtures/truthsocial/embed-dialog-video.html',
-      '../fixtures/truthsocial/oembed-text.html',
       'URL dailymotion Video, no Player ID: reports an error',
       'URL bluesky Post, by handle: reports a lookup error',
     ]);

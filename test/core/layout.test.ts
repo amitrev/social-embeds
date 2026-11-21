@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { IframePlan } from '../../src/core/plan';
-import { frameStyle } from '../../src/core/layout';
+import { frameStyle, srcWithSize } from '../../src/core/layout';
 
 const plan = (extra: Partial<IframePlan> = {}): IframePlan => ({
   kind: 'iframe',
@@ -102,5 +102,29 @@ describe('frameStyle', () => {
     expect(
       frameStyle(plan({ maxWidth: 325 }), { maxWidth: 400 }),
     ).toMatchObject({ maxWidth: 400 });
+  });
+});
+
+describe('srcWithSize', () => {
+  it('puts the width and the height from the ratio first in the query', () => {
+    const flickr = plan({
+      src: 'https://embedr.flickr.com/photos/1?header=true',
+      ratio: { width: 4, height: 3 },
+    });
+    expect(srcWithSize(flickr, 600)).toBe(
+      'https://embedr.flickr.com/photos/1?width=600&height=450&header=true',
+    );
+  });
+
+  it('starts the query when the src has none', () => {
+    expect(srcWithSize(plan({ ratio: { width: 4, height: 3 } }), 400)).toBe(
+      'https://example.com/embed?width=400&height=300',
+    );
+  });
+
+  it('takes the ratio from the input size and rounds the height', () => {
+    expect(
+      srcWithSize(plan({ size: { width: 4096, height: 2301 } }), 375),
+    ).toBe('https://example.com/embed?width=375&height=211');
   });
 });

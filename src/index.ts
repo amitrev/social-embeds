@@ -101,6 +101,25 @@ export {
 } from './components/streamable-embed';
 export { RumbleEmbed, type RumbleEmbedProps } from './components/rumble-embed';
 export {
+  TruthSocialEmbed,
+  type TruthSocialEmbedProps,
+} from './components/truthsocial-embed';
+export {
+  ImgurEmbed,
+  type ImgurEmbedProps,
+  type ImgurOptions,
+} from './components/imgur-embed';
+export {
+  StravaEmbed,
+  type StravaEmbedProps,
+  type StravaOptions,
+} from './components/strava-embed';
+export {
+  FlickrEmbed,
+  type FlickrEmbedProps,
+  type FlickrOptions,
+} from './components/flickr-embed';
+export {
   GenericIframeEmbed,
   type GenericIframeEmbedProps,
 } from './components/generic-iframe-embed';

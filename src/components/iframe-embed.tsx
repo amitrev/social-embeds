@@ -1,12 +1,13 @@
 import {
   type CSSProperties,
+  type ReactNode,
   useCallback,
   useEffect,
   useRef,
   useState,
 } from 'react';
 import { FRAME_TIMEOUT_MS, MAX_REPORTED_HEIGHT } from '../core/timing';
-import { frameStyle } from '../core/layout';
+import { frameStyle, srcWithSize, watchWidth } from '../core/layout';
 import type { IframePlan, MessageHeight } from '../core/plan';
 import { useNearViewport } from './hooks';
 import type { FrameProps } from './shared';
@@ -31,15 +32,32 @@ type IframeEmbedProps = FrameProps & {
   /** Query parameter that gets the page's host when the iframe is created (Twitch's `parent`). */
   hostParam?: string;
   borderRadius?: number;
+  /** `src` gets the box's pixel size, rebuilt when the box's width changes (Flickr). */
+  sizeInSrc?: boolean;
 };
 
 /** The plan's fields as `IframeEmbed` props. */
 export function planProps(
   plan: IframePlan,
-): Omit<IframePlan, 'kind' | 'fallbackHtml'> {
+): Omit<IframePlan, 'kind' | 'fallbackHtml' | 'fallbackImage'> {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { kind, fallbackHtml, ...props } = plan;
+  const { kind, fallbackHtml, fallbackImage, ...props } = plan;
   return props;
+}
+
+/** The plan's verified fallback content as the placeholder, if it has any. */
+export function fallbackPlaceholder(plan: IframePlan): ReactNode {
+  const { fallbackHtml, fallbackImage } = plan;
+  if (fallbackHtml === undefined) return undefined;
+  // Verified by resolveEmbed: only what the parser's whitelist rebuilds.
+  return fallbackImage ? (
+    <div
+      style={{ height: '100%' }}
+      dangerouslySetInnerHTML={{ __html: fallbackHtml }}
+    />
+  ) : (
+    <blockquote dangerouslySetInnerHTML={{ __html: fallbackHtml }} />
+  );
 }
 
 const FILL: CSSProperties = { position: 'absolute', inset: 0 };
@@ -60,6 +78,7 @@ export function IframeEmbed({
   startHeight,
   hostParam,
   borderRadius,
+  sizeInSrc,
   width,
   maxWidth,
   height,
@@ -78,6 +97,7 @@ export function IframeEmbed({
   const inView = useNearViewport(frame, !lazy);
   const [loaded, setLoaded] = useState(false);
   const [reportedHeight, setReportedHeight] = useState<number>();
+  const [boxWidth, setBoxWidth] = useState<number>();
   const reported = useRef(false);
   const callbacks = useRef({ onLoad, onError });
   useEffect(() => {
@@ -120,6 +140,12 @@ export function IframeEmbed({
   }, [near, messageHeight, report]);
 
   useEffect(() => {
+    const element = frame.current;
+    if (!near || !sizeInSrc || !element) return;
+    return watchWidth(element, setBoxWidth);
+  }, [near, sizeInSrc]);
+
+  useEffect(() => {
     if (!near || !inView) return;
     const failure = messageHeight
       ? 'did not report its height'
@@ -154,14 +180,19 @@ export function IframeEmbed({
     ),
     ...style,
   };
+  const frameSrc = !sizeInSrc
+    ? src
+    : boxWidth === undefined
+      ? undefined
+      : srcWithSize({ src, ratio, size }, boxWidth);
 
   return (
     <div {...rest} style={wrapper}>
       <div ref={frame} style={FILL}>
-        {near && (
+        {near && frameSrc !== undefined && (
           <iframe
             ref={iframe}
-            src={hostParam ? withHost(src, hostParam) : src}
+            src={hostParam ? withHost(frameSrc, hostParam) : frameSrc}
             title={title}
             allow={allow}
             allowFullScreen={allowFullscreen}
