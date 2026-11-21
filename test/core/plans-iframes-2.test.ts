@@ -801,6 +801,12 @@ describe('truthSocialPlan', () => {
     expect(read({ type: 'other', height: 530 })).toBeUndefined();
   });
 
+  it('reads no height from a video post that reports none', () => {
+    const read = readerOf(truthSocialPlan(fromCode(truthVideo, 'truthsocial')));
+    expect(read({ type: 'setHeight', height: 0 })).toBeUndefined();
+    expect(read({ type: 'setHeight', height: -1 })).toBeUndefined();
+  });
+
   it('errors on a URL that is not the canonical post URL', () => {
     const embed = fromCode(truthText, 'truthsocial');
     expect(

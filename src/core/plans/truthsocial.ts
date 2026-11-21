@@ -21,7 +21,10 @@ const TRUTH_SOCIAL_VIDEO_HEIGHT: MessageHeight = {
   origin: 'https://truthsocial.com',
   read(data) {
     const height = setHeight(data);
-    return height === undefined ? undefined : height + VIDEO_EXTRA;
+    // The frame posts 0 before it is painted; with the extra it would pass as a height.
+    return height === undefined || height <= 0
+      ? undefined
+      : height + VIDEO_EXTRA;
   },
 };
 
