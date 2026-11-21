@@ -203,7 +203,38 @@ function check(side: Rendered): void {
 
 describe('<social-embed> and <SocialEmbed>', () => {
   it('skips only the fixtures that are not embed code', () => {
-    expect([...skipped].sort()).toEqual([]);
+    expect([...skipped].sort()).toEqual([
+      'flickr/embed-dialog-album.html',
+      'flickr/embed-dialog-header-footer.html',
+      'flickr/embed-dialog-slideshow.html',
+      'flickr/embed-dialog.html',
+      'flickr/oembed-album.html',
+      'flickr/oembed.html',
+      'generic/bandcamp-embed.html',
+      'generic/codepen-oembed.html',
+      'generic/datawrapper-oembed.html',
+      'generic/deezer-oembed.html',
+      'generic/google-maps-embed.html',
+      'generic/loom-responsive.html',
+      'generic/mixcloud-oembed.html',
+      'generic/ted-oembed.html',
+      'imgur/embed-dialog-album-hide-title.html',
+      'imgur/embed-dialog-album.html',
+      'imgur/oembed-album.html',
+      'imgur/oembed-image.html',
+      'rumble/embed-dialog-iframe.html',
+      'rumble/embed-dialog-js.html',
+      'rumble/oembed.html',
+      'strava/route-derived.html',
+      'streamable/api-embed-code.html',
+      'streamable/embed-docs.html',
+      'streamable/oembed.html',
+      'streamable/player-copy-embed.html',
+      'tenor/embed-dialog.html',
+      'tenor/oembed.html',
+      'truthsocial/embed-dialog-video.html',
+      'truthsocial/oembed-text.html',
+    ]);
     expect(parsed).toHaveLength(53);
   });
 

@@ -1018,6 +1018,150 @@ Iframe embeds that do not report their height (all but Telegram, Reddit, Bluesky
 
 These frames now get the D81 timeout, started the same way: 15 s from when the frame comes within 200 px of the viewport, also with `lazy={false}`. Without a `load` by then, the placeholder goes and `onError` (the element's `error` event) reports `social-embeds: {title} did not load`. A `load` that arrives later still calls `onLoad`, as a late height does (D78). With `lazy` off, the near-viewport observer for the timeout is now created for every iframe embed. The constant is renamed `FRAME_TIMEOUT_MS`.
 
+## Wave 5 research (Milestone 1, 2026-11-21)
+
+The VERIFY items of [wave-5-brief.md](./wave-5-brief.md). Frames were probed in Chrome on a static page on `localhost:4173` with a `message` listener, as in waves 2–4. Embed and Share dialog code was read from each platform's own page, logged out; cookie banners were declined. Platform scripts were read as served on 2026-11-21.
+
+### D92. Generic iframe fixtures: what each code carries
+
+One real code per source in `test/fixtures/generic/`, checked against the rules of brief §3:
+
+| Fixture              | `src` host                    | Size by §3                                          | Kept                                                                    | Dropped                                                                            |
+| -------------------- | ----------------------------- | --------------------------------------------------- | ----------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| `google-maps-embed`  | `www.google.com/maps/embed`   | 600×450, ratio box                                  | `allowfullscreen=""`, `referrerpolicy`                                  | `style`, `loading`                                                                 |
+| `datawrapper-oembed` | `datawrapper.dwcdn.net`       | full width at 200 (no `width`)                      | `title`, `scrolling="no"`                                               | `aria-label`, `id`, `frameborder`, `style`, `data-external`, the resize `<script>` |
+| `deezer-oembed`      | `widget.deezer.com`           | 420×420                                             | `allowfullscreen="true"`, `allow="encrypted-media"`                     | `id`, `allowtransparency`                                                          |
+| `mixcloud-oembed`    | `www.mixcloud.com/widget`     | full width at 120 (`width="100%"`)                  | `allow`: `encrypted-media`, `fullscreen`, `autoplay`, `web-share`       | `allow`: `idle-detection`, `speaker-selection`; `frameborder`                      |
+| `loom-responsive`    | `www.loom.com/embed`          | wrapper `padding-bottom: 56.074766355140184%`       | `allowfullscreen`                                                       | `frameborder`, `webkitallowfullscreen`, `mozallowfullscreen`, `style`              |
+| `ted-oembed`         | `embed.ted.com`               | 560×315                                             | `title`, all four `allow` features, `referrerpolicy`, `allowfullscreen` | `frameborder`, `loading`                                                           |
+| `codepen-oembed`     | `codepen.io/…/embed/preview`  | full width at 300 (no `width`; `style` has no `px`) | `title`, `scrolling="no"`, `allowfullscreen="true"`                     | `id`, `frameborder`, `allowtransparency`, `allowpaymentrequest`, `class`, `style`  |
+| `bandcamp-embed`     | `bandcamp.com/EmbeddedPlayer` | 350×470 from `style` `px`                           | —                                                                       | `style`, `seamless`, the link inside the iframe                                    |
+
+None is rejected by the §3 rules, provided the generic parser does the following (Task 2):
+
+- **Children of the iframe:** Bandcamp's iframe holds an `<a>` (fallback text for browsers without frames). The package's HTML parser reads it as a child element; it must be accepted and dropped.
+- **No `title`:** Google Maps, Deezer, Mixcloud, Loom and Bandcamp get `Embedded content`.
+- **An empty `allow` entry:** Mixcloud's list ends with `;`.
+- **Loom's wrapper** is `position: relative; padding-bottom: {n}%; height: 0;` with a long fraction. None of the Vimeo, Dailymotion or Giphy wrapper patterns matches it.
+- **A raw `&` in `src`** (Deezer, Loom), and `&amp;` (Mixcloud): both reach the parser as `&` and must be escaped again when the iframe is rebuilt.
+- **`width: 0` in Datawrapper's `style`:** it has no `px` and `pixels()` rejects `0`, so the `height` attribute alone decides: full width at 200.
+- **Text after the iframe:** Mixcloud's code ends with a newline; Datawrapper's with a `<script>`. Both are dropped.
+
+Height messages, for the record (§6 leaves them for later): the Datawrapper frame posts `{"datawrapper-height":{"9kGOy":216}}` about every second from `https://datawrapper.dwcdn.net`, beside `{"sentinel":"amp","type":"embed-size","height":216}`. Its code says `height="200"`, so without its script the chart is clipped by 16 px at 600 and at 320 px wide.
+
+### D93. Truth Social: the embed iframe posts its height without being asked
+
+- **Embed code** (`truthsocial/embed-dialog-video.html`, post ⋯ → Embed Truth): `<iframe src="https://truthsocial.com/@{user}/{id}/embed" class="truthsocial-embed truthsocial-video" style="max-width: 100%; border: 0" width="600" allowfullscreen="allowfullscreen"></iframe><script src="https://truthsocial.com/embed.js" async="async"></script>`. `truthsocial.com/api/oembed?url=…` returns the same code. Text and image posts lack the class `truthsocial-video` (`oembed-text.html`).
+- **`embed.js`** gives each `iframe.truthsocial-embed` a random `id`. It sets `scrolling="no"`, an 8 px radius and a `1px solid rgb(237 237 239)` border, and posts `{type: 'setHeight', id}` to the frame with `'*'` on `load`. On a `setHeight` message whose `id` it knows and whose `source` is that frame, it sets the `height`, plus 165 px for `truthsocial-video`.
+- **The frame does not wait to be asked.** Its bundle stores the `id` of the last `setHeight` message it receives, from any origin. It posts `{type: 'setHeight', id, height}` to its parent with `'*'` whenever the post's state changes (loading, then loaded), with `height` its `scrollHeight`. Without an ask it posts the same object with `id` undefined. A second ask after load gets no answer until the content changes. Messages come from `https://truthsocial.com`.
+- **Heights, 600 px wide:** a text post reported 216, then 221, and fits; a two-image post 506 and fits. **Video posts report their height before the video is sized:** 530 for a page 1,246 px tall (a vertical 480×854 video shown at 568×1010), 586 for another vertical one. Truth Social's own script gives 695 and cuts the video off as well.
+- **Paths:** `/@{user}/{id}/embed` has no `frame-ancestors` and loads in a frame; the app then rewrites the address to `/embed/{id}` without a new load. `truthsocial.com/embed/{id}` itself is served with `frame-ancestors 'none'` and cannot be framed. The frame reads only the post id from the path, never the user name.
+- **URLs:** the web app writes `truthsocial.com/@{user}/posts/{id}` (`www.` redirects 301 to it); the API's `url` is `truthsocial.com/@{user}/{id}`, the only form oEmbed accepts. Quote posts link `truthsocial.com/users/{user}/statuses/{id}`. Ids are 18 digits, beyond 2⁵³: strings only.
+- **Parser:** canonical `https://truthsocial.com/@{user}/posts/{id}`, `id` the post number as a string, `kind: 'post'`, `variant: 'iframe'` (D100). `src` template `https://truthsocial.com/@{user}/{id}/embed`; `maxWidth` 600, from the code's `width`; height from the frame. Options: none; the code's `class`, `style` and `allowfullscreen` are dropped. Whether the code is a video post (`truthsocial-video`) is not an option, but the video height needs a ruling (D100).
+- **Frames the parser accepts (`ownsFrame`):** `truthsocial.com` with path prefix `/@`.
+- **A missing post** shows "Not found — This resource could not be found — Go back" and posts a height equal to the frame's own (300 for a 300 px frame); `load` fires.
+- **Cloudflare:** not verified for real visitors. Nine frame loads in Chrome showed no challenge, and curl with a browser user agent got 200 for `/@…/embed` and `embed.js`. Cloudflare answered 403 to curl for `/api/v1/…`, and the logged-out web app got 429 after about six paginated API calls.
+- **Sample:** `@truthsocial`'s pinned "Meet the new Watch tab." (`117529982042129746`), a product feature. The account's 2026 text posts are about the company's finances, its merger or politics; the fixture's text post is its Independence Day greeting (`116862065232992052`), the only text-only post found that is none of these.
+
+### D94. Imgur: blockquote code, a frame that posts its height once
+
+- **Embed dialog** (`imgur/embed-dialog-album.html`, post ⋯ → Embed): `<blockquote class="imgur-embed-pub" lang="en" data-id="a/{id}"  ><a href="//imgur.com/a/{id}">{title}</a></blockquote><script async src="//s.imgur.com/min/embed.js" charset="utf-8"></script>`. The link is protocol-relative, the title is escaped (`It&#39;s`), and two spaces precede `>`. "Hide Title" adds `data-context="false"` (`embed-dialog-album-hide-title.html`); it hides the title and description, not shows them.
+- **oEmbed** (`oembed-album.html`, `oembed-image.html`): `href="https://imgur.com/a/{id}"`, the title unescaped; an image is `data-id="{id}"` with the text "View post on imgur.com". oEmbed returns 404 for gallery URLs with a slug and for `i.imgur.com` file URLs.
+- **`embed.js`** loads `imgur.com/min/embed-controller.js`. That script replaces each `blockquote.imgur-embed-pub` with an iframe `//imgur.com/{data-id}/embed?pub=true&ref={page URL}[&context=false][&analytics=false]&w={width}`, using the protocol of its own `src`. The width is the parent's, at most 540 and at least 400 (300 on touch screens); the initial height is 500. It listens, with no origin check, for JSON strings with `message: 'resize_imgur'` (sets the height) or `'404_imgur_embed'` (sets 200).
+- **The frame** posts one JSON string, at `load`, unasked, from `https://imgur.com`: `{"message":"resize_imgur","href":"{frame URL}","height":415,"width":360,"context":true}`. It lays itself out to its own width; `w` changes nothing (415 at 360 px with `w=540`, `w=360` or none) and no message follows a resize. Album: 415 at 400 and 360 px, 485 at 540 px; image 363 at 400 px; `context=false` 315 at 400 px. **Without `pub=true`** it shows Imgur's old dark gallery viewer and posts nothing.
+- **Gallery and album ids are the same:** `imgur.com/gallery/{slug}-04b1CmA` is `data-id="a/04b1CmA"`. `imgur.com/gallery/{id}/embed` redirects (301) to the home page, which refuses framing, so a gallery post is framed as `a/{id}`. Not checked: an old gallery post of a single image (`gallery/{imageId}`), which may need `{id}` instead.
+- **Parser:** canonical `https://imgur.com/a/{id}` for albums and gallery posts, `https://imgur.com/{id}` for images; `id` the `data-id` (`a/04b1CmA`, `yOBT04V`); `kind: 'post'`, `variant: 'iframe'` (D100). `src` template `https://imgur.com/{data-id}/embed?pub=true`; 500 px until the message; `maxWidth` 540. Kept options: `context` (`false`) from `data-context`, `analytics` (`false`) from `data-analytics`. Dropped: `ref`, `w`, `lang`.
+- **Fallback link:** the dialog's `href` is protocol-relative. The fallback whitelist keeps only `http(s)` URLs, so the link must be read as `https:` or it loses its `href`.
+- **Frames the parser accepts (`ownsFrame`):** none; Imgur's code has no iframe.
+- **A missing post** (`a/zzzzzzZ`) answers 404 with `X-Frame-Options: DENY`: the frame stays blank, `load` fires and no message arrives, so the D81 height timeout reports it.
+- **Mature posts:** not verified. No neutral mature post exists to test with (D80).
+- **Sample:** `@imgur`'s "It's Imgur's 16th Birthday Week! Share Memories and Reminisce." (`04b1CmA`) and its first image `yOBT04V`.
+
+### D95. Tenor: the iframe works without `embed.js`
+
+- **Embed dialog** (`tenor/embed-dialog.html`, the `</>` button, which also copies the code): `<div class="tenor-gif-embed" data-postid="{id}" data-share-method="host" data-aspect-ratio="1" data-width="100%"><a href="https://tenor.com/view/{slug}-gif-{id}">{title}</a>from <a href="https://tenor.com/search/{term}-stickers">{term} Stickers</a></div> <script type="text/javascript" async src="https://tenor.com/embed.js"></script>`. The second link ("from …") is part of the fallback content.
+- **oEmbed** (`tenor/oembed.html`): `<iframe src="https://tenor.com/embed/{id}" width="600" height="400" frameborder="0"></iframe>`, 600×400 for a square sticker: oEmbed's size is not the GIF's.
+- **`embed.js`** builds `https://tenor.com/embed/{data-postid}`, adding `?canonicalurl={page}` for `data-share-method="host"`. With `data-height` it uses `data-width`×`data-height`; otherwise a wrapper with `padding-top: (1 / ratio) × 100%`, the ratio `data-aspect-ratio` or 1.33.
+- **The frame renders on its own:** `tenor.com/embed/{id}` without `embed.js` showed the sticker. It posts only player.js's `ready` event, from `https://tenor.com`, and sends no `frame-ancestors` or `X-Frame-Options`.
+- **Ids are up to 20 digits** (`12328062661350661133`), beyond 2⁵³: strings only.
+- **URLs:** `tenor.com/view/{slug}-gif-{id}`, also for stickers, and `tenor.com/{locale}/view/…` (`en-GB`). `tenor.com/view/{id}` redirects (301) to the full URL.
+- **Parser:** canonical `https://tenor.com/view/{id}`, `kind: 'video'`, `variant: 'iframe'`, `src` `https://tenor.com/embed/{id}`. Ratio from `data-aspect-ratio`, else `width`/`height`. **Default for a URL: 1.33**, `embed.js`'s own default, instead of the brief's 1:1. `maxWidth`: none (the code's `data-width` is `100%`). Options: none kept; dropped `data-share-method`, `canonicalurl`, `data-width`.
+- **Frames the parser accepts (`ownsFrame`):** `tenor.com` with path prefix `/embed/`.
+- **A missing GIF** shows plain "404 Not Found"; `load` fires.
+- **Sample:** every item on Tenor's own account (tenor.com/official/tenor, first 25 checked) is a sticker. The fixture uses "Happy Cat Day" (`12328062661350661133`); stickers embed exactly as GIFs.
+
+### D96. Streamable: two player paths, four code shapes
+
+- **Codes seen:**
+  - `streamable/api-embed-code.html`, the `embed_code` of `api.streamable.com/videos/{id}`: a wrapper `width: 100%; height: 0px; position: relative; padding-bottom: 56.25%;` around `<iframe class="streamable-embed" src="https://streamable.com/o/{id}" frameborder="0" scrolling="no" style="…" allowfullscreen>`.
+  - `streamable/oembed.html`, `api.streamable.com/oembed.json`: the same iframe at `width="1280" height="720"`, no wrapper.
+  - `streamable/player-copy-embed.html`, the player's right-click → Copy embed code: `<iframe src="https://streamable.com/e/{id}" width="100%" height="100%" … style="…position:absolute…"></iframe></div>`. It closes a `div` it never opens. The package's HTML parser rejects any unmatched end tag, so this code does not parse.
+  - `streamable/embed-docs.html`, derived from the help center's "Editing the Embed Code": a wrapper `width: 100%; height: 0px; position: relative; padding-bottom: 56.250%;` around an `/e/{id}` iframe.
+- **Not seen:** the dashboard's Embed button ("Build Embed Code"), which needs the video's owner signed in. The code the brief expects (`allow="fullscreen;autoplay"`, wrapper `position:relative; width:100%; height:0px; padding-bottom:56.250%`) was in none of the sources.
+- **Both paths play:** `streamable.com/e/{id}` and `/o/{id}` (another control skin). `/e/` posts player.js's `ready` from `https://streamable.com`; neither posts a height or refuses framing.
+- **Player parameters** (help center): `loop=0`, `autoplay=1`/`0`, `nocontrols=1`, `hd=1`, `muted=1`. Not tested one by one.
+- **Parser:** canonical `https://streamable.com/{id}`, `id` the short code (6 lowercase letters or digits; the API docs show a 5-character one), `kind: 'video'`, `variant: 'iframe'`. `src` template `https://streamable.com/e/{id}` plus kept options. Ratio from the wrapper's padding, else `width`/`height`, else 16:9; `maxWidth`: none. Kept options: `loop`, `autoplay`, `nocontrols`, `hd`, `muted`. Dropped: everything else. The two wrapper styles above are the D14 exceptions.
+- **Frames the parser accepts (`ownsFrame`):** `streamable.com` with path prefixes `/e/` and `/o/`.
+- **A missing video** shows "Oops! We couldn't find your video." An expired one: not verified, as no expired id was known.
+- **Sample:** "chameleon" (`lttg48`), one of nine clips that Streamable's own home page plays; Streamable has no public account page. The others are a podcast, a donut, a fair, friends reacting, guitar, online gaming, fireworks and football.
+
+### D97. Strava: a placeholder, a frame that posts its height once
+
+- **Embed code:** Strava's dialogs need a signed-in account and were not seen. Public pages show `<div class="strava-embed-placeholder" data-embed-type="activity" data-embed-id="{id}" data-style="standard" data-from-embed="false"></div><script src="https://strava-embeds.com/embed.js"></script>`, and an older form with single quotes and no `data-style`. `strava/route-derived.html` is that form with a route.
+- **`embed.js`** (last modified 2026-11-05) replaces each `.strava-embed-placeholder` with an iframe `https://strava-embeds.com/{type}/{id}?{params}#ns={uuid}&hostOrigin=…&hostPath=…&hostTitle=…[&mapHash=…]`. Every data attribute but `embed-type`, `embed-id` and `map-hash` becomes a query parameter under its camel-case name (`style`, `fromEmbed`, `fullWidth`). The frame is 554 px wide (100% for a route with `fullWidth=true`), 250 px at least, at most 100%, and 650 px high. It listens, with no origin or source check, for arrays whose first item is the `ns`; `BROADCAST_IFRAME_HEIGHT` sets the height. On window focus it posts `[ns, 'BROADCAST_HOST_FOCUS', {}]`.
+- **The frame** posts `[ns, "BROADCAST_IFRAME_HEIGHT", height]` once, unasked, before `load`, from `https://strava-embeds.com`; `ns` is `null` without `#ns=`. No message follows a width change. Route: 571 at 554 px; 694 at 760 px with `style=minimal&fullWidth=true`.
+- **Types:** `activity` and `route` render; `segment` returns 404. The profile and club cards of Strava's support article are other widgets.
+- **Ids:** curated routes have 19 digits (`3247927232574435836`), so strings; small ids exist too (`route/1`).
+- **Parser:** canonical `https://www.strava.com/activities/{id}` and `https://www.strava.com/routes/{id}`; `id` the number as a string; `kind: 'post'`, `variant: 'iframe'` (D100). `src` template `https://strava-embeds.com/{type}/{id}?style={style}[&fullWidth=true]#ns={token}[&mapHash=…]`; 650 px until the message; `maxWidth` 554, none for a full-width route. Kept options: `style` (`standard`, `minimal`; both render), `fullWidth` (routes), `mapHash`. Dropped: `fromEmbed` (the frame renders the same without it) and anything else. `data-embed-type` and `data-embed-id` are content (D68).
+- **Frames the parser accepts (`ownsFrame`):** none; Strava's code has no iframe.
+- **A missing or private item** (`activity/1`, an unknown route id) shows "This content is unavailable." with "View on Strava" and "Error code: 9CF", 521 px high. A private item was not checked separately.
+- **Sample:** "Wonderland Trail" in Acadia National Park, a route Strava curates (its page reads "See Strava's Route"; logged out it asks to log in, but the embed renders). **No activity** from Strava's own account was found logged out, and no private person's activity was used, so the activity sample is open.
+
+### D98. Flickr: the script writes the frame itself; the frame URL works from an id
+
+- **Share → Embed** (`flickr/embed-dialog*.html`): `<a data-flickr-embed="true" href="https://www.flickr.com/photos/{user}/{id}/" title="{title}"><img src="https://live.staticflickr.com/{server}/{id}_{secret}_{size}.jpg" width="…" height="…" alt="{title}"/></a><script async src="//embedr.flickr.com/assets/client-code.js" charset="utf-8"></script>`. The default size is the largest (X-Large 4096 × 2301, with the secret of the large sizes); the list runs from 75 × 75 up. Header, Footer and Slideshow add `data-header="true"`, `data-footer="true"` and `data-context="true"`. An album links to `…/albums/{albumId}` and shows its cover.
+- **oEmbed** (`flickr/oembed.html`, `oembed-album.html`): the title gains "by Flickr, on Flickr", the script is `https:`, the image is the 1024 px `_b`, and `<img …>` is not self-closed. The album's oEmbed uses single quotes and the cover photo's own title as `alt`.
+- **The script does not create a framed URL.** `client-code.js` loads `embedr-loader.js`, which loads `widgets.flickr.com/embedr/embedr-{hash}.js`. For each `[data-flickr-embed="true"] img` wider than 150 px it fetches `https://embedr.flickr.com/photos/{id}?width={w}&height={h}&secret={secret}&{options}` (albums: `/photosets/{albumId}`) with the header `X-Embedr-Referrer: {page URL}`. It then `document.write`s the answer into an iframe that has no `src`. Flickr's HTML therefore runs in the host page's origin: in the probe, its messages came from `http://localhost:4173`. The frame took the image's pixel size (1024 × 575, `max-width: none`).
+- **Options** the script reads from data attributes: `header`, `footer`, `comment-count`, `fave-count`, `branding`, `truncate`, `letterbox`, `context`, `lang`, `sharing`, `vr`, `gp`.
+- **The frame URL works from the photo id alone,** with no user and no secret: `https://embedr.flickr.com/photos/55618331478?width=800&height=449` rendered in an iframe. It sends no `X-Frame-Options` or `frame-ancestors`. **`width` and `height` are required:** without them the image is `width="NaN"` and broken. They set the content's pixel size, so they must match the frame: a 400 × 225 frame with 800 × 449 showed its top-left quarter. A later resize of the frame does not reflow it. A ratio that differs from the photo's letterboxes in black (600 × 600). `header=true` overlays the photo, adding no height. `/photosets/{albumId}?width=…&height=…` renders the album as a slideshow.
+- **Messages:** `{name: 'loaded', data: '{photoId}'}` when the image loads; the album frame posted it about 25 times in 1.5 s. `update:resize` and `update:height` exist in the frame's code (on window resize, on opening the description) and were not seen. No height on load.
+- **`flic.kr/p/{code}`:** `2sJNueC` decodes to `55618331478` in the alphabet `123456789abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ`, and `flic.kr/p/2sJNueC` redirects (302) to `www.flickr.com/photo.gne?short=2sJNueC`.
+- **Parser:** canonical `https://www.flickr.com/photos/{user}/{id}/` and `https://www.flickr.com/photos/{user}/albums/{albumId}`; `id` the photo or album number; `kind: 'post'`; `variant` per the D100 ruling. For a frame, the `src` template is `https://embedr.flickr.com/photos/{id}?width={px}&height={px}`, or `/photosets/{albumId}?…` for an album, plus kept options. Ratio from the image's `width` and `height`; for a URL, 4:3, the size Flickr's oEmbed gives albums (800 × 600), with letterboxing for other photos. `maxWidth`: the image's `width`. Kept options: `header`, `footer`, `context`. Dropped: the secret, the size suffix, the other display options.
+- **Frames the parser accepts (`ownsFrame`):** none; Flickr's code has no iframe.
+- **A missing photo:** `embedr.flickr.com/photos/{id}` answers 404 with the text "Photo not found".
+- **Sample:** "Flickr for the Planet Feature - Rio Arrayanes, Patagonia Argentina" (`55618331478`), a landscape posted by Flickr's own account (a member's photo it features), and the album "Flickr Fundamentals and Flickr FAQs" (`72157716823987722`), Flickr's help videos and graphics.
+
+### D99. Rumble: page and embed ids differ; iframe only
+
+- **Embed dialog** (`rumble/embed-dialog-iframe.html`, video → Embed, logged out, "IFRAME"): `<iframe class="rumble" width="640" height="360" src="https://rumble.com/embed/{embedId}/?pub=4" frameborder="0" allowfullscreen></iframe>`. Logged out the dialog writes `pub=4`.
+- **The "JavaScript" option** (`rumble/embed-dialog-js.html`): an inline loader that adds `https://rumble.com/embedJS/u4…`, then `<div id="rumble_{embedId}"></div>` and `Rumble("play", {"video":"{embedId}","div":"rumble_{embedId}"})`. It has no iframe, so neither the Rumble parser (iframe only, brief §4.7) nor the generic path accepts it.
+- **oEmbed** (`rumble/oembed.html`): `<iframe src="https://rumble.com/embed/{embedId}/" width="3840" height="2160" frameborder="0" title="{title}" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>`, the video's own size.
+- **The ids differ:** the page `rumble.com/v15atp3-….html` embeds as `v12onr1`, and `rumble.com/embed/v15atp3/` shows "Video not found". The page's JSON-LD `embedUrl` holds the embed id. A URL therefore needs a lookup, as the brief says.
+- **The frame** plays with or without `pub`. It posts the string `get` and Google IMA messages, never a height.
+- **Player parameters:** none found. The dialog writes only `pub`, and Rumble's player docs (`player.rumble.com/developers`) answered HTTP 421.
+- **Parser:** canonical `https://rumble.com/embed/{embedId}/`; `id` the embed id (`v` and lowercase letters or digits); `kind: 'video'`, `variant: 'iframe'`. `src` template `https://rumble.com/embed/{embedId}/`, plus `?pub=` when given; ratio from `width`/`height`, else 16:9; `maxWidth`: none. Kept: `pub`, as given and never added. Dropped: everything else.
+- **Frames the parser accepts (`ownsFrame`):** `rumble.com` with path prefix `/embed/`.
+- **A missing video** shows "Video not found" (`v12onzz`).
+- **Sample:** "Rumble Basics: How to Upload a Video (iOS App)", a help video that Rumble's help center (rumble.support) links to, uploaded by the verified account `rumble.com/user/Mario`. Rumble's `c/Rumble` and `user/Rumble` have no videos, and `c/HowtoRumble` and `c/RumbleHelpVideos` listed none logged out.
+
+### D100. Script or frame: the mechanism per platform
+
+| Platform     | Mechanism                 | Frame URL                                                      | Height message (origin, data)                                                    | Ask first?              |
+| ------------ | ------------------------- | -------------------------------------------------------------- | -------------------------------------------------------------------------------- | ----------------------- |
+| Truth Social | `iframe`                  | `https://truthsocial.com/@{user}/{id}/embed`                   | `https://truthsocial.com`, the object `{type: 'setHeight', id, height}`          | no (D93)                |
+| Imgur        | `iframe`                  | `https://imgur.com/{a/}{id}/embed?pub=true[&context=false]`    | `https://imgur.com`, a JSON string with `message: 'resize_imgur'` and `height`   | no; once, at `load`     |
+| Strava       | `iframe`                  | `https://strava-embeds.com/{type}/{id}?style=…#ns={token}`     | `https://strava-embeds.com`, the array `[ns, 'BROADCAST_IFRAME_HEIGHT', height]` | no; once, before `load` |
+| Flickr       | ruling needed (see below) | `https://embedr.flickr.com/photos/{id}?width={px}&height={px}` | none on load; size from the image's ratio                                        | —                       |
+
+- **Truth Social, Imgur, Strava: the frame directly.** Each frame posts its height unasked from a fixed origin, so the existing message path (D55) checks origin and source and needs no request. `MessageHeight` needs no optional request (brief §4.1). Truth Social's frame would also answer `{type: 'setHeight', id}` posted to it with `'*'` by tagging its later messages with that `id`; the origin and source check makes that unnecessary. Strava's `ns` only has to be in the fragment for the frame to echo it; any token will do.
+- **Truth Social video posts need a ruling:** their reported height leaves out the video. Options: (a) add 165 px for code with `truthsocial-video`, as Truth Social's script does (a URL cannot tell, and vertical videos are still cut off); (b) take the reported height, as for other posts; (c) give video posts a scrolling frame.
+- **Flickr needs a ruling.** The brief expected a frame at `embedr.flickr.com/photos/{id}`. Flickr's script frames no URL: it writes Flickr's HTML into a same-origin iframe. Options:
+  - (a) `iframe`: the package builds the frame URL on the client, with the box's pixel width and the image's ratio, and rebuilds it when the width changes. URL input works (4:3 by default). It relies on an undocumented URL.
+  - (b) `sdk`: run Flickr's script as is. Flickr's code then runs in the host's origin, and the frame takes the image's pixel width (4096 px for the dialog's default).
+  - (c) `iframe` at the code's fixed pixel size: simplest, but not responsive.
+- **Flickr from an id alone:** yes, given any `width` and `height`; the user name and the secret are not needed (D98).
+- **Rumble page and embed ids differ:** yes (D99).
+
 ## Open VERIFY items
 
 | ID  | Item                                            | Milestone | Status                                          |
