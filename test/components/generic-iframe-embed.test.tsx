@@ -180,7 +180,7 @@ describe('GenericIframeEmbed with a host-built embed', () => {
     );
     expect(container.innerHTML).toBe('');
     expect(onError).toHaveBeenCalledWith(
-      new Error('social-embeds: the iframe embed is not safe to render'),
+      new Error('social-embeds: not a generic iframe embed'),
     );
   });
 

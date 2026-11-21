@@ -1,5 +1,5 @@
 import { describe, expect, expectTypeOf, it } from 'vitest';
-import { type ParsedIframe, parseIframe } from '../../src/parser';
+import { type ParsedIframe, parseEmbed, parseIframe } from '../../src/parser';
 import { checkIframe } from '../../src/parser/iframe';
 import bandcamp from '../fixtures/generic/bandcamp-embed.html?raw';
 import codepen from '../fixtures/generic/codepen-oembed.html?raw';
@@ -285,6 +285,67 @@ describe('parseIframe size', () => {
     const parsed = parseIframe(html);
     expect(parsed?.size).toEqual({});
     expect(parsed).not.toHaveProperty('ratio');
+  });
+});
+
+describe('parsing time', () => {
+  const run = ' '.repeat(100_000);
+  const halfRun = ' '.repeat(50_000);
+  const long = 'a'.repeat(100_000);
+
+  it('rejects a stray < before a long whitespace run quickly', () => {
+    const started = performance.now();
+    expect(parseEmbed(`<${run}x`)).toBeNull();
+    expect(performance.now() - started).toBeLessThan(500);
+  });
+
+  it.each([
+    ['a whitespace run in a start tag', `<a${run}x`],
+    ['whitespace runs around an equals sign', `<a b${halfRun}=${halfRun}x`],
+    ['a whitespace run in an end tag', `</div${run}x`],
+    ['a whitespace run before a stray </div>', `${run}</div>x`],
+    [
+      'whitespace runs around a stray </div> after Streamable code',
+      `<iframe src="https://streamable.com/e/abcd"></iframe>${halfRun}</div>${halfRun}x`,
+    ],
+    [
+      'an unclosed start tag',
+      `<iframe src="https://example.com/" title="${long}`,
+    ],
+    ['an unclosed script', `<script>${'</script'.repeat(12_500)}`],
+    ['an unclosed comment', `<!--${'-'.repeat(100_000)}`],
+    ['a long unquoted attribute value', `<iframe src=${long}></iframe>`],
+    ['a long host', `<iframe src="https://${'a.'.repeat(50_000)}!"></iframe>`],
+    [
+      'a long run of slashes in the path',
+      `<iframe src="https://example.com${'/'.repeat(100_000)}"></iframe>`,
+    ],
+    [
+      'a whitespace run in a style',
+      `<iframe src="https://example.com/" style="width${run}x"></iframe>`,
+    ],
+    [
+      "a whitespace run in a wrapper's style",
+      `<div style=";${run}x"><iframe src="https://example.com/"></iframe></div>`,
+    ],
+    [
+      'a whitespace run in allow',
+      `<iframe src="https://example.com/" allow="autoplay${run}x"></iframe>`,
+    ],
+    [
+      'a long entity name',
+      `<iframe src="https://example.com/" title="&${long}"></iframe>`,
+    ],
+    [
+      'a whitespace run in a class',
+      `<blockquote class="${run}x"></blockquote>`,
+    ],
+  ])('reads 100 KB of code with %s quickly', (_, html) => {
+    for (const parse of [parseEmbed, parseIframe]) {
+      const started = performance.now();
+      parse(html);
+      expect(performance.now() - started).toBeLessThan(500);
+    }
   });
 });
 

@@ -374,7 +374,7 @@ describe('FlickrEmbed', () => {
   });
 });
 
-describe('SocialEmbed with the wave 5 frames', () => {
+describe('SocialEmbed with Truth Social, Imgur, Strava and Flickr code', () => {
   it.each([
     [
       truthText,

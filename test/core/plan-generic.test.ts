@@ -62,7 +62,7 @@ describe('genericPlan', () => {
       }),
     ).toEqual({
       kind: 'error',
-      message: 'social-embeds: the iframe embed is not safe to render',
+      message: 'social-embeds: not a generic iframe embed',
     });
   });
 
@@ -71,7 +71,7 @@ describe('genericPlan', () => {
       genericPlan({ ...BASE, src: 'https://www.youtube.com/embed/x' }),
     ).toEqual({
       kind: 'error',
-      message: 'social-embeds: the iframe embed is not safe to render',
+      message: 'social-embeds: not a generic iframe embed',
     });
   });
 

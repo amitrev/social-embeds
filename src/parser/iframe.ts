@@ -142,11 +142,12 @@ function checkSrc(value: unknown): string | null {
   const src = value.trim();
   const url = SRC.test(src) && !src.includes('\\') ? parseUrl(src) : null;
   if (!url || REWRITTEN_PATH.test(url.path)) return null;
-  // A port or capitals in the path would hide a platform's frame from `ownsFrame`.
+  // A port, capitals, a `;` parameter or an escaped `/` in the path would hide a platform's
+  // frame from `ownsFrame`.
   const frame = {
     ...url,
     host: url.host.replace(/:\d+$/, ''),
-    path: url.path.toLowerCase(),
+    path: (url.path.toLowerCase().split(';')[0] ?? '').replaceAll('%2f', '/'),
   };
   if (platforms.some((platform) => platform.ownsFrame?.(frame))) return null;
   return src.startsWith('//') ? `https:${src}` : src;

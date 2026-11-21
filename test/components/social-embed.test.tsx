@@ -323,7 +323,7 @@ describe('SocialEmbed with generic iframe code', () => {
     },
   );
 
-  it('renders iframe code that used to reach fallback', () => {
+  it('renders generic iframe code instead of calling fallback', () => {
     const fallback = vi.fn(() => <p>fallback</p>);
     render(<SocialEmbed html={mapsFixture} fallback={fallback} lazy={false} />);
     expect(fallback).not.toHaveBeenCalled();

@@ -5,7 +5,7 @@ import { type EmbedSource, type FrameProps, resolveEmbed } from './shared';
 
 export type TenorEmbedProps = EmbedSource & FrameProps;
 
-/** The embed code's aspect ratio; a URL carries no size and renders at 4:3 (docs/decisions.md D95). */
+/** The embed code's aspect ratio; a URL carries no size and renders at 1.33:1 (docs/decisions.md D95). */
 export function TenorEmbed(props: TenorEmbedProps) {
   const { url, embed: given, onError, maxWidth, ...frame } = props;
   const { embed, error } = resolveEmbed(url, given, 'tenor');

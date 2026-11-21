@@ -1,7 +1,7 @@
 import type { ParsedEmbed } from '../../parser';
 import type { Plan, PlanError } from '../plan';
 
-/** The embed code's aspect ratio; a URL carries no size and renders at 4:3, as `embed.js` does (docs/decisions.md D95). */
+/** The embed code's aspect ratio; a URL carries no size and renders at 1.33:1, as `embed.js` does (docs/decisions.md D95). */
 export function tenorPlan(embed: ParsedEmbed): Plan | PlanError {
   return {
     kind: 'iframe',

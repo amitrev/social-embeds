@@ -10,7 +10,7 @@ export function genericPlan(embed: ParsedIframe): IframePlan | PlanError {
   if (!checked) {
     return {
       kind: 'error',
-      message: 'social-embeds: the iframe embed is not safe to render',
+      message: 'social-embeds: not a generic iframe embed',
     };
   }
   return {

@@ -37,6 +37,7 @@ export function flickrPlan(
     ...(size ? { size, maxWidth: size.width } : {}),
     sizeInSrc: true,
     // Adds a fixed style to the verified markup, so the image fills the box until the frame loads.
+    // Security: `rebuild` leaves no `<` in text or attribute values, so `<img` only matches a tag.
     ...(embed.fallbackHtml === undefined
       ? {}
       : {

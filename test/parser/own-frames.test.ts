@@ -86,6 +86,18 @@ describe('frames of named platforms', () => {
     ],
     ['a YouTube embed path in capitals', 'https://www.youtube.com/EMBED/!!bad'],
     [
+      'a YouTube embed behind a path parameter',
+      'https://www.youtube.com/embed;x/abc',
+    ],
+    [
+      'a YouTube embed with an escaped slash',
+      'https://www.youtube.com/embed%2Fabc',
+    ],
+    [
+      'a Facebook plugin behind a path parameter',
+      'https://www.facebook.com/plugins;/post.php?href=x',
+    ],
+    [
       'a Facebook plugin behind a double slash',
       'https://www.facebook.com//plugins/post.php?href=x',
     ],

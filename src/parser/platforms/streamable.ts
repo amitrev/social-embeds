@@ -42,7 +42,7 @@ const NOT_VIDEOS = new Set([
 const WRAPPER =
   /^width:\s*100%;\s*height:\s*0(?:px)?;\s*position:\s*relative;\s*padding-bottom:\s*(\d{1,3}(?:\.\d{1,4})?)%;?$/;
 const KEPT = new Set(['loop', 'autoplay', 'nocontrols', 'hd', 'muted']);
-const STRAY_END = /\s*<\/div\s*>\s*$/i;
+const STRAY_END = /<\/div\s*>$/i;
 
 function video(id: string): Omit<ParsedEmbed, 'options'> {
   return {
@@ -90,10 +90,12 @@ export const streamable: PlatformParser = {
   isOwnScript: () => false,
   // The player's "Copy embed code" closes a `div` it never opened.
   repair(html) {
-    const trimmed = html.replace(STRAY_END, '');
-    return trimmed !== html && /^\s*<iframe[\s>]/i.test(trimmed)
-      ? trimmed
-      : null;
+    // Trimmed first: a `\s*` before the tag would backtrack across long whitespace runs.
+    const code = html.trimEnd();
+    const end = STRAY_END.exec(code);
+    if (!end) return null;
+    const trimmed = code.slice(0, end.index).trimEnd();
+    return /^\s*<iframe[\s>]/i.test(trimmed) ? trimmed : null;
   },
   match(url) {
     const id = idOf(url);
