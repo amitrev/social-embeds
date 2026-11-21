@@ -38,9 +38,6 @@ const WRAPPER_STYLES = [
   'position',
 ] as const;
 
-// Wave 5 platforms whose fixtures do not parse yet; each joins `PLATFORMS` with its parser.
-type Unparsed = 'truthsocial' | 'imgur' | 'strava' | 'flickr';
-
 const PLATFORMS = {
   x: true,
   instagram: true,
@@ -64,10 +61,14 @@ const PLATFORMS = {
   tumblr: true,
   kick: true,
   giphy: true,
+  truthsocial: true,
+  imgur: true,
   tenor: true,
   streamable: true,
+  strava: true,
+  flickr: true,
   rumble: true,
-} satisfies Record<Exclude<Platform, Unparsed>, true>;
+} satisfies Record<Platform, true>;
 
 type Rendered = {
   kind: 'iframe' | 'script' | 'error' | 'none';
@@ -221,23 +222,8 @@ function check(side: Rendered): void {
 
 describe('<social-embed> and <SocialEmbed>', () => {
   it('skips only the fixtures that are not embed code', () => {
-    expect([...skipped].sort()).toEqual([
-      'flickr/embed-dialog-album.html',
-      'flickr/embed-dialog-header-footer.html',
-      'flickr/embed-dialog-slideshow.html',
-      'flickr/embed-dialog.html',
-      'flickr/oembed-album.html',
-      'flickr/oembed.html',
-      'imgur/embed-dialog-album-hide-title.html',
-      'imgur/embed-dialog-album.html',
-      'imgur/oembed-album.html',
-      'imgur/oembed-image.html',
-      'rumble/embed-dialog-js.html',
-      'strava/route-derived.html',
-      'truthsocial/embed-dialog-video.html',
-      'truthsocial/oembed-text.html',
-    ]);
-    expect(parsed).toHaveLength(61);
+    expect([...skipped].sort()).toEqual(['rumble/embed-dialog-js.html']);
+    expect(parsed).toHaveLength(74);
     expect(generic).toHaveLength(8);
   });
 
@@ -264,15 +250,28 @@ describe('<social-embed> and <SocialEmbed>', () => {
     expect(seen.script).toBe(23);
     expect(seen.error).toEqual([
       '../fixtures/dailymotion/oembed.html',
-      // Placeholder errors until Task 6 renders Tenor, Streamable and Rumble.
+      // Placeholder errors until the wave 5 platforms render.
+      '../fixtures/flickr/embed-dialog-album.html',
+      '../fixtures/flickr/embed-dialog-header-footer.html',
+      '../fixtures/flickr/embed-dialog-slideshow.html',
+      '../fixtures/flickr/embed-dialog.html',
+      '../fixtures/flickr/oembed-album.html',
+      '../fixtures/flickr/oembed.html',
+      '../fixtures/imgur/embed-dialog-album-hide-title.html',
+      '../fixtures/imgur/embed-dialog-album.html',
+      '../fixtures/imgur/oembed-album.html',
+      '../fixtures/imgur/oembed-image.html',
       '../fixtures/rumble/embed-dialog-iframe.html',
       '../fixtures/rumble/oembed.html',
+      '../fixtures/strava/route-derived.html',
       '../fixtures/streamable/api-embed-code.html',
       '../fixtures/streamable/embed-docs.html',
       '../fixtures/streamable/oembed.html',
       '../fixtures/streamable/player-copy-embed.html',
       '../fixtures/tenor/embed-dialog.html',
       '../fixtures/tenor/oembed.html',
+      '../fixtures/truthsocial/embed-dialog-video.html',
+      '../fixtures/truthsocial/oembed-text.html',
       'URL dailymotion Video, no Player ID: reports an error',
       'URL bluesky Post, by handle: reports a lookup error',
     ]);
