@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { matchUrl, parseEmbed } from '../../src/parser';
+import { matchUrl, parseEmbed, parseIframe } from '../../src/parser';
+import { truthsocial } from '../../src/parser/platforms/truthsocial';
+import { parseUrl } from '../../src/parser/url';
 import { verifyEmbed } from '../../src/parser/verify';
 import video from '../fixtures/truthsocial/embed-dialog-video.html?raw';
 import text from '../fixtures/truthsocial/oembed-text.html?raw';
@@ -87,5 +89,35 @@ describe('Truth Social URLs', () => {
     'https://truthsocial.com/users/x/statuses/1',
   ])('does not match %s', (url) => {
     expect(matchUrl(url)).toBeNull();
+  });
+});
+
+describe('Truth Social frame guard', () => {
+  const owns = (src: string): boolean => {
+    const url = parseUrl(src);
+    return url !== null && truthsocial.ownsFrame?.(url) === true;
+  };
+
+  it.each([
+    'https://truthsocial.com/@truthsocial/117529982042129746/embed',
+    'https://truthsocial.com/@truthsocial',
+    'https://truthsocial.com/@truthsocial/1/embed?x=1',
+  ])('owns %s', (src) => {
+    expect(owns(src)).toBe(true);
+  });
+
+  it.each([
+    'https://truthsocial.com/about',
+    'https://example.com/@truthsocial/1/embed',
+  ])('does not own %s', (src) => {
+    expect(owns(src)).toBe(false);
+  });
+
+  it('keeps an owned frame the parser rejects off the generic path', () => {
+    expect(
+      parseIframe(
+        '<iframe src="https://truthsocial.com/@truthsocial"></iframe>',
+      ),
+    ).toBeNull();
   });
 });
