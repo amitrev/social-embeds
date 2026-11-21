@@ -235,7 +235,7 @@ Boolean player parameters are written as `1`/`0`; Streamable's as the player wri
 
 ### Parser
 
-`social-embeds/parser` exports `parseEmbed(html)`, `matchUrl(url)` and `parseIframe(html)`. They are pure functions with no React and no DOM, so they run the same in a Server Component, in Node (for example when your CMS saves a post) and in the browser. Both return a plain, serialisable `ParsedEmbed`, or `null` for input they do not recognise. They never throw.
+`social-embeds/parser` exports `parseEmbed(html)`, `matchUrl(url)` and `parseIframe(html)`. They are pure functions with no React and no DOM, so they run the same in a Server Component, in Node (for example when your CMS saves a post) and in the browser. `parseEmbed` and `matchUrl` return a plain, serialisable `ParsedEmbed`, and `parseIframe` a plain, serialisable `ParsedIframe`, or `null` for input they do not recognise. They never throw.
 
 ```ts
 import { matchUrl, parseEmbed, type ParsedEmbed } from 'social-embeds/parser';
@@ -307,7 +307,7 @@ A component checks an `embed` before using it: its `url` must be the exact URL `
 | `onError`     | `(error: Error) => void` |              | Called on invalid input, a script that fails to load, or a post that does not render. Components never throw.                                                                                                                                                                                                                                                         |
 | `...rest`     | `ComponentProps<'div'>`  |              | Passed to the wrapper `div` (`className`, `style`, `data-*`, …).                                                                                                                                                                                                                                                                                                      |
 
-Script-based embeds try to render three times, waiting 15 s each time, 1 s and then 2 s apart, before `onError` reports the failure. Iframe embeds get 15 s, counted from when the embed comes near the viewport, also with `lazy={false}`. Telegram, Reddit, Bluesky and Tumblr frames that report no height by then show at their starting height; other frames that have not loaded by then show as they are, such as a frame the browser blocked. `onError` reports both, and a frame that loads or reports its height later still calls `onLoad`.
+Script-based embeds try to render three times, waiting 15 s each time, 1 s and then 2 s apart, before `onError` reports the failure. Iframe embeds get 15 s, counted from when the embed comes near the viewport, also with `lazy={false}`. Telegram, Reddit, Bluesky, Tumblr, Truth Social, Imgur and Strava frames that report no height by then show at their starting height; other frames that have not loaded by then show as they are, such as a frame the browser blocked. `onError` reports both, and a frame that loads or reports its height later still calls `onLoad`.
 
 ## Platforms
 
@@ -335,7 +335,7 @@ Script-based embeds try to render three times, waiting 15 s each time, 1 s and t
 | Tumblr         | iframe (`embed.tumblr.com/embed/post/…`), height from the frame; `post.js` is not loaded                         | `www.tumblr.com/{blog}/{id}`, `{blog}.tumblr.com/post/{id}`, with or without the slug                                                                                                  | none                                                                                                                                                           | 540                                |
 | Kick           | iframe (`player.kick.com/{channel}`)                                                                             | `kick.com/{channel}`                                                                                                                                                                   | `autoplay`, `muted`, `width`, `height`                                                                                                                         | none                               |
 | Giphy          | iframe (`giphy.com/embed/{id}`)                                                                                  | `giphy.com/gifs/{slug}-{id}`, `giphy.com/gifs/{id}`, `giphy.com/embed/{id}`, `media.giphy.com/media/{id}/giphy.gif`                                                                    | `width` and `height`, or the responsive wrapper's ratio                                                                                                        | none                               |
-| Truth Social   | iframe (`truthsocial.com/@{user}/{id}/embed`), height from the frame; `embed.js` is not loaded                   | `truthsocial.com/@{user}/posts/{id}`, `truthsocial.com/@{user}/{id}`                                                                                                                   | none                                                                                                                                                           | 600                                |
+| Truth Social   | iframe (`truthsocial.com/@{user}/{id}/embed`), height from the frame; `embed.js` is not loaded                   | `truthsocial.com/@{user}/posts/{id}`, `truthsocial.com/@{user}/{id}`                                                                                                                   | `video`, set from the iframe's `truthsocial-video` class, not a prop                                                                                           | 600                                |
 | Imgur          | iframe (`imgur.com/{id}/embed?pub=true`), height from the frame; `embed.js` is not loaded                        | `imgur.com/{id}`, `imgur.com/a/{id}`, `imgur.com/gallery/{id}` and `…/gallery/{slug}-{id}`, `i.imgur.com/{id}.{ext}`                                                                   | `data-context`, `data-analytics`                                                                                                                               | 540                                |
 | Tenor          | iframe (`tenor.com/embed/{id}`); `embed.js` is not loaded                                                        | `tenor.com/view/{slug}-gif-{id}`, with an optional locale (`tenor.com/en-GB/view/…`)                                                                                                   | none; the ratio from `data-aspect-ratio`, or the iframe's `width` and `height`                                                                                 | none                               |
 | Streamable     | iframe (`streamable.com/e/{id}`)                                                                                 | `streamable.com/{id}`, `streamable.com/e/{id}`, `streamable.com/o/{id}`                                                                                                                | `loop`, `autoplay`, `nocontrols`, `hd`, `muted`; the ratio from the wrapper or the iframe                                                                      | none                               |
@@ -498,7 +498,7 @@ URL shapes, each tested against Facebook's plugins on `www.facebook.com`, `faceb
 
 ### Tenor and Streamable
 
-- A Tenor URL has no size, so it renders in a 4:3 box (the 1.33 ratio of Tenor's own script); Tenor's Embed dialog code carries its ratio, and oEmbed code carries its own `width` and `height`. A sticker embeds like a GIF.
+- A Tenor URL has no size, so it renders at 1.33:1, the default ratio of Tenor's own script; Tenor's Embed dialog code carries its ratio, and oEmbed code carries its own `width` and `height`. A sticker embeds like a GIF.
 - Streamable's player has a "Copy embed code" menu. Its code ends with a stray `</div>`; the package accepts exactly that one. The code Streamable's API and oEmbed give is accepted too.
 
 ### Flickr
@@ -520,7 +520,7 @@ Embed code that no platform claims, but that holds one iframe, renders as a resp
 - **Exactly one `<iframe>`.** Markup around it (wrappers, links, captions, `<script>` tags) is dropped, and no script runs. Two or more iframes are not a generic embed.
 - **Named platforms win.** `<SocialEmbed>` and `<social-embed>` try the platforms first. An iframe whose host a named platform owns (YouTube, Vimeo, Spotify, `facebook.com/plugins`, and so on) never goes generic, even if that platform rejects it. Frames a platform's own script creates (`platform.twitter.com/embed/…`) and a platform's other hosts (`podcasters.spotify.com`) are not guarded and render generically.
 - **Kept attributes:** `src`, `width`, `height`, `title`, `allow`, `allowfullscreen`, `referrerpolicy`, `sandbox`, `scrolling="no"`. Everything else is dropped: `srcdoc`, every `on*` handler, `style`, `class`, `id`, `name` and `loading`.
-- **Rejected `src`:** `http:`, `javascript:`, `data:`, `blob:`, a relative URL, and a URL with a user name or password. The code is then not a generic embed. A `//host/…` URL becomes `https:`.
+- **Rejected `src`:** `http:`, `javascript:`, `data:`, `blob:`, a relative URL, and a URL with a user name or password. Also rejected: a backslash, a percent-encoded or non-ASCII host, a dot segment (`/./` or `/../`, also escaped), `//` in the path, a percent-escaped unreserved character in the path (`%7E`), and a malformed `%` escape in the query. The code is then not a generic embed. A `//host/…` URL becomes `https:`.
 - **`allow`** keeps only `autoplay`, `fullscreen`, `encrypted-media`, `picture-in-picture`, `clipboard-write` and `web-share`. Camera, microphone, geolocation, payment and every other feature are dropped, because a delegated permission is granted in your site's name. A feature keeps its origin list only when every origin is `*`, `'self'`, `'src'`, `'none'` or an `https:` origin.
 - **`referrerpolicy`** keeps only `no-referrer`, `origin`, `same-origin`, `strict-origin` and `strict-origin-when-cross-origin`. Other policies would send the page's URL to the frame, so the browser default applies instead.
 - **`sandbox`** keeps only the spec's keywords.
@@ -542,7 +542,7 @@ embed && <GenericIframeEmbed embed={embed} />;
 
 `GenericIframeEmbed` takes the [shared props](#shared-props) and no `url`.
 
-**Behaviour change in 0.7.0:** iframe code that `<SocialEmbed>` used to hand to `fallback` now renders. Non-iframe code and rejected iframes still reach `fallback`.
+**Behaviour change in 0.7.0:** iframe code that `<SocialEmbed>` used to hand to `fallback`, and that `<social-embed>` answered with an `error` event, now renders. Non-iframe code and rejected iframes still reach `fallback` or `error`.
 
 ### Not supported
 
@@ -552,7 +552,7 @@ embed && <GenericIframeEmbed embed={embed} />;
 
 ## Without React
 
-`social-embeds/element` defines `<social-embed>`, a custom element for plain HTML, CMS templates, Vue, Svelte and Angular. It is one self-contained file with no React in it, about 20 KB gzipped.
+`social-embeds/element` defines `<social-embed>`, a custom element for plain HTML, CMS templates, Vue, Svelte and Angular. It is one self-contained file with no React in it, about 25 KB gzipped.
 
 ```html
 <script

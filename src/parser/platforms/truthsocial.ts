@@ -8,7 +8,7 @@ import {
 import type { ParsedEmbed } from '../types';
 import { parseUrl, type ParsedUrl } from '../url';
 
-// The `truthsocial-video` class is kept as the option `video`, which only sets the height rule (docs/decisions.md D93).
+// Video code (`truthsocial-video` class) is recorded as the option `video: true`, which only sets the height rule (docs/decisions.md D93).
 
 const HOSTS = new Set(['truthsocial.com', 'www.truthsocial.com']);
 const USER = '(@[A-Za-z0-9_.-]{1,64})';
