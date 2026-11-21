@@ -20,7 +20,14 @@ export type Platform =
   | 'applepodcasts'
   | 'tumblr'
   | 'kick'
-  | 'giphy';
+  | 'giphy'
+  | 'truthsocial'
+  | 'imgur'
+  | 'tenor'
+  | 'streamable'
+  | 'strava'
+  | 'flickr'
+  | 'rumble';
 
 export type ParsedEmbed = {
   platform: Platform;

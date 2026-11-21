@@ -38,6 +38,9 @@ const WRAPPER_STYLES = [
   'position',
 ] as const;
 
+// Wave 5 platforms whose fixtures do not parse yet; each joins `PLATFORMS` with its parser.
+type Unparsed = 'truthsocial' | 'imgur' | 'strava' | 'flickr';
+
 const PLATFORMS = {
   x: true,
   instagram: true,
@@ -61,7 +64,10 @@ const PLATFORMS = {
   tumblr: true,
   kick: true,
   giphy: true,
-} satisfies Record<Platform, true>;
+  tenor: true,
+  streamable: true,
+  rumble: true,
+} satisfies Record<Exclude<Platform, Unparsed>, true>;
 
 type Rendered = {
   kind: 'iframe' | 'script' | 'error' | 'none';
@@ -226,20 +232,12 @@ describe('<social-embed> and <SocialEmbed>', () => {
       'imgur/embed-dialog-album.html',
       'imgur/oembed-album.html',
       'imgur/oembed-image.html',
-      'rumble/embed-dialog-iframe.html',
       'rumble/embed-dialog-js.html',
-      'rumble/oembed.html',
       'strava/route-derived.html',
-      'streamable/api-embed-code.html',
-      'streamable/embed-docs.html',
-      'streamable/oembed.html',
-      'streamable/player-copy-embed.html',
-      'tenor/embed-dialog.html',
-      'tenor/oembed.html',
       'truthsocial/embed-dialog-video.html',
       'truthsocial/oembed-text.html',
     ]);
-    expect(parsed).toHaveLength(53);
+    expect(parsed).toHaveLength(61);
     expect(generic).toHaveLength(8);
   });
 
@@ -266,6 +264,15 @@ describe('<social-embed> and <SocialEmbed>', () => {
     expect(seen.script).toBe(23);
     expect(seen.error).toEqual([
       '../fixtures/dailymotion/oembed.html',
+      // Placeholder errors until Task 6 renders Tenor, Streamable and Rumble.
+      '../fixtures/rumble/embed-dialog-iframe.html',
+      '../fixtures/rumble/oembed.html',
+      '../fixtures/streamable/api-embed-code.html',
+      '../fixtures/streamable/embed-docs.html',
+      '../fixtures/streamable/oembed.html',
+      '../fixtures/streamable/player-copy-embed.html',
+      '../fixtures/tenor/embed-dialog.html',
+      '../fixtures/tenor/oembed.html',
       'URL dailymotion Video, no Player ID: reports an error',
       'URL bluesky Post, by handle: reports a lookup error',
     ]);

@@ -25,6 +25,13 @@ export const NAMES: Record<Platform, string> = {
   tumblr: 'Tumblr',
   kick: 'Kick',
   giphy: 'Giphy',
+  truthsocial: 'Truth Social',
+  imgur: 'Imgur',
+  tenor: 'Tenor',
+  streamable: 'Streamable',
+  strava: 'Strava',
+  flickr: 'Flickr',
+  rumble: 'Rumble',
 };
 
 /** For a post URL that only a network lookup could resolve (docs/decisions.md D70). */

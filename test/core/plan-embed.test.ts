@@ -46,6 +46,16 @@ import vimeo from '../fixtures/vimeo/responsive-docs.html?raw';
 import x from '../fixtures/x/oembed-basic.html?raw';
 import youtube from '../fixtures/youtube/share.html?raw';
 
+// Wave 5 platforms whose plans come in later tasks.
+type Unplanned =
+  | 'truthsocial'
+  | 'imgur'
+  | 'tenor'
+  | 'streamable'
+  | 'strava'
+  | 'flickr'
+  | 'rumble';
+
 type Case = [string, (embed: ParsedEmbed) => Plan | PlanError];
 
 const cases = {
@@ -71,7 +81,7 @@ const cases = {
   tumblr: [tumblr, (e) => tumblrPlan(e)],
   kick: [kick, (e) => kickPlan(e, {})],
   giphy: [giphy, (e) => giphyPlan(e)],
-} satisfies Record<Platform, Case>;
+} satisfies Record<Exclude<Platform, Unplanned>, Case>;
 
 describe('planEmbed', () => {
   it.each(Object.entries(cases))(

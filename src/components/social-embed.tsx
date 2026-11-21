@@ -1,5 +1,6 @@
 import { type ReactNode, useMemo } from 'react';
-import { matchUrl, parseEmbed, parseIframe } from '../parser';
+import { matchUrl, parseEmbed, parseIframe, type ParsedEmbed } from '../parser';
+import { planEmbed } from '../core/plan-embed';
 import { sourceError } from '../core/resolve';
 import { AppleMusicEmbed, ApplePodcastsEmbed } from './apple-embed';
 import { BlueskyEmbed, type BlueskyOptions } from './bluesky-embed';
@@ -188,5 +189,26 @@ export function SocialEmbed(props: SocialEmbedProps) {
       return (
         <GiphyEmbed {...shared} {...frame} onError={onError} embed={embed} />
       );
+    // Placeholders until the components of Tasks 6 to 8 replace them.
+    case 'truthsocial':
+    case 'imgur':
+    case 'tenor':
+    case 'streamable':
+    case 'strava':
+    case 'flickr':
+    case 'rumble':
+      return <UnplannedEmbed embed={embed} onError={onError} />;
   }
+}
+
+function UnplannedEmbed(props: {
+  embed: ParsedEmbed;
+  onError: SocialEmbedProps['onError'];
+}) {
+  const plan = planEmbed(props.embed);
+  useReportError(
+    plan.kind === 'error' ? plan.message : undefined,
+    props.onError,
+  );
+  return null;
 }

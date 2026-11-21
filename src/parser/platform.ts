@@ -12,6 +12,11 @@ export type PlatformParser = {
   parse: (root: HtmlElement) => ParsedEmbed | null;
   /** Embed code that is a single `<script>` tag, as Telegram's is. */
   parseScript?: (script: HtmlElement) => ParsedEmbed | null;
+  /**
+   * For code the HTML parser rejects: the same code without the stray markup this platform's own
+   * tool writes, or `null`. The result must still parse as this platform's embed.
+   */
+  repair?: (html: string) => string | null;
   isOwnScript: (src: string) => boolean;
   scriptOptions?: (src: string) => Options;
   allowsFbRoot?: boolean;

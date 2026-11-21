@@ -12,8 +12,11 @@ import { pinterest } from './pinterest';
 import { reddit } from './reddit';
 import { snapchat } from './snapchat';
 import { soundcloud } from './soundcloud';
+import { rumble } from './rumble';
 import { spotify } from './spotify';
+import { streamable } from './streamable';
 import { telegram } from './telegram';
+import { tenor } from './tenor';
 import { threads } from './threads';
 import { tiktok } from './tiktok';
 import { tumblr } from './tumblr';
@@ -43,6 +46,9 @@ export const platforms: readonly PlatformParser[] = [
   applepodcasts,
   kick,
   giphy,
+  tenor,
+  streamable,
+  rumble,
   bluesky,
   tumblr,
 ];

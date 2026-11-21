@@ -8,13 +8,20 @@ const HANDLE_POST =
 const HANDLE =
   /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z](?:[a-z0-9-]{0,61}[a-z0-9])?$/i;
 
+const RUMBLE_HOSTS = new Set(['rumble.com', 'www.rumble.com']);
+// A page id is not the embed id (docs/decisions.md D99).
+const RUMBLE_PAGE = /^\/v[a-z0-9]{1,12}-[^/]{1,300}\.html$/;
+
 /**
  * The platform of a post URL that only a network lookup could turn into an embed: a Bluesky
- * URL with a handle instead of a DID. Internal; the parser entry does not export it.
+ * URL with a handle instead of a DID, or a Rumble page URL. Internal; the parser entry does not export it.
  */
 export function needsLookup(url: string): Platform | null {
   const parsed = typeof url === 'string' ? parseUrl(url) : null;
-  if (!parsed || !BLUESKY_HOSTS.has(parsed.host)) return null;
+  if (!parsed) return null;
+  if (RUMBLE_HOSTS.has(parsed.host))
+    return RUMBLE_PAGE.test(parsed.path) ? 'rumble' : null;
+  if (!BLUESKY_HOSTS.has(parsed.host)) return null;
   const [, profile] = HANDLE_POST.exec(parsed.path) ?? [];
   return profile !== undefined && HANDLE.test(profile) ? 'bluesky' : null;
 }

@@ -1,0 +1,101 @@
+import {
+  type Options,
+  type PlatformParser,
+  sizeOf,
+  underPath,
+  unwrapRatio,
+  withSize,
+} from '../platform';
+import type { HtmlElement } from '../html';
+import type { ParsedEmbed } from '../types';
+import { coerce, parseUrl, type ParsedUrl } from '../url';
+
+// Two wrapper styles and one stray `</div>` are accepted (docs/decisions.md D96).
+
+const ID = '([a-z0-9]{4,8})';
+const PAGE_HOSTS = new Set(['streamable.com', 'www.streamable.com']);
+const PLAYER_PATH = new RegExp(`^/[eo]/${ID}$`);
+const PAGE_PATH = new RegExp(`^/${ID}$`);
+// Short paths on streamable.com that are pages, not videos.
+const NOT_VIDEOS = new Set([
+  'about',
+  'login',
+  'signup',
+  'terms',
+  'privacy',
+  'pricing',
+  'upload',
+  'help',
+  'apps',
+  'blog',
+  'jobs',
+  'press',
+  'tools',
+  'embed',
+  'plans',
+  'contact',
+  'support',
+  'videos',
+  'account',
+  'profile',
+]);
+const WRAPPER =
+  /^width:\s*100%;\s*height:\s*0(?:px)?;\s*position:\s*relative;\s*padding-bottom:\s*(\d{1,3}(?:\.\d{1,4})?)%;?$/;
+const KEPT = new Set(['loop', 'autoplay', 'nocontrols', 'hd', 'muted']);
+const STRAY_END = /\s*<\/div\s*>\s*$/i;
+
+function video(id: string): Omit<ParsedEmbed, 'options'> {
+  return {
+    platform: 'streamable',
+    kind: 'video',
+    url: `https://streamable.com/${id}`,
+    id,
+    variant: 'iframe',
+  };
+}
+
+function fromIframe(iframe: HtmlElement): ParsedEmbed | null {
+  if (iframe.tag !== 'iframe') return null;
+  const src = parseUrl(iframe.attrs.get('src') ?? '');
+  if (!src || src.host !== 'streamable.com') return null;
+  const [, id] = PLAYER_PATH.exec(src.path) ?? [];
+  if (id === undefined) return null;
+  const options: Options = Object.fromEntries(
+    [...src.query]
+      .filter(([key]) => KEPT.has(key))
+      .map(([key, value]) => [key, coerce(value)]),
+  );
+  return { ...video(id), options };
+}
+
+function idOf(url: ParsedUrl | null): string | undefined {
+  if (!url || !PAGE_HOSTS.has(url.host)) return undefined;
+  const id = (PLAYER_PATH.exec(url.path) ?? PAGE_PATH.exec(url.path))?.[1];
+  return id === undefined || NOT_VIDEOS.has(id) ? undefined : id;
+}
+
+export const streamable: PlatformParser = {
+  platform: 'streamable',
+  parse(root) {
+    const wrapped = unwrapRatio(root, WRAPPER);
+    const iframe = wrapped?.iframe ?? root;
+    const found = fromIframe(iframe);
+    if (!found) return null;
+    return withSize(found, wrapped?.size ?? sizeOf(iframe));
+  },
+  isOwnScript: () => false,
+  // The player's "Copy embed code" closes a `div` it never opened.
+  repair(html) {
+    const trimmed = html.replace(STRAY_END, '');
+    return trimmed !== html && /^\s*<iframe[\s>]/i.test(trimmed)
+      ? trimmed
+      : null;
+  },
+  match(url) {
+    const id = idOf(url);
+    return id === undefined ? null : { ...video(id), options: {} };
+  },
+  ownsFrame: (src) =>
+    src.host === 'streamable.com' &&
+    (underPath(src.path, '/e') || underPath(src.path, '/o')),
+};
