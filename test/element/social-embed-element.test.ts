@@ -21,6 +21,8 @@ const YOUTUBE_SHORT = 'https://youtu.be/jNQXAC9IVRw?t=11';
 const TELEGRAM = 'https://t.me/telegram/83';
 const DAILYMOTION = 'https://www.dailymotion.com/video/x84sh87';
 const BLUESKY_HANDLE = 'https://bsky.app/profile/bsky.app/post/3l6oveex3ii2l';
+const RUMBLE_PAGE =
+  'https://rumble.com/v15atp3-rumble-basics-how-to-upload-a-video-ios-app.html';
 
 const page = window as unknown as Record<string, unknown>;
 
@@ -329,6 +331,18 @@ describe('<social-embed>', () => {
     const { errors } = listen(element);
     await flush();
     expect(errors.mock.calls[0]?.[0].message).toBe(lookupMessage('bluesky'));
+  });
+
+  it('reports a Rumble page URL that needs a lookup', async () => {
+    const element = create({ url: RUMBLE_PAGE, eager: '' });
+    document.body.append(element);
+    const { errors } = listen(element);
+    await flush();
+    expect(errors).toHaveBeenCalledOnce();
+    expect(errors.mock.calls[0]?.[0].message).toBe(
+      'social-embeds: a Rumble URL needs a lookup: use the embed code',
+    );
+    expect(element.childElementCount).toBe(0);
   });
 
   it('reports a Dailymotion URL without a Player ID', async () => {

@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 export const PLATFORMS = {
@@ -24,6 +24,13 @@ export const PLATFORMS = {
   tumblr: 'Tumblr',
   kick: 'Kick',
   giphy: 'Giphy',
+  truthsocial: 'Truth Social',
+  imgur: 'Imgur',
+  tenor: 'Tenor',
+  streamable: 'Streamable',
+  strava: 'Strava',
+  flickr: 'Flickr',
+  rumble: 'Rumble',
 } as const;
 
 export type PlatformKey = keyof typeof PLATFORMS;
@@ -33,11 +40,21 @@ export interface Sample {
   value: string;
 }
 
+const FIXTURES = join(process.cwd(), '..', 'test', 'fixtures');
+
 function fixture(file: string): string {
-  return readFileSync(
-    join(process.cwd(), '..', 'test', 'fixtures', file),
-    'utf8',
-  );
+  return readFileSync(join(FIXTURES, file), 'utf8');
+}
+
+/** Every fixture in `test/fixtures/generic/`, labelled with its file name. */
+export function genericCodes(): Sample[] {
+  return readdirSync(join(FIXTURES, 'generic'))
+    .filter((file) => file.endsWith('.html'))
+    .sort()
+    .map((file) => ({
+      label: file.replace(/\.html$/, ''),
+      value: fixture(`generic/${file}`),
+    }));
 }
 
 const FACEBOOK_POST =
@@ -51,9 +68,23 @@ export const BLUESKY_POST =
 export const DAILYMOTION_VIDEO = 'https://www.dailymotion.com/video/x84sh87';
 // The Player ID in Dailymotion's own iframe docs (test/fixtures/dailymotion/player-id-docs.html).
 export const DAILYMOTION_DOCS_PLAYER = 'x8lr5';
+export const TRUTH_SOCIAL_POST =
+  'https://truthsocial.com/@truthsocial/posts/117529982042129746';
+export const IMGUR_POST = 'https://imgur.com/a/04b1CmA';
+export const TENOR_GIF =
+  'https://tenor.com/view/happy-cat-day-national-cat-day-cat-day-cat-cat-lover-gif-12328062661350661133';
+export const STREAMABLE_VIDEO = 'https://streamable.com/lttg48';
+export const STRAVA_ROUTE = 'https://www.strava.com/routes/3247927232574435836';
+export const FLICKR_PHOTO = 'https://www.flickr.com/photos/flickr/55618331478/';
+export const RUMBLE_VIDEO = 'https://rumble.com/embed/v12onr1/';
 
 export function facebookReel(): string {
   return fixture('facebook/video-iframe-reel.html');
+}
+
+/** Google Maps' Share → Embed a map code: the generic iframe sample on `/many` and `/element`. */
+export function genericMap(): string {
+  return fixture('generic/google-maps-embed.html');
 }
 
 export function embedCodes(platform: PlatformKey): Sample[] {
@@ -270,6 +301,93 @@ export function embedCodes(platform: PlatformKey): Sample[] {
         { label: 'Fixed', value: fixture('giphy/embed-fixed.html') },
         { label: 'Responsive', value: fixture('giphy/embed-responsive.html') },
       ];
+    case 'truthsocial':
+      return [
+        {
+          label: 'Embed dialog, a video post',
+          value: fixture('truthsocial/embed-dialog-video.html'),
+        },
+        {
+          label: 'oEmbed, a text post',
+          value: fixture('truthsocial/oembed-text.html'),
+        },
+      ];
+    case 'imgur':
+      return [
+        {
+          label: 'Embed dialog, a gallery post',
+          value: fixture('imgur/embed-dialog-album.html'),
+        },
+        {
+          label: 'Embed dialog, Hide Title',
+          value: fixture('imgur/embed-dialog-album-hide-title.html'),
+        },
+        { label: 'oEmbed, album', value: fixture('imgur/oembed-album.html') },
+        { label: 'oEmbed, image', value: fixture('imgur/oembed-image.html') },
+      ];
+    case 'tenor':
+      return [
+        {
+          label: 'Embed dialog, a sticker',
+          value: fixture('tenor/embed-dialog.html'),
+        },
+        {
+          label: 'oEmbed (600×400 for a square sticker)',
+          value: fixture('tenor/oembed.html'),
+        },
+      ];
+    case 'streamable':
+      return [
+        {
+          label: 'API embed code',
+          value: fixture('streamable/api-embed-code.html'),
+        },
+        {
+          label: 'Help center example (derived)',
+          value: fixture('streamable/embed-docs.html'),
+        },
+        { label: 'oEmbed', value: fixture('streamable/oembed.html') },
+        {
+          label: 'Player’s Copy embed code, with its stray </div>',
+          value: fixture('streamable/player-copy-embed.html'),
+        },
+      ];
+    case 'strava':
+      return [
+        {
+          label: 'Route (derived: the Embed dialog needs a signed-in account)',
+          value: fixture('strava/route-derived.html'),
+        },
+      ];
+    case 'flickr':
+      return [
+        {
+          label: 'Embed dialog, defaults (X-Large)',
+          value: fixture('flickr/embed-dialog.html'),
+        },
+        {
+          label: 'Embed dialog, header and footer',
+          value: fixture('flickr/embed-dialog-header-footer.html'),
+        },
+        {
+          label: 'Embed dialog, Medium and slideshow',
+          value: fixture('flickr/embed-dialog-slideshow.html'),
+        },
+        {
+          label: 'Embed dialog, album',
+          value: fixture('flickr/embed-dialog-album.html'),
+        },
+        { label: 'oEmbed', value: fixture('flickr/oembed.html') },
+        { label: 'oEmbed, album', value: fixture('flickr/oembed-album.html') },
+      ];
+    case 'rumble':
+      return [
+        {
+          label: 'Embed dialog, IFRAME',
+          value: fixture('rumble/embed-dialog-iframe.html'),
+        },
+        { label: 'oEmbed', value: fixture('rumble/oembed.html') },
+      ];
   }
 }
 
@@ -421,6 +539,36 @@ export const URLS: Record<PlatformKey, Sample[]> = {
       label: 'GIF',
       value:
         'https://giphy.com/gifs/originals-animation-kitten-logo-l41YlHs99JsSptZf2',
+    },
+  ],
+  truthsocial: [
+    { label: 'Video post', value: TRUTH_SOCIAL_POST },
+    {
+      label: 'Text post',
+      value: 'https://truthsocial.com/@truthsocial/posts/116862065232992052',
+    },
+  ],
+  imgur: [
+    { label: 'Gallery post', value: IMGUR_POST },
+    { label: 'Image', value: 'https://imgur.com/yOBT04V' },
+  ],
+  tenor: [{ label: 'Sticker', value: TENOR_GIF }],
+  streamable: [{ label: 'Video', value: STREAMABLE_VIDEO }],
+  strava: [{ label: 'Route', value: STRAVA_ROUTE }],
+  flickr: [
+    { label: 'Photo', value: FLICKR_PHOTO },
+    { label: 'Short link', value: 'https://flic.kr/p/2sJNueC' },
+    {
+      label: 'Album',
+      value: 'https://www.flickr.com/photos/flickr/albums/72157716823987722',
+    },
+  ],
+  rumble: [
+    { label: 'Embed URL', value: RUMBLE_VIDEO },
+    {
+      label: 'Page URL: reports a lookup error',
+      value:
+        'https://rumble.com/v15atp3-rumble-basics-how-to-upload-a-video-ios-app.html',
     },
   ],
 };

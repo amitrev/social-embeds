@@ -5,18 +5,25 @@ import {
   BlueskyEmbed,
   DailymotionEmbed,
   FacebookEmbed,
+  FlickrEmbed,
   GiphyEmbed,
+  ImgurEmbed,
   InstagramEmbed,
   KickEmbed,
   LinkedInEmbed,
   PinterestEmbed,
   RedditEmbed,
+  RumbleEmbed,
   SnapchatEmbed,
   SoundCloudEmbed,
   SpotifyEmbed,
+  StravaEmbed,
+  StreamableEmbed,
   TelegramEmbed,
+  TenorEmbed,
   ThreadsEmbed,
   TikTokEmbed,
+  TruthSocialEmbed,
   TumblrEmbed,
   TwitchEmbed,
   VimeoEmbed,
@@ -92,6 +99,20 @@ function ParsedOnServer({ embed }: { embed: ParsedEmbed }) {
       return <KickEmbed embed={embed} />;
     case 'giphy':
       return <GiphyEmbed embed={embed} />;
+    case 'truthsocial':
+      return <TruthSocialEmbed embed={embed} />;
+    case 'imgur':
+      return <ImgurEmbed embed={embed} />;
+    case 'tenor':
+      return <TenorEmbed embed={embed} />;
+    case 'streamable':
+      return <StreamableEmbed embed={embed} />;
+    case 'strava':
+      return <StravaEmbed embed={embed} />;
+    case 'flickr':
+      return <FlickrEmbed embed={embed} />;
+    case 'rumble':
+      return <RumbleEmbed embed={embed} />;
   }
 }
 

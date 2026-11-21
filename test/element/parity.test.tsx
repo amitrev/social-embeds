@@ -224,7 +224,8 @@ function check(side: Rendered): void {
 }
 
 describe('<social-embed> and <SocialEmbed>', () => {
-  it('skips only the fixtures that are not embed code', () => {
+  it('parses every fixture or renders it as a generic iframe, except Rumble’s script player', () => {
+    // Rumble's script player code has no iframe, and the package accepts only its iframe code.
     expect([...skipped].sort()).toEqual(['rumble/embed-dialog-js.html']);
     expect(parsed).toHaveLength(74);
     expect(generic).toHaveLength(8);
@@ -249,12 +250,13 @@ describe('<social-embed> and <SocialEmbed>', () => {
     expect([...platforms].sort()).toEqual(
       [...Object.keys(PLATFORMS), 'generic'].sort(),
     );
-    expect(seen.iframe).toBe(92);
+    expect(seen.iframe).toBe(103);
     expect(seen.script).toBe(23);
     expect(seen.error).toEqual([
       '../fixtures/dailymotion/oembed.html',
       'URL dailymotion Video, no Player ID: reports an error',
       'URL bluesky Post, by handle: reports a lookup error',
+      'URL rumble Page URL: reports a lookup error',
     ]);
   });
 });

@@ -1166,6 +1166,52 @@ Height messages, for the record (§6 leaves them for later): the Datawrapper fra
 - **Flickr from an id alone:** yes, given any `width` and `height`; the user name and the secret are not needed (D98).
 - **Rumble page and embed ids differ:** yes (D99).
 
+## Wave 5 dispatcher and playground (2026-11-21)
+
+### D101. `<SocialEmbed>` and `<social-embed>` route the wave 5 platforms and generic iframes
+
+- **Routing:** `truthsocial`, `imgur`, `tenor`, `streamable`, `strava`, `flickr` and `rumble` go to their components in `<SocialEmbed>` and through `planEmbed` in `<social-embed>`. `height` and `maxHeight` reach Tenor, Streamable, Rumble and Flickr. Truth Social, Imgur and Strava take their height from the frame, starting at 300, 500 and 650 px.
+- **Generic iframes:** embed code that `parseEmbed` rejects but that holds one safe iframe renders as `GenericIframeEmbed`. Anything else goes to `fallback`, or to `onError` and the element's `error` event. Rumble's script-player code has no iframe, so it goes to `fallback` too. The parity test covers every fixture except that one: 74 parse to a platform and 8 render generically. Its 48 URL samples bring it to 130 cases: 103 iframe, 23 script and 4 errors.
+- **A Rumble page URL** renders nothing in both entries. It reports `social-embeds: a Rumble URL needs a lookup: use the embed code`.
+- **Props left off the dispatcher** join the D36 list:
+  - Streamable's `autoplay`, `hd`, `loop`, `muted` and `nocontrols`.
+  - Imgur's and Flickr's `context`, and Flickr's `header` and `footer`.
+  - Strava's `embedStyle`, `fullWidth` and `mapHash`.
+- **Playground:** each new platform has a page with every fixture and URL sample, from the samples of D93–D99. Strava has a route only. `/iframe` renders every `test/fixtures/generic/` code with its last `onLoad` or `onError`. `/many` and `/element` add one embed per new platform and Google Maps' generic code. A `code` element now wraps anywhere: at 375 px, the long URLs in headings made pages 604 px wide.
+
+Choices made during implementation that no earlier decision records:
+
+- **Generic `referrerpolicy`:** only `no-referrer`, `origin`, `same-origin`, `strict-origin` and `strict-origin-when-cross-origin` are kept. These are at least as strict as the browser default. Any other policy is dropped and the default applies.
+- **Generic size with only a numeric `width`:** 16:9, at most that width.
+- **`IframePlan.allowFullscreen`** defaults to `true`. A generic iframe gets `allowfullscreen` only when its code has it.
+- **Streamable:**
+  - Twenty short `streamable.com` paths are pages, never video ids: `about`, `login`, `signup` and the like.
+  - The player's Copy embed code ends with a stray `</div>`. It goes through `PlatformParser.repair`, which runs only after strict parsing fails. Exactly one trailing `</div>` is removed, and what remains must start with `<iframe`.
+- **Tenor size:** div code takes `data-aspect-ratio`, else 1.33. oEmbed iframe code takes its own `width` and `height`. A URL takes 1.33. There is no maximum width.
+- **`allow` and `scrolling`:** Truth Social, Imgur, Strava and Flickr have no `allow` and `scrolling="no"`. Tenor and Rumble allow `fullscreen`; Streamable allows `autoplay; fullscreen`.
+- **Strava's `ns`:** the fixed token `#ns=social-embeds`. The frame echoes it, and the reader checks origin, source and message type.
+- **Placeholders:** Imgur's title link and Flickr's linked image show until the frame loads. The Flickr image is styled to fill the box.
+- **Strava's style option** is the prop `embedStyle`, because `style` would shadow the CSS prop; the embed option key stays `style`.
+- **Flickr rebuilds:** each new width builds a fresh iframe, keyed by its `src`. A navigated frame would add a history entry; a new frame adds none. The first width builds at once; later widths wait until the box width has held for 200 ms. A fixed host `height` may crop or letterbox the photo; `maxHeight` does not.
+- **Truth Social video posts:** a reported height of 0 or less is ignored before the 165 px are added. The browser check found that the frame posts 0 before it is painted, which had shrunk a video post to 165 px.
+
+Checked in Chrome on 2026-11-21, against `next build` and `next start` on port 3100. Desktop is a 1280 × 900 viewport, with a 760 px column. Mobile is 375 × 812, with a 343 px column. Each page was loaded directly and scrolled through, with every section brought into view. The browser pane was hidden, so frames were painted by screenshots, as in D78.
+
+| Platform     | Desktop                                                                                                                                  | 375 px                                                                 |
+| ------------ | ---------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| Truth Social | video code 600×695 (530 + 165), text 600×316, video URL 600×530                                                                          | 343×735, 343×316, 343×570                                              |
+| Imgur        | album 540×485, Hide Title 540×385, image 540×433                                                                                         | 343×415, 343×315, 343×363                                              |
+| Tenor        | Embed dialog 760×760, oEmbed 760×507, URL 760×571                                                                                        | 343×343, 343×229, 343×258                                              |
+| Streamable   | all four codes and the URL 760×428                                                                                                       | 343×193                                                                |
+| Strava       | 554×571                                                                                                                                  | 343×489                                                                |
+| Flickr       | photo code 760×427, album code and URLs 760×570                                                                                          | 343×193, 343×257                                                       |
+| Rumble       | 760×428; the page URL shows the lookup error                                                                                             | 343×193; the same error                                                |
+| Generic      | Bandcamp 350×470, CodePen 760×300, Datawrapper 760×200, Deezer 420×420, Google Maps 600×450, Loom 760×426, Mixcloud 760×120, TED 560×315 | 343×461, 343×300, 343×200, 343×343, 343×257, 343×192, 343×120, 343×193 |
+
+- **Results:** at both widths, every wave 5 embed and every generic iframe left its placeholder and fired `load`. Nothing was wider than the viewport. The only errors from wave 5 samples were the documented Rumble lookups. No wave 5 platform added a script. On `/many` and `/element`, each platform script was on the page once.
+- **Flickr:** six width steps from 730 to 580 px took 251 ms. Each of the 10 frames was rebuilt once, at 580 px, 216 ms after the last step. A viewport change from 1280 to 375 px rebuilt each frame once, at 343 px. `history.length` stayed at 10 throughout.
+- **Hidden-pane artefacts:** on `/many` and `/element`, frames that post their height only once painted timed out: Telegram, Reddit, Bluesky, Tumblr and Threads. The released 0.6.1 demo on GitHub Pages behaves the same in this pane. Frames that loaded while unpainted also misbehaved. The Imgur image frame posted height 0. Imgur's Hide Title frame posted 200, but 315 when loaded in view. A Rumble frame stayed blank until it was reloaded in view.
+
 ## Open VERIFY items
 
 | ID  | Item                                            | Milestone | Status                                          |

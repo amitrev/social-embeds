@@ -39,6 +39,10 @@ h3 {
   font-weight: 600;
 }
 
+code {
+  overflow-wrap: anywhere;
+}
+
 pre {
   overflow-x: auto;
   padding: 8px;
