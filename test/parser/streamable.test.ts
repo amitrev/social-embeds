@@ -68,6 +68,8 @@ describe('Streamable embed code', () => {
     ['a stray </div> after a wrapper', `${api}</div>`],
     ['a stray </div> before the iframe', `</div>${oembed}`],
     ['a stray </span>', player.replace('</div>', '</span>')],
+    ['a reserved name in /e/', player.replace('lttg48', 'about')],
+    ['a reserved name in /o/', oembed.replace('lttg48', 'login')],
     ['another host', oembed.replace('streamable.com', 'example.com')],
     ['another path', oembed.replace('/o/lttg48', '/s/lttg48')],
     ['an upper-case id', oembed.replace('lttg48', 'LTTG48')],

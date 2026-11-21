@@ -54,12 +54,16 @@ function video(id: string): Omit<ParsedEmbed, 'options'> {
   };
 }
 
+function validId(id: string | undefined): id is string {
+  return id !== undefined && !NOT_VIDEOS.has(id);
+}
+
 function fromIframe(iframe: HtmlElement): ParsedEmbed | null {
   if (iframe.tag !== 'iframe') return null;
   const src = parseUrl(iframe.attrs.get('src') ?? '');
   if (!src || src.host !== 'streamable.com') return null;
   const [, id] = PLAYER_PATH.exec(src.path) ?? [];
-  if (id === undefined) return null;
+  if (!validId(id)) return null;
   const options: Options = Object.fromEntries(
     [...src.query]
       .filter(([key]) => KEPT.has(key))
@@ -71,7 +75,7 @@ function fromIframe(iframe: HtmlElement): ParsedEmbed | null {
 function idOf(url: ParsedUrl | null): string | undefined {
   if (!url || !PAGE_HOSTS.has(url.host)) return undefined;
   const id = (PLAYER_PATH.exec(url.path) ?? PAGE_PATH.exec(url.path))?.[1];
-  return id === undefined || NOT_VIDEOS.has(id) ? undefined : id;
+  return validId(id) ? id : undefined;
 }
 
 export const streamable: PlatformParser = {
