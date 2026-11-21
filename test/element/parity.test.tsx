@@ -246,11 +246,11 @@ describe('<social-embed> and <SocialEmbed>', () => {
     expect([...platforms].sort()).toEqual(
       [...Object.keys(PLATFORMS), 'generic'].sort(),
     );
-    expect(seen.iframe).toBe(71);
+    expect(seen.iframe).toBe(79);
     expect(seen.script).toBe(23);
     expect(seen.error).toEqual([
       '../fixtures/dailymotion/oembed.html',
-      // Placeholder errors until the wave 5 platforms render.
+      // Placeholder errors until the remaining wave 5 platforms render.
       '../fixtures/flickr/embed-dialog-album.html',
       '../fixtures/flickr/embed-dialog-header-footer.html',
       '../fixtures/flickr/embed-dialog-slideshow.html',
@@ -261,15 +261,7 @@ describe('<social-embed> and <SocialEmbed>', () => {
       '../fixtures/imgur/embed-dialog-album.html',
       '../fixtures/imgur/oembed-album.html',
       '../fixtures/imgur/oembed-image.html',
-      '../fixtures/rumble/embed-dialog-iframe.html',
-      '../fixtures/rumble/oembed.html',
       '../fixtures/strava/route-derived.html',
-      '../fixtures/streamable/api-embed-code.html',
-      '../fixtures/streamable/embed-docs.html',
-      '../fixtures/streamable/oembed.html',
-      '../fixtures/streamable/player-copy-embed.html',
-      '../fixtures/tenor/embed-dialog.html',
-      '../fixtures/tenor/oembed.html',
       '../fixtures/truthsocial/embed-dialog-video.html',
       '../fixtures/truthsocial/oembed-text.html',
       'URL dailymotion Video, no Player ID: reports an error',

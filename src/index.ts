@@ -93,6 +93,13 @@ export {
   type KickOptions,
 } from './components/kick-embed';
 export { GiphyEmbed, type GiphyEmbedProps } from './components/giphy-embed';
+export { TenorEmbed, type TenorEmbedProps } from './components/tenor-embed';
+export {
+  StreamableEmbed,
+  type StreamableEmbedProps,
+  type StreamableOptions,
+} from './components/streamable-embed';
+export { RumbleEmbed, type RumbleEmbedProps } from './components/rumble-embed';
 export {
   GenericIframeEmbed,
   type GenericIframeEmbedProps,

@@ -7,6 +7,9 @@ import { kickPlan } from '../../src/core/plans/kick';
 import { soundcloudPlan } from '../../src/core/plans/soundcloud';
 import { spotifyPlan } from '../../src/core/plans/spotify';
 import { tumblrPlan } from '../../src/core/plans/tumblr';
+import { rumblePlan } from '../../src/core/plans/rumble';
+import { streamablePlan } from '../../src/core/plans/streamable';
+import { tenorPlan } from '../../src/core/plans/tenor';
 import { twitchPlan } from '../../src/core/plans/twitch';
 import { vimeoPlan } from '../../src/core/plans/vimeo';
 import { resolveEmbed } from '../../src/core/resolve';
@@ -25,6 +28,11 @@ import spotifyShowVideo from '../fixtures/spotify/oembed-show-video.html?raw';
 import spotifyTrack from '../fixtures/spotify/oembed-track.html?raw';
 import twitchChannel from '../fixtures/twitch/docs-channel.html?raw';
 import twitchVideo from '../fixtures/twitch/docs-video.html?raw';
+import rumbleDialog from '../fixtures/rumble/embed-dialog-iframe.html?raw';
+import rumbleOembed from '../fixtures/rumble/oembed.html?raw';
+import streamableApi from '../fixtures/streamable/api-embed-code.html?raw';
+import streamableOembed from '../fixtures/streamable/oembed.html?raw';
+import tenorDialog from '../fixtures/tenor/embed-dialog.html?raw';
 import vimeoResponsive from '../fixtures/vimeo/responsive-docs.html?raw';
 
 function fromUrl(url: string, platform: Platform): ParsedEmbed {
@@ -606,5 +614,106 @@ describe('giphyPlan', () => {
       ratio: { width: 1, height: 1 },
       size: { width: 480, height: 269 },
     });
+  });
+});
+
+describe('tenorPlan', () => {
+  it('defaults a URL to 4:3', () => {
+    expect(
+      tenorPlan(
+        fromUrl('https://tenor.com/view/hello-wave-gif-12345', 'tenor'),
+      ),
+    ).toEqual({
+      kind: 'iframe',
+      src: 'https://tenor.com/embed/12345',
+      title: 'Tenor GIF',
+      allow: 'fullscreen',
+      ratio: { width: 133, height: 100 },
+      size: undefined,
+    });
+  });
+
+  it('keeps the embed code ratio', () => {
+    expect(tenorPlan(fromCode(tenorDialog, 'tenor'))).toMatchObject({
+      src: 'https://tenor.com/embed/12328062661350661133',
+      size: { width: 1, height: 1 },
+    });
+  });
+});
+
+describe('streamablePlan', () => {
+  it('builds the player frame for a URL', () => {
+    expect(
+      streamablePlan(
+        fromUrl('https://streamable.com/abc123', 'streamable'),
+        {},
+      ),
+    ).toEqual({
+      kind: 'iframe',
+      src: 'https://streamable.com/e/abc123',
+      title: 'Streamable video',
+      allow: 'autoplay; fullscreen',
+      ratio: { width: 16, height: 9 },
+      size: undefined,
+    });
+  });
+
+  it('keeps the wrapper ratio and the frame size', () => {
+    expect(
+      streamablePlan(fromCode(streamableApi, 'streamable'), {}),
+    ).toMatchObject({
+      src: 'https://streamable.com/e/lttg48',
+      size: { width: 16, height: 9 },
+    });
+    expect(
+      streamablePlan(fromCode(streamableOembed, 'streamable'), {}),
+    ).toMatchObject({ size: { width: 1280, height: 720 } });
+  });
+
+  it('turns options into player parameters', () => {
+    expect(
+      streamablePlan(fromUrl('https://streamable.com/abc123', 'streamable'), {
+        autoplay: true,
+        loop: false,
+        nocontrols: true,
+        hd: true,
+        muted: true,
+      }),
+    ).toMatchObject({
+      src: 'https://streamable.com/e/abc123?autoplay=1&hd=1&loop=0&muted=1&nocontrols=1',
+    });
+  });
+
+  it('ignores parsed options that are not player parameters', () => {
+    const embed = fromUrl('https://streamable.com/abc123', 'streamable');
+    expect(
+      streamablePlan({ ...embed, options: { id: 'x', muted: 1 } }, {}),
+    ).toMatchObject({ src: 'https://streamable.com/e/abc123?muted=1' });
+  });
+});
+
+describe('rumblePlan', () => {
+  it('keeps pub from the embed code and its size', () => {
+    expect(rumblePlan(fromCode(rumbleDialog, 'rumble'))).toEqual({
+      kind: 'iframe',
+      src: 'https://rumble.com/embed/v12onr1/?pub=4',
+      title: 'Rumble video',
+      allow: 'fullscreen',
+      ratio: { width: 16, height: 9 },
+      size: { width: 640, height: 360 },
+    });
+  });
+
+  it('adds no pub', () => {
+    expect(rumblePlan(fromCode(rumbleOembed, 'rumble'))).toMatchObject({
+      src: 'https://rumble.com/embed/v12onr1/',
+    });
+  });
+
+  it('drops options other than pub', () => {
+    const embed = fromCode(rumbleDialog, 'rumble');
+    expect(
+      rumblePlan({ ...embed, options: { pub: 4, id: 'x' } }),
+    ).toMatchObject({ src: 'https://rumble.com/embed/v12onr1/?pub=4' });
   });
 });

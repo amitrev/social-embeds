@@ -18,6 +18,9 @@ import type { FrameProps } from './shared';
 import { SnapchatEmbed } from './snapchat-embed';
 import { SoundCloudEmbed, type SoundCloudOptions } from './soundcloud-embed';
 import { SpotifyEmbed } from './spotify-embed';
+import { StreamableEmbed, type StreamableOptions } from './streamable-embed';
+import { RumbleEmbed } from './rumble-embed';
+import { TenorEmbed } from './tenor-embed';
 import { TelegramEmbed, type TelegramOptions } from './telegram-embed';
 import { ThreadsEmbed, type ThreadsOptions } from './threads-embed';
 import { TikTokEmbed, type TikTokOptions } from './tiktok-embed';
@@ -49,7 +52,8 @@ type PlatformOption =
   | keyof DailymotionOptions
   | keyof BlueskyOptions
   | keyof SoundCloudOptions
-  | keyof KickOptions;
+  | keyof KickOptions
+  | keyof StreamableOptions;
 
 export type SocialEmbedProps = SocialEmbedSource &
   Omit<FrameProps, PlatformOption> & {
@@ -189,14 +193,28 @@ export function SocialEmbed(props: SocialEmbedProps) {
       return (
         <GiphyEmbed {...shared} {...frame} onError={onError} embed={embed} />
       );
-    // Placeholders until the components of Tasks 6 to 8 replace them.
+    case 'tenor':
+      return (
+        <TenorEmbed {...shared} {...frame} onError={onError} embed={embed} />
+      );
+    case 'streamable':
+      return (
+        <StreamableEmbed
+          {...shared}
+          {...frame}
+          onError={onError}
+          embed={embed}
+        />
+      );
+    case 'rumble':
+      return (
+        <RumbleEmbed {...shared} {...frame} onError={onError} embed={embed} />
+      );
+    // Placeholders until the components of Tasks 7 and 8 replace them.
     case 'truthsocial':
     case 'imgur':
-    case 'tenor':
-    case 'streamable':
     case 'strava':
     case 'flickr':
-    case 'rumble':
       return <UnplannedEmbed embed={embed} onError={onError} />;
   }
 }

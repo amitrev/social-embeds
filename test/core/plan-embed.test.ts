@@ -15,6 +15,9 @@ import { snapchatPlan } from '../../src/core/plans/snapchat';
 import { soundcloudPlan } from '../../src/core/plans/soundcloud';
 import { spotifyPlan } from '../../src/core/plans/spotify';
 import { telegramPlan } from '../../src/core/plans/telegram';
+import { rumblePlan } from '../../src/core/plans/rumble';
+import { streamablePlan } from '../../src/core/plans/streamable';
+import { tenorPlan } from '../../src/core/plans/tenor';
 import { threadsPlan } from '../../src/core/plans/threads';
 import { tiktokPlan } from '../../src/core/plans/tiktok';
 import { tumblrPlan } from '../../src/core/plans/tumblr';
@@ -34,10 +37,13 @@ import kick from '../fixtures/kick/player-channel.html?raw';
 import linkedin from '../fixtures/linkedin/post-full.html?raw';
 import pinterest from '../fixtures/pinterest/widget-docs.html?raw';
 import reddit from '../fixtures/reddit/post-share.html?raw';
+import rumble from '../fixtures/rumble/embed-dialog-iframe.html?raw';
 import snapchat from '../fixtures/snapchat/profile-share.html?raw';
 import soundcloud from '../fixtures/soundcloud/share-visual.html?raw';
 import spotify from '../fixtures/spotify/oembed-track.html?raw';
+import streamable from '../fixtures/streamable/api-embed-code.html?raw';
 import telegram from '../fixtures/telegram/widget-configurator.html?raw';
+import tenor from '../fixtures/tenor/embed-dialog.html?raw';
 import threads from '../fixtures/threads/embed-dialog.html?raw';
 import tiktok from '../fixtures/tiktok/oembed-player.html?raw';
 import tumblr from '../fixtures/tumblr/oembed.html?raw';
@@ -47,14 +53,7 @@ import x from '../fixtures/x/oembed-basic.html?raw';
 import youtube from '../fixtures/youtube/share.html?raw';
 
 // Wave 5 platforms whose plans come in later tasks.
-type Unplanned =
-  | 'truthsocial'
-  | 'imgur'
-  | 'tenor'
-  | 'streamable'
-  | 'strava'
-  | 'flickr'
-  | 'rumble';
+type Unplanned = 'truthsocial' | 'imgur' | 'strava' | 'flickr';
 
 type Case = [string, (embed: ParsedEmbed) => Plan | PlanError];
 
@@ -81,6 +80,9 @@ const cases = {
   tumblr: [tumblr, (e) => tumblrPlan(e)],
   kick: [kick, (e) => kickPlan(e, {})],
   giphy: [giphy, (e) => giphyPlan(e)],
+  tenor: [tenor, (e) => tenorPlan(e)],
+  streamable: [streamable, (e) => streamablePlan(e, {})],
+  rumble: [rumble, (e) => rumblePlan(e)],
 } satisfies Record<Exclude<Platform, Unplanned>, Case>;
 
 describe('planEmbed', () => {

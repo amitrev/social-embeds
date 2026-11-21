@@ -13,7 +13,10 @@ import { redditPlan } from './plans/reddit';
 import { snapchatPlan } from './plans/snapchat';
 import { soundcloudPlan } from './plans/soundcloud';
 import { spotifyPlan } from './plans/spotify';
+import { rumblePlan } from './plans/rumble';
+import { streamablePlan } from './plans/streamable';
 import { telegramPlan } from './plans/telegram';
+import { tenorPlan } from './plans/tenor';
 import { threadsPlan } from './plans/threads';
 import { tiktokPlan } from './plans/tiktok';
 import { tumblrPlan } from './plans/tumblr';
@@ -69,14 +72,17 @@ export function planEmbed(embed: ParsedEmbed): Plan | PlanError {
       return kickPlan(embed, {});
     case 'giphy':
       return giphyPlan(embed);
-    // Placeholders until the plans of Tasks 6 to 8 replace them.
+    case 'tenor':
+      return tenorPlan(embed);
+    case 'streamable':
+      return streamablePlan(embed, {});
+    case 'rumble':
+      return rumblePlan(embed);
+    // Placeholders until the plans of Tasks 7 and 8 replace them.
     case 'truthsocial':
     case 'imgur':
-    case 'tenor':
-    case 'streamable':
     case 'strava':
     case 'flickr':
-    case 'rumble':
       return {
         kind: 'error',
         message: `social-embeds: no plan for ${embed.platform} yet`,
