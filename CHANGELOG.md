@@ -1,5 +1,14 @@
 # social-embeds
 
+## 0.8.1
+
+### Patch Changes
+
+- 52c008b: `<social-embed>` now restyles in place when `width`, `max-width`, `height`, `max-height` or `eager` changes, instead of reloading the embed. `eager="false"` now means off, and React 19's `eager` now means on. Embed code written straight inside the element, without a `<template>`, now renders. Placeholder copies no longer duplicate `id`s.
+- 52c008b: `GenericIframeEmbed` no longer bundles every platform's parser: it adds about 5 KB gzipped to an app instead of about 16 KB. It still refuses an iframe that a named platform serves.
+- 52c008b: Script embeds no longer render twice, or call `onLoad` twice, when React's `<Activity>` hides and shows them (Next.js 16 `cacheComponents`). `onError` is no longer called twice for the same error under StrictMode. The scripts the package adds now carry the page's CSP nonce, copied from its first `<script nonce>`. Instagram and Threads embeds inside a shadow root, where their script cannot reach, now report that at once instead of after about 50 s.
+- 52c008b: More YouTube, Facebook and older embed code is recognised: YouTube playlists (`/playlist?list=`, `/embed/videoseries?list=`) and channel streams (`/channel/{id}/live`, `/embed/live_stream?channel=`), a `#t=` start time, URLs copied from HTML source with `&amp;`, Facebook photostream photo URLs, Vimeo code with its credit paragraph, Reddit's older `reddit-card` code, older Tumblr code, X's `twitter-video` code, and `&nbsp;` between an embed and its script.
+
 ## 0.8.0
 
 ### Minor Changes
