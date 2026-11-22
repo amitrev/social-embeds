@@ -1,8 +1,8 @@
 import { kickPlan, type KickOptions } from '../core/plans/kick';
 import { kick } from '../parser/platforms/kick';
-import { useReportError } from './hooks';
-import { IframeEmbed, planProps } from './iframe-embed';
-import { type EmbedSource, type FrameProps, resolveEmbed } from './shared';
+import type { EmbedSource, FrameProps } from './shared';
+import { usePlan } from './use-plan';
+import { frameOf } from './iframe-embed';
 
 export type { KickOptions };
 
@@ -10,31 +10,10 @@ export type KickEmbedProps = EmbedSource &
   Omit<FrameProps, keyof KickOptions> &
   KickOptions;
 
+const KICK_OPTIONS = ['autoplay', 'muted'] as const;
+
 /** A live channel at 16:9. */
 export function KickEmbed(props: KickEmbedProps) {
-  const {
-    url,
-    embed: given,
-    onError,
-    maxWidth,
-    autoplay,
-    muted,
-    ...frame
-  } = props;
-  const { embed, error } = resolveEmbed(url, given, kick);
-  const plan = embed ? kickPlan(embed, { autoplay, muted }) : undefined;
-  useReportError(
-    error ?? (plan?.kind === 'error' ? plan.message : undefined),
-    onError,
-  );
-  if (plan?.kind !== 'iframe') return null;
-
-  return (
-    <IframeEmbed
-      {...frame}
-      {...planProps(plan)}
-      onError={onError}
-      maxWidth={maxWidth ?? plan.maxWidth}
-    />
-  );
+  const [plan, frame] = usePlan(props, kick, KICK_OPTIONS, kickPlan);
+  return plan?.kind === 'iframe' ? frameOf(plan, frame) : null;
 }

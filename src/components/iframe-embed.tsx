@@ -60,6 +60,27 @@ export function fallbackPlaceholder(plan: IframePlan): ReactNode {
   );
 }
 
+/**
+ * A platform component's frame: the host's `maxWidth` and `height` win over the plan's.
+ * Platforms with fallback content pass `fallbackPlaceholder`, which the others never bundle.
+ */
+export function frameOf(
+  plan: IframePlan,
+  props: FrameProps,
+  fallback?: (plan: IframePlan) => ReactNode,
+): ReactNode {
+  const { maxWidth, height, placeholder, ...rest } = props;
+  return (
+    <IframeEmbed
+      {...rest}
+      {...planProps(plan)}
+      maxWidth={maxWidth ?? plan.maxWidth}
+      height={height ?? plan.height}
+      placeholder={placeholder ?? fallback?.(plan)}
+    />
+  );
+}
+
 const FILL: CSSProperties = { position: 'absolute', inset: 0 };
 
 export function IframeEmbed(props: IframeEmbedProps) {

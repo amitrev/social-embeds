@@ -3,9 +3,9 @@ import {
   dailymotionPlan,
   type DailymotionOptions,
 } from '../core/plans/dailymotion';
-import { useReportError } from './hooks';
-import { IframeEmbed, planProps } from './iframe-embed';
-import { type EmbedSource, type FrameProps, resolveEmbed } from './shared';
+import type { EmbedSource, FrameProps } from './shared';
+import { usePlan } from './use-plan';
+import { frameOf } from './iframe-embed';
 
 export type { DailymotionOptions };
 
@@ -13,38 +13,18 @@ export type DailymotionEmbedProps = EmbedSource &
   Omit<FrameProps, keyof DailymotionOptions> &
   DailymotionOptions;
 
+const DAILYMOTION_OPTIONS = ['playerId', 'mute', 'startTime', 'loop'] as const;
+
 /**
  * Dailymotion refuses embeds without a Player ID: one from the embed code or the `playerId`
  * prop, never another account's (docs/decisions.md D63).
  */
 export function DailymotionEmbed(props: DailymotionEmbedProps) {
-  const {
-    url,
-    embed: given,
-    onError,
-    maxWidth,
-    playerId,
-    mute,
-    startTime,
-    loop,
-    ...frame
-  } = props;
-  const { embed, error } = resolveEmbed(url, given, dailymotion);
-  const plan = embed
-    ? dailymotionPlan(embed, { playerId, mute, startTime, loop })
-    : undefined;
-  useReportError(
-    error ?? (plan?.kind === 'error' ? plan.message : undefined),
-    onError,
+  const [plan, frame] = usePlan(
+    props,
+    dailymotion,
+    DAILYMOTION_OPTIONS,
+    dailymotionPlan,
   );
-  if (plan?.kind !== 'iframe') return null;
-
-  return (
-    <IframeEmbed
-      {...frame}
-      {...planProps(plan)}
-      onError={onError}
-      maxWidth={maxWidth ?? plan.maxWidth}
-    />
-  );
+  return plan?.kind === 'iframe' ? frameOf(plan, frame) : null;
 }

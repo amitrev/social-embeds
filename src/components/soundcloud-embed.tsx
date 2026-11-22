@@ -3,9 +3,9 @@ import {
   soundcloudPlan,
   type SoundCloudOptions,
 } from '../core/plans/soundcloud';
-import { useReportError } from './hooks';
-import { IframeEmbed, planProps } from './iframe-embed';
-import { type EmbedSource, type FrameProps, resolveEmbed } from './shared';
+import type { EmbedSource, FrameProps } from './shared';
+import { usePlan } from './use-plan';
+import { frameOf } from './iframe-embed';
 
 export type { SoundCloudOptions };
 
@@ -13,52 +13,25 @@ export type SoundCloudEmbedProps = EmbedSource &
   Omit<FrameProps, keyof SoundCloudOptions> &
   SoundCloudOptions;
 
+const SOUNDCLOUD_OPTIONS = [
+  'visual',
+  'color',
+  'autoPlay',
+  'hideRelated',
+  'showComments',
+  'showUser',
+  'showReposts',
+  'showTeaser',
+  'showArtwork',
+] as const;
+
 /** A fixed height: the `height` prop, else the embed code's, else 400px for the visual player. */
 export function SoundCloudEmbed(props: SoundCloudEmbedProps) {
-  const {
-    url,
-    embed: given,
-    onError,
-    maxWidth,
-    height,
-    visual,
-    color,
-    autoPlay,
-    hideRelated,
-    showComments,
-    showUser,
-    showReposts,
-    showTeaser,
-    showArtwork,
-    ...frame
-  } = props;
-  const { embed, error } = resolveEmbed(url, given, soundcloud);
-  const plan = embed
-    ? soundcloudPlan(embed, {
-        visual,
-        color,
-        autoPlay,
-        hideRelated,
-        showComments,
-        showUser,
-        showReposts,
-        showTeaser,
-        showArtwork,
-      })
-    : undefined;
-  useReportError(
-    error ?? (plan?.kind === 'error' ? plan.message : undefined),
-    onError,
+  const [plan, frame] = usePlan(
+    props,
+    soundcloud,
+    SOUNDCLOUD_OPTIONS,
+    soundcloudPlan,
   );
-  if (plan?.kind !== 'iframe') return null;
-
-  return (
-    <IframeEmbed
-      {...frame}
-      {...planProps(plan)}
-      onError={onError}
-      maxWidth={maxWidth ?? plan.maxWidth}
-      height={height ?? plan.height}
-    />
-  );
+  return plan?.kind === 'iframe' ? frameOf(plan, frame) : null;
 }

@@ -1397,6 +1397,12 @@ Measured from `dist` as in D114, gzipped: `YouTubeEmbed` 4.2 to 4.1 KB, `TikTokE
 
 - **Not done:** the 29 React wrappers repeat the same steps (resolve, plan, report, render) and list each option twice. One shared helper would save an estimated 0.5 to 1 KB gzipped in `<SocialEmbed>` and about 100 bytes in a single component, for a change to every component.
 
+### D116. One body for every platform component
+
+The 29 React wrappers repeated the same steps (resolve the input, plan it, report errors, render the frame or the script embed) and listed each option twice, once to take it out of the props and once to pass it to the plan. They now call `usePlan(props, parser, OPTIONS, plan)` and render with `frameOf` or `scriptOf`; each lists its options once, in an `as const` array that the type checker requires to name every key of the plan's options, so no option prop can reach the wrapper `<div>`. The host's `maxWidth` and `height` win over the plan's, as each component did by hand; only Bluesky, Flickr and Imgur pass `fallbackPlaceholder`, so the others never bundle it. `frameOf` lives beside `IframeEmbed` and `scriptOf` beside `ScriptEmbed`, so an iframe component still bundles no script code.
+
+Measured from `dist` as in D114, gzipped: `<SocialEmbed>` 28.3 to 27.4 KB and `createSocialEmbed` with five platforms 12.3 to 12.2 KB, but a single component grows by 65 to 98 bytes (`YouTubeEmbed` 4.07 to 4.13 KB, `FacebookEmbed` 7.37 to 7.47 KB): a shared helper pays only once two components share it. The maintainer kept it for the smaller `<SocialEmbed>` and the 570 fewer lines.
+
 ## Open VERIFY items
 
 | ID  | Item                                            | Milestone | Status                                          |

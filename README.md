@@ -83,7 +83,7 @@ Before 0.7.0, iframe code that no platform claimed reached `fallback`. It now re
 
 #### Only the platforms you use
 
-`<SocialEmbed>` recognises every platform, so it adds about 28 KB gzipped to an app. `createSocialEmbed` makes one that recognises only the platforms you list, and a bundler leaves the others out:
+`<SocialEmbed>` recognises every platform, so it adds about 27 KB gzipped to an app. `createSocialEmbed` makes one that recognises only the platforms you list, and a bundler leaves the others out:
 
 ```tsx
 // app/social-embed.tsx
@@ -111,7 +111,7 @@ export const SocialEmbed = createSocialEmbed([
 | `youtube`, `x`                                    | 9 KB    |
 | `youtube`, `x`, `instagram`, `facebook`, `tiktok` | 12 KB   |
 | the same five and `genericIframe`                 | 14 KB   |
-| every platform (`<SocialEmbed>`)                  | 28 KB   |
+| every platform (`<SocialEmbed>`)                  | 27 KB   |
 
 - **Names:** each platform is exported under its id, as in `embed.platform`: `x`, `instagram`, `threads`, `facebook`, `tiktok`, `youtube`, `telegram`, `snapchat`, `linkedin`, `reddit`, `pinterest`, `spotify`, `vimeo`, `twitch`, `dailymotion`, `bluesky`, `soundcloud`, `applemusic`, `applepodcasts`, `tumblr`, `kick`, `giphy`, `truthsocial`, `imgur`, `tenor`, `streamable`, `strava`, `flickr` and `rumble`. `genericIframe` adds [generic iframe embeds](#generic-iframe-embeds). The order of the list does not matter.
 - **The same component:** it takes the same props and renders exactly what `<SocialEmbed>` renders for the platforms it knows. Embed code of another platform goes to `fallback`, or to `onError` as `social-embeds: unrecognised embed code`; a URL of another platform is reported as `social-embeds: not a supported post URL: …`. A frame that a named platform serves never renders as a generic iframe, even when that platform is not in the list.
@@ -121,7 +121,7 @@ export const SocialEmbed = createSocialEmbed([
 
 Each platform component takes a `url`, or an `embed` already parsed by [`social-embeds/parser`](#parser), plus the shared props and its own option props. Option props override options from the embed code.
 
-A platform component bundles only its own platform's parser: one component adds about 3.5 to 5.5 KB gzipped to an app (`FacebookEmbed` about 7.4 KB), against about 28 KB for `<SocialEmbed>`, which recognises every platform. A URL of another platform is reported as `social-embeds: not a {Platform} post URL: …`, and an `embed` of another platform as `social-embeds: expected a {Platform} embed, got {id}`.
+A platform component bundles only its own platform's parser: one component adds about 3.5 to 5.5 KB gzipped to an app (`FacebookEmbed` about 7.4 KB), against about 27 KB for `<SocialEmbed>`, which recognises every platform. A URL of another platform is reported as `social-embeds: not a {Platform} post URL: …`, and an `embed` of another platform as `social-embeds: expected a {Platform} embed, got {id}`.
 
 ```tsx
 import {
