@@ -17,8 +17,18 @@ describe('parseEmbed input rules', () => {
   });
 
   it.each([
+    ['&nbsp;', '&nbsp;'],
+    ['&#160;', '&#160;'],
+    ['&#xA0;', '&#xA0;'],
+    ['a non-breaking space', ' '],
+  ])('reads %s between the embed and its script as whitespace', (_, space) => {
+    expect(parseEmbed(`${blockquote}${space}${script}`)?.id).toBe('20');
+  });
+
+  it.each([
     ['a wrapper element', `<p>${x}</p>`],
     ['text next to the embed', `See this: ${x}`],
+    ['an entity that is not a space', `${blockquote}&amp;${script}`],
     ['two embeds', `${blockquote}${blockquote}`],
     ['two platforms', `${blockquote}${youtube}`],
     [

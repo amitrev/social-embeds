@@ -7,6 +7,7 @@ import {
 } from '../platform';
 import type { ParsedEmbed } from '../types';
 import { parseUrl, type ParsedUrl } from '../url';
+import { truthsocialFrame } from '../frames';
 
 // Video code (`truthsocial-video` class) is recorded as the option `video: true`, which only sets the height rule (docs/decisions.md D93).
 
@@ -51,6 +52,5 @@ export const truthsocial: PlatformParser = {
     const found = fromUrl(url);
     return found && { ...found, options: {} };
   },
-  ownsFrame: (src) =>
-    src.host === 'truthsocial.com' && src.path.startsWith('/@'),
+  ownsFrame: truthsocialFrame,
 };

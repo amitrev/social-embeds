@@ -4,11 +4,14 @@ import {
   type Options,
   type PlatformParser,
   sizeOf,
-  underPath,
   withSize,
 } from '../platform';
 import type { ParsedEmbed } from '../types';
 import { coerce, parseUrl, pixels, type ParsedUrl } from '../url';
+import {
+  FACEBOOK_PLUGIN_HOSTS as PLUGIN_HOSTS,
+  facebookFrame,
+} from '../frames';
 
 // Which input renders through the SDK and which as an iframe: docs/decisions.md D10, D22, D44.
 
@@ -18,11 +21,6 @@ const HOSTS = new Set([
   'web.facebook.com',
   'm.facebook.com',
 ]);
-const PLUGIN_HOSTS = new Set([
-  'facebook.com',
-  'www.facebook.com',
-  'web.facebook.com',
-]);
 const BASE = 'https://www.facebook.com';
 
 // URL shapes: docs/decisions.md D21.
@@ -30,7 +28,7 @@ const NAME = '[A-Za-z0-9.\\-]{1,80}';
 const POST_ID = '(?:\\d{1,25}|pfbid[A-Za-z0-9]{10,120})';
 const POSTS_PATH = new RegExp(`^/(${NAME})/posts/(${POST_ID})/?$`);
 const PHOTOS_PATH = new RegExp(
-  `^/(${NAME})/photos/([A-Za-z0-9.]{1,40})/(\\d{1,25})/?$`,
+  `^/(${NAME})/photos/([A-Za-z0-9.\\-]{1,80})/(\\d{1,25})/?$`,
 );
 const VIDEOS_PATH = new RegExp(
   `^/(${NAME})/videos/(?:[^/]{1,200}/)?(\\d{1,25})/?$`,
@@ -217,6 +215,5 @@ export const facebook: PlatformParser = {
     const found = target(url);
     return found && embed(found, found.kind, 'sdk', {});
   },
-  ownsFrame: (src) =>
-    PLUGIN_HOSTS.has(src.host) && underPath(src.path, '/plugins'),
+  ownsFrame: facebookFrame,
 };

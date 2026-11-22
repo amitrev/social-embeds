@@ -1,5 +1,5 @@
 import type { ParsedEmbed } from '../../parser';
-import { playerParams, query } from '../params';
+import { optionsWithout, playerParams, query } from '../params';
 import type { Plan, PlanError } from '../plan';
 
 /** The player parameters YouTube documents (developers.google.com/youtube/player_parameters). */
@@ -55,6 +55,18 @@ const PARAMS: Record<Exclude<keyof YouTubeOptions, 'nocookie'>, string> = {
 const ALLOW =
   'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
 
+// Security: the `list` or `channel` that names the content is the verified id, never an option (docs/decisions.md D68).
+function player(embed: ParsedEmbed): {
+  path: string;
+  key?: 'list' | 'channel';
+} {
+  if (embed.url.startsWith('https://www.youtube.com/playlist?'))
+    return { path: 'videoseries', key: 'list' };
+  if (embed.url.startsWith('https://www.youtube.com/channel/'))
+    return { path: 'live_stream', key: 'channel' };
+  return { path: embed.id };
+}
+
 export function youtubePlan(
   embed: ParsedEmbed,
   options: YouTubeOptions,
@@ -65,10 +77,15 @@ export function youtubePlan(
     (nocookie ?? parsedNocookie === true)
       ? 'https://www.youtube-nocookie.com'
       : 'https://www.youtube.com';
-  const params = playerParams(rest, PARAMS);
+  const { path, key } = player(embed);
+  const params = playerParams(rest, PARAMS).filter(([name]) => name !== key);
   return {
     kind: 'iframe',
-    src: `${host}/embed/${embed.id}${query(Object.entries(parsed), params)}`,
+    src: `${host}/embed/${path}${query(
+      key === undefined ? undefined : [[key, embed.id]],
+      optionsWithout(parsed, key === undefined ? [] : [key]),
+      params,
+    )}`,
     title: 'YouTube video player',
     allow: ALLOW,
     referrerPolicy: 'strict-origin-when-cross-origin',

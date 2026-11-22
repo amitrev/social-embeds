@@ -130,6 +130,53 @@ describe('youtubePlan', () => {
       ) as unknown,
     });
   });
+
+  const channel = 'UCBR8-60-B28hp2BmDPdntcQ';
+  const list = 'PL0123456789abcdefghijklmnopqrstuv';
+  const liveUrl = `https://www.youtube.com/channel/${channel}/live`;
+  const playlistUrl = `https://www.youtube.com/playlist?list=${list}`;
+
+  it("plays a channel's live stream", () => {
+    expect(youtubePlan(fromUrl(liveUrl, 'youtube'), {})).toEqual({
+      kind: 'iframe',
+      src: `https://www.youtube.com/embed/live_stream?channel=${channel}`,
+      title: 'YouTube video player',
+      allow: YOUTUBE_ALLOW,
+      referrerPolicy: 'strict-origin-when-cross-origin',
+      ratio: { width: 16, height: 9 },
+      size: undefined,
+    });
+  });
+
+  it('plays a playlist, with its options and from youtube-nocookie.com', () => {
+    expect(
+      youtubePlan(fromUrl(playlistUrl, 'youtube'), {
+        nocookie: true,
+        autoplay: true,
+      }),
+    ).toMatchObject({
+      src: `https://www.youtube-nocookie.com/embed/videoseries?list=${list}&autoplay=1`,
+      ratio: { width: 16, height: 9 },
+    });
+  });
+
+  it('never lets an option replace the playlist or the channel', () => {
+    const playlist = fromUrl(playlistUrl, 'youtube');
+    const live = fromUrl(liveUrl, 'youtube');
+    expect(
+      youtubePlan(
+        { ...playlist, options: { list: 'PLother0000', LIST: 'x' } },
+        { list: 'PLother0000' },
+      ),
+    ).toMatchObject({
+      src: `https://www.youtube.com/embed/videoseries?list=${list}`,
+    });
+    expect(
+      youtubePlan({ ...live, options: { channel: 'UCother' } }, {}),
+    ).toMatchObject({
+      src: `https://www.youtube.com/embed/live_stream?channel=${channel}`,
+    });
+  });
 });
 
 describe('telegramPlan', () => {

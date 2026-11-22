@@ -2,17 +2,19 @@ import {
   type Options,
   type PlatformParser,
   sizeOf,
-  underPath,
   withSize,
 } from '../platform';
 import type { ParsedEmbed } from '../types';
 import { coerce, parseUrl, type ParsedUrl } from '../url';
+import {
+  TWITCH_PLAYER_HOST as PLAYER_HOST,
+  TWITCH_CLIPS_HOST as CLIPS_HOST,
+  twitchFrame,
+} from '../frames';
 
 // `parent` names the embedding page, so it is never read from the input (docs/decisions.md D62).
 
 const HOSTS = new Set(['twitch.tv', 'www.twitch.tv', 'm.twitch.tv']);
-const PLAYER_HOST = 'player.twitch.tv';
-const CLIPS_HOST = 'clips.twitch.tv';
 const CHANNEL = /^[A-Za-z0-9_]{3,25}$/;
 const VIDEO = /^v?(\d{1,12})$/;
 const COLLECTION = /^[A-Za-z0-9_-]{6,30}$/;
@@ -133,7 +135,5 @@ export const twitch: PlatformParser = {
     const page = fromPage(url);
     return page && { ...page.found, options: page.options };
   },
-  ownsFrame: (src) =>
-    src.host === PLAYER_HOST ||
-    (src.host === CLIPS_HOST && underPath(src.path, '/embed')),
+  ownsFrame: twitchFrame,
 };

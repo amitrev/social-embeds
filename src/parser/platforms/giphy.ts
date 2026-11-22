@@ -2,17 +2,16 @@ import type { HtmlElement } from '../html';
 import {
   type PlatformParser,
   sizeOf,
-  underPath,
   unwrapRatio,
   withSize,
 } from '../platform';
 import type { ParsedEmbed } from '../types';
 import { parseUrl, type ParsedUrl } from '../url';
+import { GIPHY_PAGE_HOSTS as PAGE_HOSTS, giphyFrame } from '../frames';
 
 // Giphy's code ends with a "via GIPHY" credit, accepted and dropped (docs/decisions.md D76).
 
 const ID = '([A-Za-z0-9]{6,40})';
-const PAGE_HOSTS = new Set(['giphy.com', 'www.giphy.com']);
 const PAGE_PATH = new RegExp(
   `^/(?:gifs|stickers)/(?:[A-Za-z0-9-]{0,200}-)?${ID}/?$`,
 );
@@ -92,5 +91,5 @@ export const giphy: PlatformParser = {
     const id = idOf(url);
     return id === undefined ? null : { ...gif(id), options: {} };
   },
-  ownsFrame: (src) => PAGE_HOSTS.has(src.host) && underPath(src.path, '/embed'),
+  ownsFrame: giphyFrame,
 };

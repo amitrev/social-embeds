@@ -1,7 +1,18 @@
-import { frameStyle, srcWithSize, watchWidth } from '../core/layout';
+import {
+  type FrameLayout,
+  frameStyle,
+  srcWithSize,
+  watchWidth,
+} from '../core/layout';
 import type { IframePlan } from '../core/plan';
 import { FRAME_TIMEOUT_MS, MAX_REPORTED_HEIGHT } from '../core/timing';
-import { applyStyle, type Mounted, type MountOptions, skeleton } from './dom';
+import {
+  applyStyle,
+  type Mounted,
+  type MountOptions,
+  restyle,
+  skeleton,
+} from './dom';
 import { whenNear } from './near';
 
 function withHost(src: string, name: string): string {
@@ -21,10 +32,14 @@ export function mountIframe(
   plan: IframePlan,
   options: MountOptions,
 ): Mounted {
-  const { eager, placeholder, onLoad, onError, ...layout } = options;
+  const { eager, placeholder, onLoad, onError } = options;
   const { messageHeight } = plan;
   const wrapper = document.createElement('div');
-  applyStyle(wrapper, frameStyle(plan, layout));
+  let height: number | undefined;
+  const style = (layout: FrameLayout) => {
+    restyle(wrapper, frameStyle(plan, layout, height));
+  };
+  style(options);
   const frame = fill(document.createElement('div'));
   const layer = fill(document.createElement('div'));
   const content: readonly Node[] =
@@ -66,7 +81,8 @@ export function mountIframe(
       !(value > 0 && value <= MAX_REPORTED_HEIGHT)
     )
       return;
-    applyStyle(wrapper, { height: Math.ceil(value) });
+    height = Math.ceil(value);
+    applyStyle(wrapper, { height });
     report();
   };
 
@@ -106,7 +122,10 @@ export function mountIframe(
     if (messageHeight) window.addEventListener('message', listen);
   };
 
+  let started = false;
   const start = () => {
+    if (started) return;
+    started = true;
     if (!plan.sizeInSrc) {
       create(plan.src);
       return;
@@ -118,17 +137,13 @@ export function mountIframe(
     );
   };
 
-  if (eager) {
-    start();
-    cancels.push(whenNear(frame, false, startTimer));
-  } else {
-    cancels.push(
-      whenNear(frame, false, () => {
-        start();
-        startTimer();
-      }),
-    );
-  }
+  if (eager) start();
+  cancels.push(
+    whenNear(frame, false, () => {
+      start();
+      startTimer();
+    }),
+  );
 
   const cleanup = () => {
     for (const cancel of cancels) cancel();
@@ -136,7 +151,14 @@ export function mountIframe(
     window.removeEventListener('message', listen);
     wrapper.remove();
   };
-  return { wrapper, cleanup };
+  return {
+    wrapper,
+    cleanup,
+    update(layout, eager) {
+      style(layout);
+      if (eager) start();
+    },
+  };
 }
 
 function fallback(html: string, image: boolean): HTMLElement {

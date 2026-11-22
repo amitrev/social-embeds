@@ -1284,6 +1284,51 @@ Evidence: Chrome, the Next.js 16 app, `<social-embed>` with an X URL and a React
 - **Giphy:** `giphy.com/stickers/…`, the "Copy GIF link" form `media.giphy.com/media/v1.{token}/{id}/giphy.gif`, other rendition files, and `i.giphy.com/{id}.gif` (D76). A sticker's canonical URL is `giphy.com/gifs/{id}`; not checked live.
 - **Streamable:** a page URL may end in `/` (D96).
 
+## Low-severity fixes and the generic iframe's size (2026-11-22, after 0.8.0)
+
+The rest of the 0.7.1 review, and bundlephobia's analysis of 0.8.0: every platform component 4.8 to 6.1 kB gzipped, `FacebookEmbed` 8.2 kB, but `GenericIframeEmbed` 15.5 kB.
+
+### D109. More URL and embed code shapes
+
+- **`&amp;` in URLs:** a URL copied from HTML source keeps `&amp;`. `parseUrl` reads it as `&`, so YouTube's `watch?v={id}&amp;t=30` keeps its start time. A percent-encoded `%26amp%3B` stays inside its value. Canonical URLs never contain `&amp;`, so D57 is unaffected.
+- **YouTube `#t=`:** URL input reads a `#t=` fragment as the start time, after the query's `start` and `t`, as Vimeo already did.
+- **YouTube playlists and a channel's stream:** `/embed/videoseries?list={id}` and `/embed/live_stream?channel={UC…}` parsed as a video with the id `live_stream`, or not at all. They now have canonical URLs `/playlist?list={id}` and `/channel/{UC…}/live`, which URL input accepts too, and the id is the list or channel id. The plan chooses `videoseries` or `live_stream` from the verified URL and sets `list` or `channel` from the id alone; options and props never do (D68).
+- **Facebook albums:** `/{page}/photos/{album}/{id}/` allows `-` and up to 80 characters, for photostream albums (`pb.{id}.-2207520000`) and old `a.{id}.{id}.{id}` albums.
+- **Older embed code:** Vimeo's credit paragraph after the iframe (its video link must name the embed's id), Reddit's `blockquote.reddit-card` with `embed.redditmedia.com/widgets/platform.js`, Tumblr frames without `/v2` and its `secure.assets.tumblr.com/post.js`, and X's `blockquote.twitter-video` are accepted and render as today's embed. The Tumblr token is not checked, as before; the post id is.
+- **Entities between elements:** `&nbsp;`, `&#160;` and `&#xA0;` between a blockquote and its script count as whitespace (D14).
+- **No fixtures:** the real old codes found were posts by private people, against D80, so the tests use inline code of the same structure with existing sample ids.
+
+### D110. Frame ownership lives apart from the parsers
+
+The generic iframe check refuses a frame that a named platform serves (D92). It asked each parser's `ownsFrame`, so `GenericIframeEmbed` bundled every parser: 15.9 kB gzipped in a consumer bundle. The 18 frame checks and the host constants they share with the parsers now live in `src/parser/frames.ts`; each parser imports its constants and sets `ownsFrame` to the shared check, and `checkIframe` calls `ownedFrame` alone. `test/parser/own-frames.test.ts` checks that `ownedFrame` agrees with the parsers' `ownsFrame` on every fixture frame.
+
+Measured with esbuild from `dist` (minified, gzipped, React external), 0.8.0 against this change:
+
+| Import               | 0.8.0   | Now     |
+| -------------------- | ------- | ------- |
+| `GenericIframeEmbed` | 15.9 KB | 5.3 KB  |
+| `YouTubeEmbed`       | 5.7 KB  | 6.1 KB  |
+| `XEmbed`             | 6.4 KB  | 6.5 KB  |
+| `FacebookEmbed`      | 8.4 KB  | 8.8 KB  |
+| `SocialEmbed`        | 27.2 KB | 28.1 KB |
+
+The other rows grew by the fixes in D109, D111 and D112: YouTube by its playlists and streams.
+
+### D111. React: `<Activity>`, StrictMode and a CSP nonce
+
+- **`<Activity>`:** Next.js 16's `cacheComponents` hides a page with `<Activity>`, which cleans up its effects and runs them again when shown, keeping the DOM. A script embed then rendered into its container a second time and called `onLoad` twice. One that has rendered now skips that second run. An embed hidden while loading, or one that failed, starts over when shown.
+- **`onError` once:** StrictMode and `<Activity>` ran `useReportError` again for the same message. One message is now reported once while it lasts; a new message, or the same one after valid input, is reported again.
+- **Nonce:** with a nonce-only CSP (no `'strict-dynamic'`), the tags the loader adds were blocked, with no way to pass a nonce. The loader now copies the nonce of the page's first `script[nonce]`, read from the property because browsers empty the attribute, as webpack, Emotion and Vite do. There is no new API.
+- **Shadow roots:** React's script embeds fail at once on the error D112 adds, instead of after two retries.
+
+### D112. The element: layout in place, `eager`, children as code, shadow roots
+
+- **Layout in place:** a change to `width`, `max-width`, `height`, `max-height` or `eager` tore the embed down and started it again: a playing video restarted and `load` fired again. Only a new source does that now, as in React (D105). Layout changes restyle the mounted wrapper, keeping a height the frame reported, and `eager` turned on before the embed started starts it. Checked in Chrome: a `max-width` change from 400 to 300 kept the same iframe node.
+- **`eager`:** React 19 sets the property to `''`, which turned it off, and Vue and Svelte write `eager="false"` before the tag is defined, which turned it on. It is read like a boolean attribute now, except that `"false"` is off.
+- **Children as code:** embed code written straight inside the element, without a `<template>` or after a CMS sanitizer stripped it, rendered nothing and fired no `error`. When there is no other input and the children are code that `parseEmbed` or `parseIframe` recognises, they are the `html` input, with no placeholder. The code is read once and kept until the output is removed, because Instagram's `process()` renders the host's own copy of the blockquote into an iframe that `parseIframe` would accept. That hidden copy still loads; it is the host's markup.
+- **Shadow roots:** Instagram's and Threads' `process()` scans only the document, so inside another component's shadow root (Lit, Stencil) their embeds never rendered, and the element fired `error` only after about 48 s of retries. The driver now fails at once with `social-embeds: the {label} embed cannot render inside a shadow root`. X's `widgets.load(el)`, Facebook's `XFBML.parse(el)` and Pinterest's `build(el)` take the container and still work.
+- **ids:** placeholder copies no longer duplicate the children's `id`s.
+
 ## Open VERIFY items
 
 | ID  | Item                                            | Milestone | Status                                          |

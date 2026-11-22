@@ -2,12 +2,17 @@ import {
   type Options,
   type PlatformParser,
   sizeOf,
-  underPath,
   unwrapRatio,
   withSize,
 } from '../platform';
 import type { ParsedEmbed } from '../types';
 import { coerce, parseUrl, type ParsedUrl } from '../url';
+import {
+  DAILYMOTION_HOSTS as HOSTS,
+  DAILYMOTION_PLAYER_HOST as PLAYER_HOST,
+  DAILYMOTION_SHORT_HOST as SHORT_HOST,
+  dailymotionFrame,
+} from '../frames';
 
 // Dailymotion refuses embeds without a publisher's Player ID (docs/decisions.md D63).
 
@@ -15,9 +20,6 @@ const VIDEO_ID = /^x[a-z0-9]{4,12}$/;
 const PLAYER_ID = /^x[a-z0-9]{3,12}$/;
 const WRAPPER =
   /^position:\s*relative;\s*padding-bottom:\s*(\d{1,3}(?:\.\d{1,4})?)%;\s*height:\s*0;\s*overflow:\s*hidden;?$/;
-const HOSTS = new Set(['dailymotion.com', 'www.dailymotion.com']);
-const PLAYER_HOST = 'geo.dailymotion.com';
-const SHORT_HOST = 'dai.ly';
 
 function video(id: string, options: Options): ParsedEmbed {
   return {
@@ -73,9 +75,5 @@ export const dailymotion: PlatformParser = {
   match(url) {
     return fromPlayer(url) ?? fromPage(url);
   },
-  ownsFrame: (src) =>
-    src.host === PLAYER_HOST ||
-    src.host === SHORT_HOST ||
-    (HOSTS.has(src.host) &&
-      (underPath(src.path, '/embed') || underPath(src.path, '/video'))),
+  ownsFrame: dailymotionFrame,
 };

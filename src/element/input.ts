@@ -25,6 +25,12 @@ function template(element: Element): HTMLTemplateElement | undefined {
   return undefined;
 }
 
+/** A boolean attribute, except that `"false"`, as Vue and Svelte write it before define, is off. */
+export function isEager(element: Element): boolean {
+  const value = element.getAttribute('eager');
+  return value !== null && value !== 'false';
+}
+
 /** The `html` property, else the `html` attribute, else the first `<template>` child, else the `url` attribute. */
 export function readInput(element: Element, html: string | null): Input {
   const content =
@@ -40,6 +46,6 @@ export function readInput(element: Element, html: string | null): Input {
       height: pixels(element.getAttribute('height')),
       maxHeight: pixels(element.getAttribute('max-height')),
     },
-    eager: element.hasAttribute('eager'),
+    eager: isEager(element),
   };
 }

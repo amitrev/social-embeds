@@ -6,6 +6,7 @@ import {
 } from '../platform';
 import type { ParsedEmbed } from '../types';
 import { coerce, parseUrl, type ParsedUrl } from '../url';
+import { KICK_PLAYER_HOSTS as PLAYER, kickFrame } from '../frames';
 
 // Channels only: Kick has no embed dialog, and its player takes a channel name (docs/decisions.md D75).
 
@@ -48,8 +49,6 @@ function channel(
   };
 }
 
-const PLAYER = new Set(['player.kick.com']);
-
 export const kick: PlatformParser = {
   platform: 'kick',
   parse(root) {
@@ -69,5 +68,5 @@ export const kick: PlatformParser = {
     const found = channel(url, PAGE_HOSTS) ?? channel(url, PLAYER);
     return found && { ...found, options: {} };
   },
-  ownsFrame: (src) => PLAYER.has(src.host),
+  ownsFrame: kickFrame,
 };

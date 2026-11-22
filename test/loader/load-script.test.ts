@@ -316,4 +316,26 @@ describe('loadScript', () => {
     await vi.advanceTimersByTimeAsync(0);
     expect(state.settled).toBe(true);
   });
+
+  it("gives its tag the nonce of the page's own scripts", async () => {
+    const loadScript = await freshLoader();
+    const own = document.createElement('script');
+    // Browsers empty the attribute once the page has loaded; the property keeps the nonce.
+    own.setAttribute('nonce', '');
+    own.nonce = 'r4nd0m';
+    document.head.append(own);
+    const added = captureScripts();
+
+    void loadScript(script);
+    expect(added[0]?.getAttribute('nonce')).toBe('r4nd0m');
+  });
+
+  it('adds no nonce when the page has none', async () => {
+    const loadScript = await freshLoader();
+    const added = captureScripts();
+
+    void loadScript(script);
+    expect(added).toHaveLength(1);
+    expect(added[0]?.hasAttribute('nonce')).toBe(false);
+  });
 });

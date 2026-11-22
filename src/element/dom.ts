@@ -7,7 +7,12 @@ export type MountOptions = FrameLayout & {
   onError: (error: Error) => void;
 };
 
-export type Mounted = { wrapper: HTMLElement; cleanup: () => void };
+export type Mounted = {
+  wrapper: HTMLElement;
+  cleanup: () => void;
+  /** Restyles the wrapper in place; `eager` starts an embed that has not started. */
+  update: (layout: FrameLayout, eager: boolean) => void;
+};
 
 const LENGTHS = new Set([
   'width',
@@ -17,6 +22,15 @@ const LENGTHS = new Set([
   'minHeight',
   'borderRadius',
 ]);
+
+/** Replaces the inline style with a style record. */
+export function restyle(
+  element: HTMLElement,
+  style: Record<string, string | number | undefined>,
+): void {
+  element.removeAttribute('style');
+  applyStyle(element, style);
+}
 
 /** Writes a style record; numbers get `px` for length properties. */
 export function applyStyle(

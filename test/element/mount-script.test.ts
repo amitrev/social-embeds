@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { Driver } from '../../src/core/drivers';
+import { type Driver, FinalError } from '../../src/core/drivers';
 import type { ScriptPlan } from '../../src/core/plan';
 import {
   RENDER_ATTEMPTS,
@@ -27,14 +27,14 @@ function plan(driver: Driver, extra: Partial<ScriptPlan> = {}): ScriptPlan {
 }
 
 function mount(p: ScriptPlan, placeholder: Node[] = []) {
-  const { wrapper, cleanup } = mountScript(host, p, {
+  const { wrapper, cleanup, update } = mountScript(host, p, {
     eager: false,
     placeholder,
     onLoad: onLoad as () => void,
     onError: onError as (error: Error) => void,
   });
   expect(host.lastElementChild).toBe(wrapper);
-  return { cleanup, wrapper };
+  return { cleanup, update, wrapper };
 }
 
 const skeletonOf = () => host.querySelector('[aria-hidden="true"]');
@@ -131,6 +131,56 @@ describe('mountScript', () => {
     expect(render).toHaveBeenCalledTimes(3);
     expect(onLoad).toHaveBeenCalledTimes(1);
     expect(onError).not.toHaveBeenCalled();
+  });
+
+  it('fails at once when render throws a FinalError', async () => {
+    const error = new FinalError('final');
+    const render = vi.fn(() => {
+      throw error;
+    });
+    mount(plan({ load: () => Promise.resolve(), render }));
+    lastObserver().enter();
+    await flush();
+    expect(render).toHaveBeenCalledTimes(1);
+    expect(onError).toHaveBeenCalledWith(error);
+    expect(skeletonOf()).toBeNull();
+    await vi.advanceTimersByTimeAsync(RENDER_TIMEOUT_MS * 5);
+    expect(render).toHaveBeenCalledTimes(1);
+    expect(onError).toHaveBeenCalledTimes(1);
+  });
+
+  it('restyles the wrapper in place', () => {
+    const render = vi.fn(() => () => {});
+    const { wrapper, update } = mount(
+      plan({ load: () => Promise.resolve(), render }, { maxWidth: 550 }),
+    );
+    const box = wrapper.firstElementChild;
+    update({ width: 300, maxWidth: 400 }, false);
+    expect(host.firstElementChild).toBe(wrapper);
+    expect(wrapper.firstElementChild).toBe(box);
+    expect(wrapper.style.width).toBe('300px');
+    expect(wrapper.style.maxWidth).toBe('400px');
+    update({}, false);
+    expect(wrapper.style.width).toBe('100%');
+    expect(wrapper.style.maxWidth).toBe('550px');
+    update({ width: '50%' }, false);
+    expect(wrapper.style.width).toBe('50%');
+    expect(wrapper.style.maxWidth).toBe('550px');
+  });
+
+  it('starts at once when eager turns on before near, and only once', async () => {
+    const load = vi.fn(() => Promise.resolve());
+    const render = vi.fn(() => () => {});
+    const { update } = mount(plan({ load, render }));
+    update({}, false);
+    expect(load).not.toHaveBeenCalled();
+    update({}, true);
+    expect(load).toHaveBeenCalledTimes(1);
+    update({}, true);
+    lastObserver().enter();
+    await flush();
+    expect(load).toHaveBeenCalledTimes(1);
+    expect(render).toHaveBeenCalledTimes(1);
   });
 
   it('errors after every attempt times out', async () => {

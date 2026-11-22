@@ -24,6 +24,20 @@ describe('Tumblr embed code', () => {
     ).toEqual(base);
   });
 
+  it('accepts older code: no `/v2` or `t:`, and secure.assets.tumblr.com', () => {
+    const older = oembed
+      .replace(
+        't:0aY0xL2Fi1OFJg4YxpmegQ/828009069026721792/v2',
+        '0aY0xL2Fi1OFJg4YxpmegQ/828009069026721792',
+      )
+      .replace(
+        /https:\/\/assets\.tumblr\.com\/post\.js\?_v=[0-9a-f]+/,
+        'https://secure.assets.tumblr.com/post.js',
+      );
+    expect(older).toContain('secure.assets.tumblr.com/post.js"');
+    expect(parseEmbed(older)).toEqual(base);
+  });
+
   it('accepts post.js with any cache key', () => {
     expect(parseEmbed(oembed.replace(/_v=[0-9a-f]+/, '_v=1'))).toEqual(base);
   });
@@ -46,6 +60,17 @@ describe('Tumblr embed code', () => {
       oembed.replace('/828009069026721792/v2', '/1/v2'),
     ],
     [
+      'an older frame for another post',
+      oembed.replace(
+        't:0aY0xL2Fi1OFJg4YxpmegQ/828009069026721792/v2',
+        '0aY0xL2Fi1OFJg4YxpmegQ/1',
+      ),
+    ],
+    [
+      'a frame with another version',
+      oembed.replace('/828009069026721792/v2', '/828009069026721792/v3'),
+    ],
+    [
       'a frame for another blog',
       oembed.replace(
         't:0aY0xL2Fi1OFJg4YxpmegQ/828009069026721792',
@@ -54,6 +79,10 @@ describe('Tumblr embed code', () => {
     ],
     ['another frame host', oembed.replace('embed.tumblr.com', 'example.com')],
     ['a foreign script', oembed.replace('assets.tumblr.com', 'example.com')],
+    [
+      'a script on another subdomain',
+      oembed.replace('assets.tumblr.com', 'cdn.assets.tumblr.com'),
+    ],
     ['another class', oembed.replace('tumblr-post', 'other-post')],
   ])('rejects %s', (_, html) => {
     expect(parseEmbed(html)).toBeNull();

@@ -1,6 +1,7 @@
 import { attributeOptions, type PlatformParser } from '../platform';
 import type { ParsedEmbed } from '../types';
 import { coerce, parseUrl, type ParsedUrl } from '../url';
+import { PINTEREST_FRAME_HOST as FRAME_HOST, pinterestFrame } from '../frames';
 
 // Widget code and oEmbed iframe code both render through the widget
 // (docs/decisions.md D51).
@@ -9,7 +10,6 @@ const HOST =
   /^(?:(?:www|[a-z]{2})\.)?pinterest\.(?:[a-z]{2,3}|co\.[a-z]{2}|com\.[a-z]{2})$/;
 const PIN_PATH = /^\/pin\/(?:[A-Za-z0-9-]{0,200}--)?(\d{1,25})\/?$/;
 const PIN_ID = /^\d{1,25}$/;
-const FRAME_HOST = 'assets.pinterest.com';
 const SCRIPT =
   /^(?:https?:)?\/\/assets\.pinterest\.com\/js\/pinit(?:_main)?\.js$/;
 
@@ -63,5 +63,5 @@ export const pinterest: PlatformParser = {
     const found = pinOf(url);
     return found && { ...found, options: {} };
   },
-  ownsFrame: (src) => src.host === FRAME_HOST,
+  ownsFrame: pinterestFrame,
 };

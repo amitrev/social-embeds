@@ -1,5 +1,5 @@
 import { type CSSProperties, useEffect, useRef, useState } from 'react';
-import type { Driver } from '../core/drivers';
+import { type Driver, FinalError } from '../core/drivers';
 import { postLinkText, postUrl } from '../core/post-link';
 import {
   RENDER_ATTEMPTS,
@@ -48,6 +48,7 @@ export function ScriptEmbed({
   const near = useNearViewport(container, lazy);
   const [rendered, setRendered] = useState(false);
   const [failure, setFailure] = useState<{ href: string | undefined }>();
+  const done = useRef(false);
   const callbacks = useRef({ onLoad, onError });
   useEffect(() => {
     callbacks.current = { onLoad, onError };
@@ -55,17 +56,17 @@ export function ScriptEmbed({
 
   useEffect(() => {
     const element = container.current;
-    if (!near || !element) return;
+    // <Activity> runs this again on show, with the rendered embed still in the container.
+    if (!near || !element || done.current) return;
     let cancelled = false;
-    let done = false;
     let timer: ReturnType<typeof setTimeout> | undefined;
     let stop = () => {};
     const href = postUrl(element);
 
     // Any attempt's render signal counts, even one that arrives after a retry began.
     const finish = () => {
-      if (cancelled || done) return;
-      done = true;
+      if (cancelled || done.current) return;
+      done.current = true;
       clearTimeout(timer);
       stop();
       setRendered(true);
@@ -76,10 +77,10 @@ export function ScriptEmbed({
       callbacks.current.onError?.(error);
     };
     const retryOrFail = (number: number, error: Error) => {
-      if (cancelled || done) return;
+      if (cancelled || done.current) return;
       stop();
       stop = () => {};
-      if (number >= RENDER_ATTEMPTS) {
+      if (number >= RENDER_ATTEMPTS || error instanceof FinalError) {
         fail(error);
         return;
       }
@@ -91,7 +92,7 @@ export function ScriptEmbed({
       );
     };
     const attempt = (number: number) => {
-      if (cancelled || done) return;
+      if (cancelled || done.current) return;
       try {
         stop = driver.render(element, finish);
       } catch (error) {

@@ -1,4 +1,9 @@
-import { type HtmlElement, type HtmlNode, parseHtml } from './html';
+import {
+  decodeEntities,
+  type HtmlElement,
+  type HtmlNode,
+  parseHtml,
+} from './html';
 import type { Options } from './platform';
 import { platforms } from './platforms';
 import type { ParsedEmbed } from './types';
@@ -34,7 +39,8 @@ function parseNodes(nodes: readonly HtmlNode[]): ParsedEmbed | null {
   for (const node of nodes) {
     if (node.type === 'comment') continue;
     if (node.type === 'text') {
-      if (/^\s*$/.test(node.raw)) continue;
+      // Editors write `&nbsp;` between the embed and its script.
+      if (/^\s*$/.test(decodeEntities(node.raw))) continue;
       return null;
     }
     if (node.tag === 'script') {

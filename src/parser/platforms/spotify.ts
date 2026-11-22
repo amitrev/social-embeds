@@ -2,11 +2,11 @@ import {
   type Options,
   type PlatformParser,
   sizeOf,
-  underPath,
   withSize,
 } from '../platform';
 import type { ParsedEmbed } from '../types';
 import { coerce, parseUrl, type ParsedUrl } from '../url';
+import { SPOTIFY_HOST as HOST, spotifyFrame } from '../frames';
 
 // A fixed-height player; a video show or episode is a 16:9 player (docs/decisions.md D60).
 
@@ -16,7 +16,6 @@ const CONTENT_PATH = new RegExp(
 );
 // utm_source is Spotify's tracking, and si a share id.
 const DROPPED = new Set(['utm_source', 'si']);
-const HOST = 'open.spotify.com';
 
 function content(
   url: ParsedUrl | null,
@@ -68,5 +67,5 @@ export const spotify: PlatformParser = {
       }
     );
   },
-  ownsFrame: (src) => src.host === HOST && underPath(src.path, '/embed'),
+  ownsFrame: spotifyFrame,
 };

@@ -67,6 +67,13 @@ describe('X embed code', () => {
     expect(parseEmbed(legacy)).toMatchObject({ ...jack, options: {} });
   });
 
+  it('reads the older twitter-video blockquote as the post', () => {
+    const video = basic.replace('twitter-tweet', 'twitter-video');
+    const embed = parseEmbed(video);
+    expect(embed).toEqual(parseEmbed(basic));
+    expect(embed && verifyEmbed(embed)).toEqual(embed);
+  });
+
   it('reads data-align and data-conversation', () => {
     const code = basic.replace(
       '<blockquote class="twitter-tweet">',
@@ -84,6 +91,12 @@ describe('X embed code', () => {
       'https://x.com/jack/status/20/photo/1?ref_src',
     );
     expect(parseEmbed(code)).toBeNull();
+  });
+
+  it('rejects another blockquote class', () => {
+    expect(
+      parseEmbed(basic.replace('twitter-tweet', 'twitter-timeline')),
+    ).toBeNull();
   });
 
   it('rejects a blockquote without a status link', () => {

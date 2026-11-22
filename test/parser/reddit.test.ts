@@ -43,6 +43,35 @@ describe('Reddit embed code', () => {
     ).toEqual({ theme: 'dark', showmedia: false, locale: 'bg-BG', depth: 2 });
   });
 
+  // The older card code's shape, with the post of the share fixture.
+  const card =
+    '<blockquote class="reddit-card" data-card-created="1679594400"><a href="https://www.reddit.com/r/reddit/comments/11zso11/an_improved_web_experience/">An Improved Web Experience</a> from <a href="http://www.reddit.com/r/reddit">r/reddit</a></blockquote>\n<script async src="//embed.redditmedia.com/widgets/platform.js" charset="UTF-8"></script>';
+
+  it('parses the older reddit-card code as the post', () => {
+    expect(parseEmbed(card)).toEqual({
+      platform: 'reddit',
+      kind: 'post',
+      url: POST_URL,
+      id: '11zso11',
+      variant: 'iframe',
+      options: {},
+    });
+  });
+
+  it.each([
+    [
+      'a card with another script',
+      card.replace('embed.redditmedia.com', 'example.com'),
+    ],
+    [
+      'a card without a post link',
+      card.replace('/comments/11zso11/an_improved_web_experience', ''),
+    ],
+    ['another class', card.replace('reddit-card', 'reddit-other')],
+  ])('rejects %s', (_, html) => {
+    expect(parseEmbed(html)).toBeNull();
+  });
+
   it('rejects a blockquote without a post link', () => {
     expect(
       parseEmbed(

@@ -56,7 +56,11 @@ export const x: PlatformParser = {
   platform: 'x',
   fallback: FALLBACK,
   parse(root) {
-    if (root.tag !== 'blockquote' || !hasClass(root, 'twitter-tweet'))
+    // `twitter-video` is older code for a post with a video.
+    if (
+      root.tag !== 'blockquote' ||
+      !(hasClass(root, 'twitter-tweet') || hasClass(root, 'twitter-video'))
+    )
       return null;
     // The status link is the last link in the blockquote; earlier ones belong to the text.
     const status = descendants(root.children)
