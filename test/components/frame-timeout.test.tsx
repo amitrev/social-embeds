@@ -197,7 +197,7 @@ afterEach(() => {
 describe('iframe embeds that never load', () => {
   it('cover every exported embed component without a platform script', () => {
     const names = Object.keys(components).filter(
-      (name) => name.endsWith('Embed') && !SCRIPT_ONLY.includes(name),
+      (name) => /^[A-Z]\w*Embed$/.test(name) && !SCRIPT_ONLY.includes(name),
     );
     expect(FRAMES.map(([name]) => name).sort()).toEqual(names.sort());
   });

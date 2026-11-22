@@ -1,37 +1,33 @@
 import { type ReactNode, useMemo } from 'react';
-import { matchUrl, parseEmbed, parseIframe } from '../parser';
 import { sourceError } from '../core/resolve';
-import { AppleMusicEmbed, ApplePodcastsEmbed } from './apple-embed';
-import { BlueskyEmbed, type BlueskyOptions } from './bluesky-embed';
-import { DailymotionEmbed, type DailymotionOptions } from './dailymotion-embed';
-import { FacebookEmbed, type FacebookOptions } from './facebook-embed';
-import { FlickrEmbed, type FlickrOptions } from './flickr-embed';
-import { GenericIframeEmbed } from './generic-iframe-embed';
-import { GiphyEmbed } from './giphy-embed';
+import { matchUrlWith } from '../parser/match-url';
+import { parseEmbedWith } from '../parser/parse-embed';
+import type { PlatformParser } from '../parser/platform';
+import type { ParsedEmbed, Platform } from '../parser/types';
+import type { BlueskyOptions } from './bluesky-embed';
+import type { DailymotionOptions } from './dailymotion-embed';
+import type { FacebookOptions } from './facebook-embed';
+import type { FlickrOptions } from './flickr-embed';
 import { useReportError } from './hooks';
-import { ImgurEmbed, type ImgurOptions } from './imgur-embed';
-import { InstagramEmbed, type InstagramOptions } from './instagram-embed';
-import { KickEmbed, type KickOptions } from './kick-embed';
-import { LinkedInEmbed, type LinkedInOptions } from './linkedin-embed';
-import { PinterestEmbed, type PinterestOptions } from './pinterest-embed';
-import { RedditEmbed, type RedditOptions } from './reddit-embed';
+import { EVERY_PLATFORM } from './platforms';
+import type { ParsedIframe } from '../parser/iframe';
+import type { ImgurOptions } from './imgur-embed';
+import type { InstagramOptions } from './instagram-embed';
+import type { KickOptions } from './kick-embed';
+import type { LinkedInOptions } from './linkedin-embed';
+import type { PinterestOptions } from './pinterest-embed';
+import type { RedditOptions } from './reddit-embed';
 import type { FrameProps } from './shared';
-import { SnapchatEmbed } from './snapchat-embed';
-import { SoundCloudEmbed, type SoundCloudOptions } from './soundcloud-embed';
-import { SpotifyEmbed } from './spotify-embed';
-import { StravaEmbed, type StravaOptions } from './strava-embed';
-import { StreamableEmbed, type StreamableOptions } from './streamable-embed';
-import { RumbleEmbed } from './rumble-embed';
-import { TenorEmbed } from './tenor-embed';
-import { TelegramEmbed, type TelegramOptions } from './telegram-embed';
-import { ThreadsEmbed, type ThreadsOptions } from './threads-embed';
-import { TikTokEmbed, type TikTokOptions } from './tiktok-embed';
-import { TruthSocialEmbed } from './truthsocial-embed';
-import { TumblrEmbed } from './tumblr-embed';
-import { TwitchEmbed, type TwitchOptions } from './twitch-embed';
-import { VimeoEmbed, type VimeoOptions } from './vimeo-embed';
-import { XEmbed, type XOptions } from './x-embed';
-import { YouTubeEmbed, type YouTubeOptions } from './youtube-embed';
+import type { SoundCloudOptions } from './soundcloud-embed';
+import type { StravaOptions } from './strava-embed';
+import type { StreamableOptions } from './streamable-embed';
+import type { TelegramOptions } from './telegram-embed';
+import type { ThreadsOptions } from './threads-embed';
+import type { TikTokOptions } from './tiktok-embed';
+import type { TwitchOptions } from './twitch-embed';
+import type { VimeoOptions } from './vimeo-embed';
+import type { XOptions } from './x-embed';
+import type { YouTubeOptions } from './youtube-embed';
 
 export type SocialEmbedSource =
   { html: string; url?: never } | { url: string; html?: never };
@@ -70,17 +66,70 @@ export type SocialEmbedProps = SocialEmbedSource &
     fallback?: (html: string) => ReactNode;
   };
 
-/** `height` and `maxHeight` reach only the iframe-based embeds: the others size themselves. */
-export function SocialEmbed(props: SocialEmbedProps) {
+/** What `<SocialEmbed>` passes on to the platform it renders. */
+export type RouteProps = {
+  shared: Omit<
+    SocialEmbedProps,
+    'html' | 'url' | 'fallback' | 'height' | 'maxHeight' | 'onError'
+  >;
+  frame: Pick<FrameProps, 'height' | 'maxHeight'>;
+  onError: FrameProps['onError'];
+};
+
+/**
+ * A platform for `createSocialEmbed`, such as `youtube` or `genericIframe`. Opaque: import the
+ * ones a page needs and pass them on.
+ */
+export type EmbedPlatform =
+  | {
+      readonly kind: 'platform';
+      readonly parser: PlatformParser;
+      readonly render: (embed: ParsedEmbed, props: RouteProps) => ReactNode;
+    }
+  | {
+      readonly kind: 'iframe';
+      readonly parse: (html: string) => ParsedIframe | null;
+      readonly render: (embed: ParsedIframe, props: RouteProps) => ReactNode;
+    };
+
+type Table = {
+  parsers: readonly PlatformParser[];
+  renders: ReadonlyMap<
+    Platform,
+    (embed: ParsedEmbed, props: RouteProps) => ReactNode
+  >;
+  iframe: Extract<EmbedPlatform, { kind: 'iframe' }> | undefined;
+};
+
+function tableOf(list: readonly EmbedPlatform[]): Table {
+  const named = list.flatMap((entry) =>
+    entry.kind === 'platform' ? [entry] : [],
+  );
+  return {
+    parsers: named.map((entry) => entry.parser),
+    renders: new Map(
+      named.map((entry) => [entry.parser.platform, entry.render]),
+    ),
+    iframe: list.find((entry) => entry.kind === 'iframe'),
+  };
+}
+
+function useSocialEmbed(props: SocialEmbedProps, table: Table): ReactNode {
   const { html, url, fallback, height, maxHeight, onError, ...shared } = props;
-  const frame = { height, maxHeight };
+  const route = { shared, frame: { height, maxHeight }, onError };
   const embed = useMemo(
-    () => (html !== undefined ? parseEmbed(html) : matchUrl(url)),
-    [html, url],
+    () =>
+      html !== undefined
+        ? parseEmbedWith(table.parsers, html)
+        : matchUrlWith(table.parsers, url),
+    [html, url, table],
   );
   const iframe = useMemo(
-    () => (embed === null && html !== undefined ? parseIframe(html) : null),
-    [embed, html],
+    () =>
+      embed === null && html !== undefined
+        ? (table.iframe?.parse(html) ?? null)
+        : null,
+    [embed, html, table],
   );
   // With a fallback, unrecognised embed code is the host's to handle, not an error.
   const unrecognised =
@@ -92,139 +141,29 @@ export function SocialEmbed(props: SocialEmbedProps) {
     onError,
   );
 
-  if (iframe) {
-    return (
-      <GenericIframeEmbed
-        {...shared}
-        {...frame}
-        onError={onError}
-        embed={iframe}
-      />
-    );
+  if (iframe && table.iframe) return table.iframe.render(iframe, route);
+  if (!embed) return html !== undefined && fallback ? fallback(html) : null;
+  return table.renders.get(embed.platform)?.(embed, route) ?? null;
+}
+
+/**
+ * A `<SocialEmbed>` that recognises only the listed platforms, so a bundler leaves the others
+ * out. Call it in a client module: `createSocialEmbed([youtube, x, genericIframe])`.
+ */
+export function createSocialEmbed(
+  list: readonly EmbedPlatform[],
+): (props: SocialEmbedProps) => ReactNode {
+  const table = tableOf(list);
+  function SocialEmbed(props: SocialEmbedProps) {
+    return useSocialEmbed(props, table);
   }
-  if (!embed) {
-    return html !== undefined && fallback ? fallback(html) : null;
-  }
-  switch (embed.platform) {
-    case 'x':
-      return <XEmbed {...shared} onError={onError} embed={embed} />;
-    case 'instagram':
-      return <InstagramEmbed {...shared} onError={onError} embed={embed} />;
-    case 'threads':
-      return <ThreadsEmbed {...shared} onError={onError} embed={embed} />;
-    case 'facebook':
-      return (
-        <FacebookEmbed {...shared} {...frame} onError={onError} embed={embed} />
-      );
-    case 'tiktok':
-      return (
-        <TikTokEmbed {...shared} {...frame} onError={onError} embed={embed} />
-      );
-    case 'youtube':
-      return (
-        <YouTubeEmbed {...shared} {...frame} onError={onError} embed={embed} />
-      );
-    case 'telegram':
-      return <TelegramEmbed {...shared} onError={onError} embed={embed} />;
-    case 'snapchat':
-      return (
-        <SnapchatEmbed {...shared} {...frame} onError={onError} embed={embed} />
-      );
-    case 'linkedin':
-      return (
-        <LinkedInEmbed {...shared} {...frame} onError={onError} embed={embed} />
-      );
-    case 'reddit':
-      return <RedditEmbed {...shared} onError={onError} embed={embed} />;
-    case 'pinterest':
-      return <PinterestEmbed {...shared} onError={onError} embed={embed} />;
-    case 'spotify':
-      return (
-        <SpotifyEmbed {...shared} {...frame} onError={onError} embed={embed} />
-      );
-    case 'vimeo':
-      return (
-        <VimeoEmbed {...shared} {...frame} onError={onError} embed={embed} />
-      );
-    case 'twitch':
-      return (
-        <TwitchEmbed {...shared} {...frame} onError={onError} embed={embed} />
-      );
-    case 'dailymotion':
-      // No Player ID prop here: only embed code that carries one renders (D63).
-      return (
-        <DailymotionEmbed
-          {...shared}
-          {...frame}
-          onError={onError}
-          embed={embed}
-        />
-      );
-    case 'bluesky':
-      return <BlueskyEmbed {...shared} onError={onError} embed={embed} />;
-    case 'soundcloud':
-      return (
-        <SoundCloudEmbed
-          {...shared}
-          {...frame}
-          onError={onError}
-          embed={embed}
-        />
-      );
-    case 'applemusic':
-      return (
-        <AppleMusicEmbed
-          {...shared}
-          {...frame}
-          onError={onError}
-          embed={embed}
-        />
-      );
-    case 'applepodcasts':
-      return (
-        <ApplePodcastsEmbed
-          {...shared}
-          {...frame}
-          onError={onError}
-          embed={embed}
-        />
-      );
-    case 'tumblr':
-      return <TumblrEmbed {...shared} onError={onError} embed={embed} />;
-    case 'kick':
-      return (
-        <KickEmbed {...shared} {...frame} onError={onError} embed={embed} />
-      );
-    case 'giphy':
-      return (
-        <GiphyEmbed {...shared} {...frame} onError={onError} embed={embed} />
-      );
-    case 'tenor':
-      return (
-        <TenorEmbed {...shared} {...frame} onError={onError} embed={embed} />
-      );
-    case 'streamable':
-      return (
-        <StreamableEmbed
-          {...shared}
-          {...frame}
-          onError={onError}
-          embed={embed}
-        />
-      );
-    case 'rumble':
-      return (
-        <RumbleEmbed {...shared} {...frame} onError={onError} embed={embed} />
-      );
-    case 'truthsocial':
-      return <TruthSocialEmbed {...shared} onError={onError} embed={embed} />;
-    case 'imgur':
-      return <ImgurEmbed {...shared} onError={onError} embed={embed} />;
-    case 'strava':
-      return <StravaEmbed {...shared} onError={onError} embed={embed} />;
-    case 'flickr':
-      return (
-        <FlickrEmbed {...shared} {...frame} onError={onError} embed={embed} />
-      );
-  }
+  return SocialEmbed;
+}
+
+let every: Table | undefined;
+
+/** `height` and `maxHeight` reach only the iframe-based embeds: the others size themselves. */
+export function SocialEmbed(props: SocialEmbedProps) {
+  every ??= tableOf(EVERY_PLATFORM);
+  return useSocialEmbed(props, every);
 }

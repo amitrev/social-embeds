@@ -5,9 +5,17 @@ import { type ParsedUrl, parseUrl } from './url';
 
 /** Never throws. Options hold only what the URL itself carries (docs/decisions.md D13). */
 export function matchUrl(url: string): ParsedEmbed | null {
+  return matchUrlWith(platforms, url);
+}
+
+/** `matchUrl` for these platforms only. */
+export function matchUrlWith(
+  parsers: readonly PlatformParser[],
+  url: string,
+): ParsedEmbed | null {
   const parsed = parse(url);
   if (!parsed) return null;
-  for (const platform of platforms) {
+  for (const platform of parsers) {
     const embed = platform.match(parsed);
     if (embed) return embed;
   }
