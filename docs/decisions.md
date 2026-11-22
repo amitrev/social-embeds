@@ -1403,6 +1403,29 @@ The 29 React wrappers repeated the same steps (resolve the input, plan it, repor
 
 Measured from `dist` as in D114, gzipped: `<SocialEmbed>` 28.3 to 27.4 KB and `createSocialEmbed` with five platforms 12.3 to 12.2 KB, but a single component grows by 65 to 98 bytes (`YouTubeEmbed` 4.07 to 4.13 KB, `FacebookEmbed` 7.37 to 7.47 KB): a shared helper pays only once two components share it. The maintainer kept it for the smaller `<SocialEmbed>` and the 570 fewer lines.
 
+### D117. Each parser in two halves: URL and embed code
+
+A platform component needs only half of its parser: matching a URL and verifying an `embed` (`match`, `name`, `shapes`, `trustsFallback`, `needsLookup`, `ownsFrame`). The other half, reading the platform's embed code (`parse`, `parseScript`, `repair`, `isOwnScript`, `scriptOptions`, `allowsFbRoot`, `isOwnExtra`), only `parseEmbed` uses; components take embed code only as an `embed` that `parseEmbed` already made. Each platform now has `src/parser/matchers/<platform>.ts` with a `PlatformMatcher` and the helpers it needs, and `src/parser/platforms/<platform>.ts` spreads that matcher into the full `PlatformParser` with the embed-code half. Components and `usePlan` import the matcher; the registry, `parseEmbed`, `<SocialEmbed>`, `createSocialEmbed`'s platforms and the element keep the full parsers.
+
+- **How it was split:** a script walked each module's syntax tree and put every top-level declaration in the half that uses it; declarations both halves use live in the matcher and are exported. Nothing was rewritten by hand except X: its fallback check called `x.parse`, so the "last status link" lookup became `lastStatus`, which `parse` and `trustsFallback` share.
+- **Measured first:** stubbing out the embed-code half of five parsers before the change gave the ceiling (YouTube −256 bytes, TikTok −396, X −322, Instagram −262, Facebook −660), and the split reached it.
+
+Measured from `dist` as in D114, gzipped:
+
+| Import                               | 0.9.2    | Now      |
+| ------------------------------------ | -------- | -------- |
+| `YouTubeEmbed`                       | 4.13 KB  | 3.86 KB  |
+| `TikTokEmbed`                        | 3.51 KB  | 3.09 KB  |
+| `XEmbed`                             | 5.40 KB  | 5.12 KB  |
+| `InstagramEmbed`                     | 5.31 KB  | 5.03 KB  |
+| `FacebookEmbed`                      | 7.47 KB  | 6.79 KB  |
+| `createSocialEmbed` with 5 platforms | 12.17 KB | 12.19 KB |
+| `<SocialEmbed>`                      | 27.44 KB | 27.66 KB |
+| `social-embeds/parser`               | 14.58 KB | 14.78 KB |
+| `social-embeds/element`              | 26.67 KB | 26.82 KB |
+
+- **What it costs:** bundles that hold every parser grow by 0.1 to 0.2 KB. Helpers that both halves use are now exported across modules, which a minifier cannot fold away, and each parser object copies its matcher's fields.
+
 ## Open VERIFY items
 
 | ID  | Item                                            | Milestone | Status                                          |
