@@ -347,6 +347,23 @@ describe('parsing time', () => {
       expect(performance.now() - started).toBeLessThan(500);
     }
   });
+
+  it.each([
+    ['inside a div', `<div>${'<br>'.repeat(200_000)}</div>`],
+    [
+      'inside a Bluesky blockquote',
+      `<blockquote class="bluesky-embed">${'<br>'.repeat(200_000)}</blockquote>`,
+    ],
+  ])('returns null for 200,000 sibling elements %s', (_, html) => {
+    for (const parse of [parseEmbed, parseIframe]) {
+      expect(parse(html)).toBeNull();
+    }
+  });
+
+  it('reads 200,000 sibling elements around one iframe', () => {
+    const html = `<div>${'<br>'.repeat(200_000)}<iframe src="https://example.com/"></iframe></div>`;
+    expect(parseIframe(html)?.src).toBe('https://example.com/');
+  });
 });
 
 describe('generic embed code fixtures', () => {
