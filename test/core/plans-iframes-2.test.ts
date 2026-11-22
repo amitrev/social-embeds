@@ -750,7 +750,7 @@ function readerOf(plan: ReturnType<typeof truthSocialPlan>) {
 describe('truthSocialPlan', () => {
   const EXPECTED = {
     kind: 'iframe',
-    src: 'https://truthsocial.com/@truthsocial/116862065232992052/embed',
+    src: 'https://truthsocial.com/@truthsocial/108318911610590772/embed',
     title: 'Truth Social post',
     allow: '',
     scrolling: 'no',
@@ -759,7 +759,7 @@ describe('truthSocialPlan', () => {
       origin: 'https://truthsocial.com',
       read: expect.any(Function) as unknown,
     },
-    startHeight: 300,
+    startHeight: 150,
     maxWidth: 600,
   };
 
@@ -773,7 +773,7 @@ describe('truthSocialPlan', () => {
     expect(
       truthSocialPlan(
         fromUrl(
-          'https://truthsocial.com/@truthsocial/posts/116862065232992052',
+          'https://truthsocial.com/@truthsocial/posts/108318911610590772',
           'truthsocial',
         ),
       ),
@@ -794,7 +794,7 @@ describe('truthSocialPlan', () => {
     const plan = truthSocialPlan(fromCode(truthVideo, 'truthsocial'));
     expect(plan).toMatchObject({
       src: 'https://truthsocial.com/@truthsocial/117529982042129746/embed',
-      startHeight: 300,
+      startHeight: 150,
     });
     const read = readerOf(plan);
     expect(read({ type: 'setHeight', height: 530 })).toBe(695);

@@ -545,7 +545,7 @@ export const URLS: Record<PlatformKey, Sample[]> = {
     { label: 'Video post', value: TRUTH_SOCIAL_POST },
     {
       label: 'Text post',
-      value: 'https://truthsocial.com/@truthsocial/posts/116862065232992052',
+      value: 'https://truthsocial.com/@truthsocial/posts/108318911610590772',
     },
   ],
   imgur: [

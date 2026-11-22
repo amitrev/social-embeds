@@ -491,7 +491,7 @@ URL shapes, each tested against Facebook's plugins on `www.facebook.com`, `faceb
 
 ### Truth Social, Imgur and Strava
 
-- These frames report their own height without being asked, so the height follows the post. Until the first report, the frame is 300 px (Truth Social), 500 px (Imgur) or 650 px (Strava) high.
+- These frames report their own height without being asked, so the height follows the post. Until the first report, the frame is 150 px (Truth Social), 500 px (Imgur) or 650 px (Strava) high.
 - Truth Social video posts get 165 px extra, as Truth Social's own script adds. Embed code marks a video post; a URL cannot, so a URL takes the height the frame reports. A vertical video stays cut off, as in Truth Social's own embed.
 - Imgur's gallery posts and albums share ids, and both render as an album. `i.imgur.com` file URLs render the image's post.
 - Strava renders activities and routes. The style option is the prop `embedStyle`, because `style` stays the CSS prop; in embed code it is `data-style`. `strava.app.link` short links are not supported.
