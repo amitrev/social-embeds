@@ -62,9 +62,14 @@ export function fallbackPlaceholder(plan: IframePlan): ReactNode {
 
 const FILL: CSSProperties = { position: 'absolute', inset: 0 };
 
+export function IframeEmbed(props: IframeEmbedProps) {
+  // A new post starts over in a new frame: placeholder, height, onLoad and timeout.
+  return <Frame key={props.src} {...props} />;
+}
+
 // The iframe is created on the client only: one in the server HTML can load before
 // hydration, and React then never sees its load event (docs/decisions.md D28).
-export function IframeEmbed({
+function Frame({
   src,
   title,
   allow,

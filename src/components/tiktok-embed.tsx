@@ -1,4 +1,5 @@
 import { tiktokPlan, type TikTokOptions } from '../core/plans/tiktok';
+import { tiktok } from '../parser/platforms/tiktok';
 import { useReportError } from './hooks';
 import { IframeEmbed, planProps } from './iframe-embed';
 import { type EmbedSource, type FrameProps, resolveEmbed } from './shared';
@@ -32,7 +33,7 @@ export function TikTokEmbed(props: TikTokEmbedProps) {
     forceMuted,
     ...frame
   } = props;
-  const { embed, error } = resolveEmbed(url, given, 'tiktok');
+  const { embed, error } = resolveEmbed(url, given, tiktok);
   const plan = embed
     ? tiktokPlan(embed, {
         controls,
@@ -61,6 +62,7 @@ export function TikTokEmbed(props: TikTokEmbedProps) {
     <IframeEmbed
       {...frame}
       {...planProps(plan)}
+      onError={onError}
       maxWidth={maxWidth ?? plan.maxWidth}
     />
   );

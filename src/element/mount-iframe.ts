@@ -1,7 +1,7 @@
 import { frameStyle, srcWithSize, watchWidth } from '../core/layout';
 import type { IframePlan } from '../core/plan';
 import { FRAME_TIMEOUT_MS, MAX_REPORTED_HEIGHT } from '../core/timing';
-import { applyStyle, type MountOptions, skeleton } from './dom';
+import { applyStyle, type Mounted, type MountOptions, skeleton } from './dom';
 import { whenNear } from './near';
 
 function withHost(src: string, name: string): string {
@@ -15,12 +15,12 @@ function fill(element: HTMLElement): HTMLElement {
   return element;
 }
 
-/** Renders into `host` and returns the cleanup. */
+/** Appends `wrapper` to `host`; `cleanup` removes it. */
 export function mountIframe(
   host: HTMLElement,
   plan: IframePlan,
   options: MountOptions,
-): () => void {
+): Mounted {
   const { eager, placeholder, onLoad, onError, ...layout } = options;
   const { messageHeight } = plan;
   const wrapper = document.createElement('div');
@@ -130,12 +130,13 @@ export function mountIframe(
     );
   }
 
-  return () => {
+  const cleanup = () => {
     for (const cancel of cancels) cancel();
     clearTimeout(timer);
     window.removeEventListener('message', listen);
     wrapper.remove();
   };
+  return { wrapper, cleanup };
 }
 
 function fallback(html: string, image: boolean): HTMLElement {

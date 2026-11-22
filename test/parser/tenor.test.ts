@@ -37,6 +37,38 @@ describe('Tenor embed code', () => {
     expect(parseEmbed(html)?.size).toEqual({ width: 3, height: 2 });
   });
 
+  it('parses code with a ratio of five decimals', () => {
+    const html =
+      '<div class="tenor-gif-embed" data-postid="14563934" data-share-method="host" data-aspect-ratio="1.33333" data-width="100%"><a href="https://tenor.com/view/x-gif-14563934">X GIF</a></div> <script type="text/javascript" async src="https://tenor.com/embed.js"></script>';
+    expect(parseEmbed(html)).toEqual({
+      platform: 'tenor',
+      kind: 'video',
+      variant: 'iframe',
+      url: 'https://tenor.com/view/14563934',
+      id: '14563934',
+      options: {},
+      size: { width: 13333, height: 10000 },
+      fallbackHtml: '<a href="https://tenor.com/view/x-gif-14563934">X GIF</a>',
+    });
+  });
+
+  it.each([
+    ['1.77778', { width: 8889, height: 5000 }],
+    ['0.993789', { width: 4969, height: 5000 }],
+    ['1.75352', { width: 3507, height: 2000 }],
+    ['2.3380281690140845', { width: 1169, height: 500 }],
+    ['100', { width: 100, height: 1 }],
+    ['0.01', { width: 1, height: 100 }],
+  ])('reads the ratio %s to four decimals', (ratio, size) => {
+    const html = dialog.replace(
+      'data-aspect-ratio="1"',
+      `data-aspect-ratio="${ratio}"`,
+    );
+    const embed = parseEmbed(html);
+    expect(embed?.size).toEqual(size);
+    expect(embed && verifyEmbed(embed)).toEqual(embed);
+  });
+
   it('parses the oEmbed iframe with its own size', () => {
     expect(parseEmbed(oembed)).toEqual({
       ...base,
@@ -67,10 +99,23 @@ describe('Tenor embed code', () => {
       dialog.replace(`data-postid="${ID}"`, 'data-postid="x"'),
     ],
     ['a missing id', dialog.replace(` data-postid="${ID}"`, '')],
-    [
-      'a ratio of zero',
-      dialog.replace('data-aspect-ratio="1"', 'data-aspect-ratio="0"'),
-    ],
+    ...[
+      '0',
+      '0.0000',
+      '0.009',
+      '100.01',
+      '1000',
+      '-1.5',
+      '1e2',
+      '1.',
+      '.5',
+      ' 1.5',
+      'Infinity',
+      `1.${'1'.repeat(21)}`,
+    ].map((ratio): [string, string] => [
+      `the ratio "${ratio}"`,
+      dialog.replace('data-aspect-ratio="1"', `data-aspect-ratio="${ratio}"`),
+    ]),
     [
       'a foreign script',
       dialog.replace('tenor.com/embed.js', 'example.com/embed.js'),

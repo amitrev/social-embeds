@@ -1,4 +1,5 @@
 import { threadsPlan, type ThreadsOptions } from '../core/plans/threads';
+import { threads } from '../parser/platforms/threads';
 import { useReportError } from './hooks';
 import { ScriptEmbed } from './script-embed';
 import { type EmbedSource, resolveEmbed, type SharedProps } from './shared';
@@ -11,7 +12,7 @@ export type ThreadsEmbedProps = EmbedSource &
 
 export function ThreadsEmbed(props: ThreadsEmbedProps) {
   const { url, embed: given, onError, maxWidth, theme, ...shared } = props;
-  const { embed, error } = resolveEmbed(url, given, 'threads');
+  const { embed, error } = resolveEmbed(url, given, threads);
   const plan = embed ? threadsPlan(embed, { theme }) : undefined;
   useReportError(
     error ?? (plan?.kind === 'error' ? plan.message : undefined),

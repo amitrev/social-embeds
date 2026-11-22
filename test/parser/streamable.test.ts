@@ -96,11 +96,17 @@ describe('Streamable URLs', () => {
     'https://www.streamable.com/lttg48',
     'https://streamable.com/e/lttg48',
     'https://streamable.com/o/lttg48',
+    'https://streamable.com/lttg48/',
+    'https://www.streamable.com/lttg48/?t=5',
   ])('matches %s', (url) => {
-    expect(matchUrl(url)).toEqual(base);
+    const embed = matchUrl(url);
+    expect(embed).toEqual(base);
+    expect(embed && verifyEmbed(embed)).toEqual(embed);
   });
 
   it.each([
+    'https://streamable.com/lttg48//',
+    'https://streamable.com/login/',
     'https://streamable.com/LTTG48',
     'https://streamable.com/abc',
     'https://streamable.com/abcdefghi',

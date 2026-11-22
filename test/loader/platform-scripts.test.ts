@@ -14,6 +14,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  vi.useRealTimers();
   vi.restoreAllMocks();
 });
 
@@ -170,6 +171,27 @@ describe('Instagram and Threads', () => {
     await expect(load('instagram')).resolves.toBeUndefined();
     expect(added).toHaveLength(0);
   });
+
+  it("adds embed.js itself when the host's own tag ran beside a loaded Facebook SDK", async () => {
+    vi.useFakeTimers();
+    const load = await freshLoader();
+    addHostScript('https://www.instagram.com/embed.js');
+    const fb: Page = { XFBML: { parse: () => undefined } };
+    page.FB = fb;
+    const added = captureScripts();
+    const promise = load('instagram');
+
+    await vi.advanceTimersByTimeAsync(3_000);
+    expect(added.map((element) => element.src)).toEqual([
+      'https://www.instagram.com/embed.js',
+    ]);
+    expect(fb.__buffer).toBe(true);
+
+    page.instgrm = embeds('instagram');
+    fire(added[0], 'load');
+    await expect(promise).resolves.toBeUndefined();
+    expect('__buffer' in fb).toBe(false);
+  });
 });
 
 describe('Facebook', () => {
@@ -228,6 +250,24 @@ describe('Facebook', () => {
     const added = captureScripts();
     await expect(load('facebook')).resolves.toBeUndefined();
     expect(added).toHaveLength(0);
+  });
+
+  it('adds its own SDK and waits for fbAsyncInit when the host tag never runs', async () => {
+    vi.useFakeTimers();
+    const load = await freshLoader();
+    addHostScript('https://connect.facebook.net/en_US/sdk.js');
+    const added = captureScripts();
+    const promise = load('facebook');
+
+    await vi.advanceTimersByTimeAsync(3_000);
+    expect(added.map((element) => element.src)).toEqual([
+      'https://connect.facebook.net/en_US/sdk.js#xfbml=0&version=v26.0',
+    ]);
+
+    page.FB = fb;
+    fire(added[0], 'load');
+    (page.fbAsyncInit as () => void)();
+    await expect(promise).resolves.toBeUndefined();
   });
 
   it('rejects an invalid locale without loading anything', async () => {

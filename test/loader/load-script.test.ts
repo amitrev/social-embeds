@@ -91,6 +91,125 @@ describe('loadScript', () => {
     expect(added).toHaveLength(0);
   });
 
+  it('adds nothing when the host tag defines the global within the grace period', async () => {
+    const loadScript = await freshLoader();
+    addHostScript('https://cdn.test/sdk.js');
+    const added = captureScripts();
+
+    const state = track(loadScript(script));
+    await vi.advanceTimersByTimeAsync(2_900);
+    present = true;
+    await vi.advanceTimersByTimeAsync(50);
+    expect(state).toEqual({ settled: true, error: undefined });
+    await vi.advanceTimersByTimeAsync(15_000);
+    expect(added).toHaveLength(0);
+  });
+
+  it('adds its own tag when the host tag never runs', async () => {
+    const loadScript = await freshLoader();
+    // Like a tag written through innerHTML: in the page, never fetched.
+    addHostScript('https://cdn.test/sdk.js');
+    const added = captureScripts();
+
+    const state = track(loadScript(script));
+    await vi.advanceTimersByTimeAsync(2_999);
+    expect(added).toHaveLength(0);
+    await vi.advanceTimersByTimeAsync(1);
+    expect(added.map((element) => element.src)).toEqual([
+      'https://cdn.test/sdk.js',
+    ]);
+
+    present = true;
+    fire(added[0], 'load');
+    await vi.advanceTimersByTimeAsync(0);
+    expect(state).toEqual({ settled: true, error: undefined });
+  });
+
+  it('adds its own tag at once when the host tag fails to load', async () => {
+    const loadScript = await freshLoader();
+    const host = addHostScript('https://cdn.test/sdk.js');
+    const added = captureScripts();
+
+    const state = track(loadScript(script));
+    await vi.advanceTimersByTimeAsync(500);
+    expect(added).toHaveLength(0);
+    fire(host, 'error');
+    await vi.advanceTimersByTimeAsync(0);
+    expect(added).toHaveLength(1);
+
+    present = true;
+    fire(added[0], 'load');
+    await vi.advanceTimersByTimeAsync(0);
+    expect(state).toEqual({ settled: true, error: undefined });
+  });
+
+  it('gives the host tag until the page has loaded, then the grace period', async () => {
+    const loadScript = await freshLoader();
+    vi.spyOn(document, 'readyState', 'get').mockReturnValue('interactive');
+    addHostScript('https://cdn.test/sdk.js');
+    const added = captureScripts();
+
+    const state = track(loadScript(script));
+    await vi.advanceTimersByTimeAsync(10_000);
+    expect(added).toHaveLength(0);
+    window.dispatchEvent(new Event('load'));
+    await vi.advanceTimersByTimeAsync(2_999);
+    expect(added).toHaveLength(0);
+    await vi.advanceTimersByTimeAsync(1);
+    expect(added).toHaveLength(1);
+
+    present = true;
+    fire(added[0], 'load');
+    await vi.advanceTimersByTimeAsync(0);
+    expect(state).toEqual({ settled: true, error: undefined });
+  });
+
+  it('adds its own tag when the page has not loaded within 15 s', async () => {
+    const loadScript = await freshLoader();
+    vi.spyOn(document, 'readyState', 'get').mockReturnValue('loading');
+    addHostScript('https://cdn.test/sdk.js');
+    const added = captureScripts();
+
+    void loadScript(script).catch(() => undefined);
+    await vi.advanceTimersByTimeAsync(14_999);
+    expect(added).toHaveLength(0);
+    await vi.advanceTimersByTimeAsync(1);
+    expect(added).toHaveLength(1);
+  });
+
+  it('sets up the ready callback only when it adds its own tag', async () => {
+    const loadScript = await freshLoader();
+    addHostScript('https://cdn.test/sdk.js');
+    const added = captureScripts();
+    let calls = 0;
+    let ready = () => {};
+    const state = track(
+      loadScript({
+        ...script,
+        readyCallback: () => {
+          calls++;
+          return new Promise((resolve) => {
+            ready = resolve;
+          });
+        },
+      }),
+    );
+
+    await vi.advanceTimersByTimeAsync(2_999);
+    expect(calls).toBe(0);
+    await vi.advanceTimersByTimeAsync(1);
+    expect(calls).toBe(1);
+    expect(added).toHaveLength(1);
+
+    present = true;
+    fire(added[0], 'load');
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(state.settled).toBe(false);
+    ready();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(state).toEqual({ settled: true, error: undefined });
+  });
+
   it('retries a failed load twice, after 1 s and then 2 s', async () => {
     const loadScript = await freshLoader();
     const added = captureScripts();

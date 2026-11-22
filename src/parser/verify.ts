@@ -1,7 +1,7 @@
 import { parseHtml, rebuild } from './html';
-import { matchUrl } from './match-url';
-import { platforms } from './platforms';
-import { x } from './platforms/x';
+import { matchWith } from './match-url';
+import type { PlatformParser } from './platform';
+import { parserFor } from './platforms';
 import type { ParsedEmbed, Platform } from './types';
 
 const SHAPES: Record<Platform, readonly string[]> = {
@@ -41,7 +41,20 @@ const SHAPES: Record<Platform, readonly string[]> = {
  * into the page: only what this parser itself produces passes (docs/decisions.md D35).
  */
 export function verifyEmbed(embed: ParsedEmbed): ParsedEmbed | null {
-  const matched = matchUrl(embed.url);
+  const parser = parserFor(embed.platform);
+  return parser ? verifyWith(parser, embed) : null;
+}
+
+/**
+ * `verifyEmbed` with only the embed's own parser, so a per-platform component does not
+ * bundle the other platforms' (docs/decisions.md D103).
+ */
+export function verifyWith(
+  parser: PlatformParser,
+  embed: ParsedEmbed,
+): ParsedEmbed | null {
+  if (embed.platform !== parser.platform) return null;
+  const matched = matchWith(parser, embed.url);
   if (matched?.platform !== embed.platform || matched.id !== embed.id)
     return null;
   // Components build iframe `src` from the URL, so it must be the parser's own form (docs/decisions.md D57).
@@ -49,17 +62,19 @@ export function verifyEmbed(embed: ParsedEmbed): ParsedEmbed | null {
   if (!SHAPES[embed.platform].includes(`${embed.kind} ${embed.variant}`))
     return null;
   if (embed.fallbackHtml === undefined) return embed;
-  if (trustedFallback(embed, embed.fallbackHtml)) return embed;
+  if (trustedFallback(parser, embed, embed.fallbackHtml)) return embed;
 
   const withoutFallback = { ...embed };
   delete withoutFallback.fallbackHtml;
   return withoutFallback;
 }
 
-function trustedFallback(embed: ParsedEmbed, fallbackHtml: string): boolean {
-  const whitelist = platforms.find(
-    (platform) => platform.platform === embed.platform,
-  )?.fallback;
+function trustedFallback(
+  parser: PlatformParser,
+  embed: ParsedEmbed,
+  fallbackHtml: string,
+): boolean {
+  const whitelist = parser.fallback;
   const nodes = parseHtml(fallbackHtml);
   if (!whitelist || !nodes || rebuild(nodes, whitelist) !== fallbackHtml)
     return false;
@@ -70,5 +85,5 @@ function trustedFallback(embed: ParsedEmbed, fallbackHtml: string): boolean {
     parseHtml(
       `<blockquote class="twitter-tweet">${fallbackHtml}</blockquote>`,
     ) ?? [];
-  return root?.type === 'element' && x.parse(root)?.id === embed.id;
+  return root?.type === 'element' && parser.parse(root)?.id === embed.id;
 }

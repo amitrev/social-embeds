@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { URLS } from '../../playground/samples';
 import { SocialEmbed } from '../../src';
 import '../../src/element';
+import { loadPlatformScript } from '../../src/loader/platform-scripts';
 import { type Platform, parseEmbed, parseIframe } from '../../src/parser';
 import { installObserver, installResizeObserver } from '../components/helpers';
 
@@ -82,6 +83,8 @@ type Rendered = {
 const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
 
 function placeholderKind(layer: Element | null | undefined): string {
+  if (layer instanceof HTMLAnchorElement)
+    return `link:${String(layer.getAttribute('href'))} ${layer.textContent}`;
   const skeleton = layer?.matches('[aria-hidden="true"]')
     ? layer
     : layer?.querySelector('[aria-hidden="true"]');
@@ -200,7 +203,12 @@ const cases: Case[] = [
   ),
 ];
 
-const seen = { iframe: 0, script: 0, error: [] as string[] };
+const seen = {
+  iframe: 0,
+  script: 0,
+  error: [] as string[],
+  failed: { link: 0, fallback: 0 },
+};
 const platforms = new Set<Platform | 'generic'>();
 
 // Nothing has loaded, so a placeholder must be showing, unless the markup is the fallback.
@@ -246,12 +254,48 @@ describe('<social-embed> and <SocialEmbed>', () => {
     },
   );
 
+  const scripts = new Set<Case['platform']>([
+    'x',
+    'instagram',
+    'threads',
+    'facebook',
+    'pinterest',
+  ]);
+  it.each(
+    cases
+      .filter((item) => scripts.has(item.platform))
+      .map((item) => [item.label, item] as const),
+  )('fails the same for %s', async (_label, { source }) => {
+    vi.mocked(loadPlatformScript).mockImplementation(() =>
+      Promise.reject(new Error('blocked')),
+    );
+    const react = await viaReact(source);
+    cleanup();
+    const element = await viaElement(source);
+    vi.mocked(loadPlatformScript).mockImplementation(
+      () => new Promise(() => {}),
+    );
+    expect(element).toEqual(react);
+    if (react.kind !== 'script') return;
+    expect(react.error).toBe('blocked');
+    if (react.placeholder === 'none') {
+      expect(react.container).toContain('<blockquote');
+      seen.failed.fallback += 1;
+    } else {
+      expect(react.placeholder).toMatch(
+        /^link:https:\/\/\S+ View this post on /,
+      );
+      seen.failed.link += 1;
+    }
+  });
+
   it('covered every platform and the known case kinds', () => {
     expect([...platforms].sort()).toEqual(
       [...Object.keys(PLATFORMS), 'generic'].sort(),
     );
     expect(seen.iframe).toBe(103);
     expect(seen.script).toBe(23);
+    expect(seen.failed).toEqual({ link: 13, fallback: 10 });
     expect(seen.error).toEqual([
       '../fixtures/dailymotion/oembed.html',
       'URL dailymotion Video, no Player ID: reports an error',

@@ -1,4 +1,5 @@
 import { blueskyPlan, type BlueskyOptions } from '../core/plans/bluesky';
+import { bluesky } from '../parser/platforms/bluesky';
 import { useReportError } from './hooks';
 import { fallbackPlaceholder, IframeEmbed, planProps } from './iframe-embed';
 import { type EmbedSource, resolveEmbed, type SharedProps } from './shared';
@@ -24,7 +25,7 @@ export function BlueskyEmbed(props: BlueskyEmbedProps) {
     placeholder,
     ...shared
   } = props;
-  const { embed, error } = resolveEmbed(url, given, 'bluesky');
+  const { embed, error } = resolveEmbed(url, given, bluesky);
   const plan = embed ? blueskyPlan(embed, { colorMode }) : undefined;
   useReportError(
     error ?? (plan?.kind === 'error' ? plan.message : undefined),

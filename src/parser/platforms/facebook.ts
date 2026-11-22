@@ -12,8 +12,17 @@ import { coerce, parseUrl, pixels, type ParsedUrl } from '../url';
 
 // Which input renders through the SDK and which as an iframe: docs/decisions.md D10, D22, D44.
 
-const HOSTS = new Set(['facebook.com', 'www.facebook.com', 'm.facebook.com']);
-const PLUGIN_HOSTS = new Set(['facebook.com', 'www.facebook.com']);
+const HOSTS = new Set([
+  'facebook.com',
+  'www.facebook.com',
+  'web.facebook.com',
+  'm.facebook.com',
+]);
+const PLUGIN_HOSTS = new Set([
+  'facebook.com',
+  'www.facebook.com',
+  'web.facebook.com',
+]);
 const BASE = 'https://www.facebook.com';
 
 // URL shapes: docs/decisions.md D21.

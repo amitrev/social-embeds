@@ -12,7 +12,8 @@ const PAGE_PATH = new RegExp(
 );
 const FRAME_PATH = new RegExp(`^/embed/${ID}$`);
 const SCRIPT = /^(?:https?:)?\/\/tenor\.com\/embed\.js$/;
-const RATIO = /^\d{1,3}(?:\.\d{1,4})?$/;
+// Tenor writes some ratios unrounded: `2.3380281690140845`.
+const RATIO = /^\d{1,3}(?:\.\d{1,20})?$/;
 const DEFAULT_RATIO = 1.33;
 const FALLBACK: Whitelist = new Map([['a', ['href']]]);
 
@@ -30,9 +31,10 @@ function idOf(url: ParsedUrl | null): string | undefined {
   return url && HOSTS.has(url.host) ? PAGE_PATH.exec(url.path)?.[1] : undefined;
 }
 
+/** To four decimals, from 1:100 to 100:1. */
 function ratioSize(ratio: number): ParsedEmbed['size'] {
   const width = Math.round(ratio * 10_000);
-  if (!(width > 0 && width <= 1_000_000)) return undefined;
+  if (!(width >= 100 && width <= 1_000_000)) return undefined;
   const divisor = gcd(width, 10_000);
   return { width: width / divisor, height: 10_000 / divisor };
 }

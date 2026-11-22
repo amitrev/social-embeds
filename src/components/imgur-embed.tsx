@@ -1,4 +1,5 @@
 import { imgurPlan, type ImgurOptions } from '../core/plans/imgur';
+import { imgur } from '../parser/platforms/imgur';
 import { useReportError } from './hooks';
 import { fallbackPlaceholder, IframeEmbed, planProps } from './iframe-embed';
 import { type EmbedSource, resolveEmbed, type SharedProps } from './shared';
@@ -20,7 +21,7 @@ export function ImgurEmbed(props: ImgurEmbedProps) {
     placeholder,
     ...shared
   } = props;
-  const { embed, error } = resolveEmbed(url, given, 'imgur');
+  const { embed, error } = resolveEmbed(url, given, imgur);
   const plan = embed ? imgurPlan(embed, { context }) : undefined;
   useReportError(
     error ?? (plan?.kind === 'error' ? plan.message : undefined),

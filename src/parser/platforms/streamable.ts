@@ -15,7 +15,7 @@ import { coerce, parseUrl, type ParsedUrl } from '../url';
 const ID = '([a-z0-9]{4,8})';
 const PAGE_HOSTS = new Set(['streamable.com', 'www.streamable.com']);
 const PLAYER_PATH = new RegExp(`^/[eo]/${ID}$`);
-const PAGE_PATH = new RegExp(`^/${ID}$`);
+const PAGE_PATH = new RegExp(`^/${ID}/?$`);
 // Short paths on streamable.com that are pages, not videos.
 const NOT_VIDEOS = new Set([
   'about',

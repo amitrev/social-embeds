@@ -1,6 +1,8 @@
-import { matchUrl, type ParsedEmbed, type Platform } from '../parser';
 import { needsLookup } from '../parser/lookup';
-import { verifyEmbed } from '../parser/verify';
+import { matchWith } from '../parser/match-url';
+import type { PlatformParser } from '../parser/platform';
+import type { ParsedEmbed, Platform } from '../parser/types';
+import { verifyWith } from '../parser/verify';
 
 export const NAMES: Record<Platform, string> = {
   x: 'X',
@@ -39,12 +41,14 @@ export function lookupMessage(platform: Platform): string {
   return `social-embeds: a ${NAMES[platform]} URL needs a lookup: use the embed code`;
 }
 
+/** Takes the platform's own parser, so a per-platform component bundles no other (docs/decisions.md D103). */
 export function resolveEmbed(
   url: string | undefined,
   given: ParsedEmbed | undefined,
-  platform: Platform,
+  parser: PlatformParser,
 ): { embed: ParsedEmbed; error?: never } | { embed?: never; error: string } {
-  const embed = given ?? (url === undefined ? null : matchUrl(url));
+  const { platform } = parser;
+  const embed = given ?? (url === undefined ? null : matchWith(parser, url));
   if (!embed && url !== undefined && needsLookup(url) === platform) {
     return {
       error: lookupMessage(platform),
@@ -60,7 +64,7 @@ export function resolveEmbed(
       error: `social-embeds: expected a ${NAMES[platform]} embed, got ${NAMES[embed.platform]}`,
     };
   }
-  const verified = verifyEmbed(embed);
+  const verified = verifyWith(parser, embed);
   if (!verified) {
     return {
       error: `social-embeds: the ${NAMES[platform]} embed's url and id do not match`,

@@ -3,6 +3,7 @@ import { planEmbed } from '../core/plan-embed';
 import { genericPlan } from '../core/plans/generic';
 import { resolveEmbed, sourceError } from '../core/resolve';
 import { matchUrl, parseEmbed, parseIframe } from '../parser';
+import { parserFor } from '../parser/platforms';
 import type { MountOptions } from './dom';
 import { type Input, readInput, type Source } from './input';
 import { mountIframe } from './mount-iframe';
@@ -15,19 +16,19 @@ const Base =
       (class {} as typeof HTMLElement)
     : HTMLElement;
 
-/** Detaches the children other than `<template>`; the non-blank ones are the placeholder. */
-function capture(host: Element): Node[] {
-  const kept: Node[] = [];
-  for (const node of [...host.childNodes]) {
-    if (node instanceof HTMLTemplateElement) continue;
-    host.removeChild(node);
+const SLOT = 'embed';
+
+/** Copies of the children other than `<template>` and blank text. */
+function placeholder(host: Element): Node[] {
+  const copies: Node[] = [];
+  for (const node of host.childNodes)
     if (
-      node.nodeType === Node.ELEMENT_NODE ||
+      (node.nodeType === Node.ELEMENT_NODE &&
+        !(node instanceof HTMLTemplateElement)) ||
       (node.nodeType === Node.TEXT_NODE && node.textContent?.trim())
     )
-      kept.push(node);
-  }
-  return kept;
+      copies.push(node.cloneNode(true));
+  return copies;
 }
 
 /** Named platforms first, then a generic iframe for `html`; a URL never goes generic. */
@@ -41,7 +42,9 @@ function planSource(source: Source): Plan | PlanError {
       : { kind: 'error', message: sourceError(source) };
   }
   // Verifies the embed, so markup such as Bluesky's fallback is safe to insert (D68).
-  const resolved = resolveEmbed(undefined, embed, embed.platform);
+  const parser = parserFor(embed.platform);
+  if (!parser) return { kind: 'error', message: sourceError(source) };
+  const resolved = resolveEmbed(undefined, embed, parser);
   if (resolved.error !== undefined)
     return { kind: 'error', message: resolved.error };
   return planEmbed(resolved.embed);
@@ -59,6 +62,7 @@ const UPGRADED = [
 
 export class SocialEmbedElement extends Base {
   static observedAttributes = [
+    'html',
     'url',
     'width',
     'max-width',
@@ -68,8 +72,8 @@ export class SocialEmbedElement extends Base {
   ];
 
   #html: string | null = null;
-  #placeholder: readonly Node[] | undefined;
   #observer: MutationObserver | undefined;
+  #output: HTMLElement | undefined;
   #key: string | undefined;
   #cleanup = () => {};
   #token = 0;
@@ -77,6 +81,9 @@ export class SocialEmbedElement extends Base {
 
   constructor() {
     super();
+    // Only the output is slotted; the host's own children stay in place, unrendered (docs/decisions.md D83).
+    this.attachShadow({ mode: 'open' }).innerHTML =
+      `<slot name="${SLOT}"></slot>`;
     // A value set before the upgrade is an own property that hides the setter.
     for (const name of UPGRADED) {
       if (!Object.hasOwn(this, name)) continue;
@@ -146,7 +153,7 @@ export class SocialEmbedElement extends Base {
 
   connectedCallback(): void {
     // While the parser streams, the children after the open tag do not exist yet.
-    if (this.#placeholder === undefined && document.readyState === 'loading') {
+    if (!this.#observer && document.readyState === 'loading') {
       if (!this.#waiting) {
         this.#waiting = true;
         document.addEventListener(
@@ -160,7 +167,6 @@ export class SocialEmbedElement extends Base {
       }
       return;
     }
-    this.#placeholder ??= capture(this);
     this.#observer ??= new MutationObserver(() => {
       this.#observe();
       this.#update();
@@ -204,23 +210,32 @@ export class SocialEmbedElement extends Base {
   }
 
   #update(): void {
-    if (!this.isConnected || this.#placeholder === undefined) return;
+    if (!this.isConnected || !this.#observer) return;
+    // A copy of a rendered element (cloneNode, saved HTML) carries an output that is not this one's.
+    for (const child of [...this.children])
+      if (child !== this.#output && child.slot === SLOT) child.remove();
     const input = readInput(this, this.#html);
     const key = JSON.stringify(input);
-    if (key === this.#key) return;
+    // Outside code may remove the output: React setting a text child, a DOM morph.
+    if (
+      key === this.#key &&
+      (!this.#output || this.#output.parentNode === this)
+    )
+      return;
     this.#reset();
     this.#key = key;
-    this.#render(input, this.#placeholder);
+    this.#render(input);
   }
 
   #reset(): void {
     this.#token += 1;
+    this.#output = undefined;
     const cleanup = this.#cleanup;
     this.#cleanup = () => {};
     cleanup();
   }
 
-  #render(input: Input, placeholder: readonly Node[]): void {
+  #render(input: Input): void {
     const { source, layout, eager } = input;
     if (!source) return;
     const token = this.#token;
@@ -243,15 +258,18 @@ export class SocialEmbedElement extends Base {
     const options: MountOptions = {
       ...layout,
       eager,
-      placeholder: placeholder.map((node) => node.cloneNode(true)),
+      placeholder: placeholder(this),
       onLoad: () => {
         dispatch(new Event('load'));
       },
       onError,
     };
-    this.#cleanup =
+    const { wrapper, cleanup } =
       plan.kind === 'iframe'
         ? mountIframe(this, plan, options)
         : mountScript(this, plan, options);
+    wrapper.slot = SLOT;
+    this.#output = wrapper;
+    this.#cleanup = cleanup;
   }
 }

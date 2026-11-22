@@ -1,4 +1,5 @@
 import { linkedinPlan, type LinkedInOptions } from '../core/plans/linkedin';
+import { linkedin } from '../parser/platforms/linkedin';
 import { useReportError } from './hooks';
 import { IframeEmbed, planProps } from './iframe-embed';
 import { type EmbedSource, type FrameProps, resolveEmbed } from './shared';
@@ -20,7 +21,7 @@ export function LinkedInEmbed(props: LinkedInEmbedProps) {
     collapsed,
     ...frame
   } = props;
-  const { embed, error } = resolveEmbed(url, given, 'linkedin');
+  const { embed, error } = resolveEmbed(url, given, linkedin);
   const plan = embed ? linkedinPlan(embed, { collapsed }) : undefined;
   useReportError(
     error ?? (plan?.kind === 'error' ? plan.message : undefined),
@@ -32,6 +33,7 @@ export function LinkedInEmbed(props: LinkedInEmbedProps) {
     <IframeEmbed
       {...frame}
       {...planProps(plan)}
+      onError={onError}
       maxWidth={maxWidth ?? plan.maxWidth}
       height={height ?? plan.height}
     />

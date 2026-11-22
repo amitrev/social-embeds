@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { matchUrl, parseEmbed } from '../../src/parser';
+import { matchUrl, parseEmbed, parseIframe } from '../../src/parser';
+import { verifyEmbed } from '../../src/parser/verify';
 import postIframe from '../fixtures/facebook/post-iframe.html?raw';
 import postSdk from '../fixtures/facebook/post-sdk-docs.html?raw';
 import videoIframe from '../fixtures/facebook/video-iframe-reel.html?raw';
@@ -32,6 +33,14 @@ describe('Facebook post embed code', () => {
       options: { locale: 'en_US', width: 500 },
       fallbackHtml: '',
     });
+  });
+
+  it('gives an SDK snippet for web.facebook.com the www URL', () => {
+    const code = postSdk.replace(
+      'https://www.facebook.com/',
+      'https://web.facebook.com/',
+    );
+    expect(parseEmbed(code)).toEqual(parseEmbed(postSdk));
   });
 
   it('reads another locale', () => {
@@ -125,6 +134,30 @@ describe('Facebook video embed code', () => {
       lazy: true,
       showCaptions: true,
     });
+  });
+
+  it('reads a web.facebook.com link in a plugin iframe as www', () => {
+    const code = videoIframe.replace(
+      'https%3A%2F%2Fwww.facebook.com',
+      'https%3A%2F%2Fweb.facebook.com',
+    );
+    expect(parseEmbed(code)).toEqual(parseEmbed(videoIframe));
+  });
+
+  it('reads a plugin iframe on web.facebook.com as one on www', () => {
+    const code = videoIframe.replace(
+      'https://www.facebook.com/plugins/',
+      'https://web.facebook.com/plugins/',
+    );
+    expect(parseEmbed(code)).toEqual(parseEmbed(videoIframe));
+  });
+
+  it('keeps web.facebook.com plugins off the generic path', () => {
+    expect(
+      parseIframe(
+        '<iframe src="https://web.facebook.com/plugins/unknown.php?href=x"></iframe>',
+      ),
+    ).toBeNull();
   });
 
   it('keeps only the parse-ignore class in fallback content', () => {
@@ -252,11 +285,28 @@ describe('Facebook URLs (shapes verified in docs/decisions.md D21)', () => {
         'https://www.facebook.com/reel/10153231379946729',
       ),
     ],
+    [
+      'https://web.facebook.com/watch/?v=10153231379946729',
+      video(
+        '10153231379946729',
+        'https://www.facebook.com/watch/?v=10153231379946729',
+      ),
+    ],
+    [
+      'https://web.facebook.com/facebook/posts/1710463914458955/',
+      post(
+        '1710463914458955',
+        'https://www.facebook.com/facebook/posts/1710463914458955',
+      ),
+    ],
   ])('%s', (url, expected) => {
-    expect(matchUrl(url)).toEqual(expected);
+    const embed = matchUrl(url);
+    expect(embed).toEqual(expected);
+    expect(embed && verifyEmbed(embed)).toEqual(embed);
   });
 
   it.each([
+    'https://web.facebook.com.example.com/facebook/posts/1710463914458955',
     'https://fb.watch/abc123/',
     'https://www.facebook.com/share/p/1AbCdEf/',
     'https://www.facebook.com/groups/1/posts/2/',

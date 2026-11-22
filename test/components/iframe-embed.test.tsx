@@ -22,8 +22,8 @@ const telegramHeight: MessageHeight = {
   },
 };
 
-function renderSized(props: Partial<Parameters<typeof IframeEmbed>[0]> = {}) {
-  const view = render(
+function sizedFrame(props: Partial<Parameters<typeof IframeEmbed>[0]> = {}) {
+  return (
     <IframeEmbed
       src="https://t.me/telegram/83?embed=1"
       title="Telegram post"
@@ -33,8 +33,12 @@ function renderSized(props: Partial<Parameters<typeof IframeEmbed>[0]> = {}) {
       startHeight={300}
       lazy={false}
       {...props}
-    />,
+    />
   );
+}
+
+function renderSized(props: Partial<Parameters<typeof IframeEmbed>[0]> = {}) {
+  const view = render(sizedFrame(props));
   const wrapper = view.container.firstElementChild as HTMLElement;
   const iframe = view.container.querySelector('iframe') as HTMLIFrameElement;
   return { ...view, wrapper, iframe };
@@ -488,5 +492,166 @@ describe('IframeEmbed with its size in the src', () => {
     expect(onError).toHaveBeenCalledWith(
       new Error('social-embeds: Flickr photo did not load'),
     );
+  });
+});
+
+describe('IframeEmbed with a new src', () => {
+  const FIRST = 'https://www.tiktok.com/player/v1/7704834703446117662';
+  const SECOND = 'https://www.tiktok.com/player/v1/7704834703446117663';
+
+  function frame(props: Partial<Parameters<typeof IframeEmbed>[0]> = {}) {
+    return (
+      <IframeEmbed
+        src={FIRST}
+        title="TikTok video"
+        allow=""
+        ratio={{ width: 9, height: 16 }}
+        lazy={false}
+        placeholder={<p data-testid="placeholder" />}
+        {...props}
+      />
+    );
+  }
+
+  function renderFrame(props: Partial<Parameters<typeof IframeEmbed>[0]> = {}) {
+    const view = render(frame(props));
+    const iframe = () =>
+      view.container.querySelector('iframe') as HTMLIFrameElement;
+    const wrapper = () => view.container.firstElementChild as HTMLElement;
+    return { ...view, iframe, wrapper };
+  }
+
+  it('starts over with a new iframe, the placeholder and a new onLoad', () => {
+    const onLoad = vi.fn();
+    const { iframe, rerender, getByTestId } = renderFrame({ onLoad });
+    const first = iframe();
+    fireEvent.load(first);
+    expect(onLoad).toHaveBeenCalledTimes(1);
+
+    rerender(frame({ onLoad, src: SECOND }));
+    const second = iframe();
+    expect(second).not.toBe(first);
+    expect(first.isConnected).toBe(false);
+    expect(second.getAttribute('src')).toBe(SECOND);
+    expect(getByTestId('placeholder')).toBeTruthy();
+
+    fireEvent.load(second);
+    expect(onLoad).toHaveBeenCalledTimes(2);
+    expect(() => getByTestId('placeholder')).toThrow();
+  });
+
+  it('restarts the timeout for the new src after the old frame loaded', () => {
+    vi.useFakeTimers();
+    const onError = vi.fn();
+    const { iframe, rerender } = renderFrame({ onError });
+    lastObserver().enter();
+    fireEvent.load(iframe());
+
+    rerender(frame({ onError, src: SECOND }));
+    lastObserver().enter();
+    act(() => {
+      vi.advanceTimersByTime(14_999);
+    });
+    expect(onError).not.toHaveBeenCalled();
+    act(() => {
+      vi.advanceTimersByTime(1);
+    });
+    expect(onError).toHaveBeenCalledTimes(1);
+    expect(onError).toHaveBeenCalledWith(
+      new Error('social-embeds: TikTok video did not load'),
+    );
+  });
+
+  it('drops the old frame’s pending timeout', () => {
+    vi.useFakeTimers();
+    const onError = vi.fn();
+    const { rerender } = renderFrame({ onError });
+    lastObserver().enter();
+    act(() => {
+      vi.advanceTimersByTime(10_000);
+    });
+
+    rerender(frame({ onError, src: SECOND }));
+    lastObserver().enter();
+    act(() => {
+      vi.advanceTimersByTime(14_999);
+    });
+    expect(onError).not.toHaveBeenCalled();
+    act(() => {
+      vi.advanceTimersByTime(1);
+    });
+    expect(onError).toHaveBeenCalledTimes(1);
+  });
+
+  it('goes back to the start height for a frame sized by messages', () => {
+    const onLoad = vi.fn();
+    const { container, wrapper, iframe, rerender } = renderSized({ onLoad });
+    post(resize(900), iframe.contentWindow);
+    expect(wrapper.style.height).toBe('900px');
+
+    rerender(sizedFrame({ onLoad, src: 'https://t.me/telegram/84?embed=1' }));
+    const box = container.firstElementChild as HTMLElement;
+    const second = container.querySelector('iframe') as HTMLIFrameElement;
+    expect(second).not.toBe(iframe);
+    expect(box.style.height).toBe('300px');
+
+    post(resize(540), second.contentWindow);
+    expect(box.style.height).toBe('540px');
+    expect(onLoad).toHaveBeenCalledTimes(2);
+  });
+
+  it('starts over for a new src with its size in the src', () => {
+    installResizeObserver(600);
+    const onLoad = vi.fn();
+    const sized = (src: string) => (
+      <IframeEmbed
+        src={src}
+        title="Flickr photo"
+        allow=""
+        ratio={{ width: 4, height: 3 }}
+        sizeInSrc
+        lazy={false}
+        onLoad={onLoad}
+        placeholder={<p data-testid="placeholder" />}
+      />
+    );
+    const { container, rerender, getByTestId } = render(
+      sized('https://embedr.flickr.com/photos/1'),
+    );
+    const first = container.querySelector('iframe') as HTMLIFrameElement;
+    fireEvent.load(first);
+
+    rerender(sized('https://embedr.flickr.com/photos/2'));
+    const second = container.querySelector('iframe') as HTMLIFrameElement;
+    expect(second).not.toBe(first);
+    expect(second.getAttribute('src')).toBe(
+      'https://embedr.flickr.com/photos/2?width=600&height=450',
+    );
+    expect(getByTestId('placeholder')).toBeTruthy();
+    fireEvent.load(second);
+    expect(onLoad).toHaveBeenCalledTimes(2);
+  });
+
+  it('keeps the loaded frame when only the layout props change', () => {
+    const onLoad = vi.fn();
+    const { iframe, wrapper, rerender, getByTestId } = renderFrame({ onLoad });
+    const first = iframe();
+    const box = wrapper();
+    fireEvent.load(first);
+
+    rerender(
+      frame({
+        onLoad,
+        maxWidth: 300,
+        className: 'wide',
+        style: { margin: 4 },
+      }),
+    );
+    expect(iframe()).toBe(first);
+    expect(wrapper()).toBe(box);
+    expect(box.style.maxWidth).toBe('300px');
+    expect(box.className).toBe('wide');
+    expect(() => getByTestId('placeholder')).toThrow();
+    expect(onLoad).toHaveBeenCalledTimes(1);
   });
 });

@@ -1,22 +1,23 @@
 import type { ScriptPlan } from '../core/plan';
+import { postLinkText, postUrl } from '../core/post-link';
 import {
   RENDER_ATTEMPTS,
   RENDER_TIMEOUT_MS,
   RETRY_DELAY_MS,
 } from '../core/timing';
-import { applyStyle, type MountOptions, skeleton } from './dom';
+import { applyStyle, type Mounted, type MountOptions, skeleton } from './dom';
 import { whenNear } from './near';
 
 function toError(error: unknown): Error {
   return error instanceof Error ? error : new Error(String(error));
 }
 
-/** Renders into `host` and returns the cleanup. */
+/** Appends `wrapper` to `host`; `cleanup` removes it. */
 export function mountScript(
   host: HTMLElement,
   plan: ScriptPlan,
   options: MountOptions,
-): () => void {
+): Mounted {
   const { driver, label } = plan;
   const { eager, placeholder, onLoad, onError } = options;
   const wrapper = document.createElement('div');
@@ -30,11 +31,21 @@ export function mountScript(
   const container = document.createElement('div');
   container.innerHTML = plan.markup;
   box.append(container);
-  const content: readonly Node[] =
-    placeholder.length > 0 ? placeholder : [skeleton(plan.minHeight)];
-  if (!plan.hasFallback) box.append(...content);
+  const href = postUrl(container);
+  let shown: readonly Node[] = plan.hasFallback
+    ? []
+    : placeholder.length > 0
+      ? placeholder
+      : [skeleton(plan.minHeight)];
+  box.append(...shown);
   wrapper.append(box);
   host.append(wrapper);
+
+  const show = (nodes: readonly Node[]) => {
+    for (const node of shown) node.parentNode?.removeChild(node);
+    shown = nodes;
+    box.append(...nodes);
+  };
 
   let cancelled = false;
   let done = false;
@@ -47,15 +58,25 @@ export function mountScript(
     done = true;
     clearTimeout(timer);
     stop();
-    for (const node of content) node.parentNode?.removeChild(node);
+    show([]);
     onLoad();
+  };
+  const fail = (error: Error) => {
+    if (plan.hasFallback || href === undefined) show([]);
+    else {
+      const link = document.createElement('a');
+      link.setAttribute('href', href);
+      link.textContent = postLinkText(label);
+      show([link]);
+    }
+    onError(error);
   };
   const retryOrFail = (number: number, error: Error) => {
     if (cancelled || done) return;
     stop();
     stop = () => {};
     if (number >= RENDER_ATTEMPTS) {
-      onError(error);
+      fail(error);
       return;
     }
     timer = setTimeout(
@@ -88,17 +109,18 @@ export function mountScript(
         attempt(1);
       },
       (error: unknown) => {
-        if (!cancelled) onError(toError(error));
+        if (!cancelled) fail(toError(error));
       },
     );
   });
 
   // Platforms offer no API to tear an embed down; removing the wrapper is the cleanup.
-  return () => {
+  const cleanup = () => {
     cancelled = true;
     cancelNear();
     clearTimeout(timer);
     stop();
     wrapper.remove();
   };
+  return { wrapper, cleanup };
 }

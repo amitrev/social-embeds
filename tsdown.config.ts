@@ -12,6 +12,8 @@ export default defineConfig([
   {
     ...shared,
     entry: { index: 'src/index.ts', parser: 'src/parser/index.ts' },
+    // One file per module, so bundlers drop the parsers a per-platform component never imports (docs/decisions.md D103).
+    unbundle: true,
     clean: true,
   },
   {

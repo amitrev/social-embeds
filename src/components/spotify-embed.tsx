@@ -1,4 +1,5 @@
 import { spotifyPlan, type SpotifyOptions } from '../core/plans/spotify';
+import { spotify } from '../parser/platforms/spotify';
 import { useReportError } from './hooks';
 import { IframeEmbed, planProps } from './iframe-embed';
 import { type EmbedSource, type FrameProps, resolveEmbed } from './shared';
@@ -15,7 +16,7 @@ export type SpotifyEmbedProps = EmbedSource &
  */
 export function SpotifyEmbed(props: SpotifyEmbedProps) {
   const { url, embed: given, onError, height, theme, ...frame } = props;
-  const { embed, error } = resolveEmbed(url, given, 'spotify');
+  const { embed, error } = resolveEmbed(url, given, spotify);
   const plan = embed ? spotifyPlan(embed, { theme }) : undefined;
   useReportError(
     error ?? (plan?.kind === 'error' ? plan.message : undefined),
@@ -27,6 +28,7 @@ export function SpotifyEmbed(props: SpotifyEmbedProps) {
     <IframeEmbed
       {...frame}
       {...planProps(plan)}
+      onError={onError}
       height={height ?? plan.height}
     />
   );

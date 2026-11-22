@@ -17,6 +17,7 @@ import { tenorPlan } from '../../src/core/plans/tenor';
 import { twitchPlan } from '../../src/core/plans/twitch';
 import { vimeoPlan } from '../../src/core/plans/vimeo';
 import { resolveEmbed } from '../../src/core/resolve';
+import { parserFor } from '../../src/parser/platforms';
 import { parseEmbed, type ParsedEmbed, type Platform } from '../../src/parser';
 import blueskyOembed from '../fixtures/bluesky/oembed.html?raw';
 import tumblrOembed from '../fixtures/tumblr/oembed.html?raw';
@@ -49,8 +50,13 @@ import flickrHeaderFooter from '../fixtures/flickr/embed-dialog-header-footer.ht
 import flickrSlideshow from '../fixtures/flickr/embed-dialog-slideshow.html?raw';
 import flickrAlbum from '../fixtures/flickr/embed-dialog-album.html?raw';
 
+function parser(platform: Platform) {
+  const found = parserFor(platform);
+  if (!found) throw new Error(`no parser for ${platform}`);
+  return found;
+}
 function fromUrl(url: string, platform: Platform): ParsedEmbed {
-  const { embed } = resolveEmbed(url, undefined, platform);
+  const { embed } = resolveEmbed(url, undefined, parser(platform));
   if (!embed) throw new Error('url did not resolve');
   return embed;
 }
@@ -58,7 +64,7 @@ function fromUrl(url: string, platform: Platform): ParsedEmbed {
 function fromCode(html: string, platform: Platform): ParsedEmbed {
   const parsed = parseEmbed(html);
   if (!parsed) throw new Error('fixture did not parse');
-  const { embed } = resolveEmbed(undefined, parsed, platform);
+  const { embed } = resolveEmbed(undefined, parsed, parser(platform));
   if (!embed) throw new Error('fixture did not verify');
   return embed;
 }

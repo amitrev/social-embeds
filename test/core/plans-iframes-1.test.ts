@@ -6,6 +6,7 @@ import { telegramPlan } from '../../src/core/plans/telegram';
 import { tiktokPlan } from '../../src/core/plans/tiktok';
 import { youtubePlan } from '../../src/core/plans/youtube';
 import { resolveEmbed } from '../../src/core/resolve';
+import { parserFor } from '../../src/parser/platforms';
 import { parseEmbed, type ParsedEmbed, type Platform } from '../../src/parser';
 import linkedinCollapsed from '../fixtures/linkedin/post-collapsed.html?raw';
 import redditComment from '../fixtures/reddit/comment-share.html?raw';
@@ -14,8 +15,13 @@ import telegramOptions from '../fixtures/telegram/widget-configurator-options.ht
 import tiktokPlayer from '../fixtures/tiktok/oembed-player.html?raw';
 import youtubeNocookie from '../fixtures/youtube/share-nocookie-controls-start.html?raw';
 
+function parser(platform: Platform) {
+  const found = parserFor(platform);
+  if (!found) throw new Error(`no parser for ${platform}`);
+  return found;
+}
 function fromUrl(url: string, platform: Platform): ParsedEmbed {
-  const { embed } = resolveEmbed(url, undefined, platform);
+  const { embed } = resolveEmbed(url, undefined, parser(platform));
   if (!embed) throw new Error('url did not resolve');
   return embed;
 }
@@ -23,7 +29,7 @@ function fromUrl(url: string, platform: Platform): ParsedEmbed {
 function fromCode(html: string, platform: Platform): ParsedEmbed {
   const parsed = parseEmbed(html);
   if (!parsed) throw new Error('fixture did not parse');
-  const { embed } = resolveEmbed(undefined, parsed, platform);
+  const { embed } = resolveEmbed(undefined, parsed, parser(platform));
   if (!embed) throw new Error('fixture did not verify');
   return embed;
 }
