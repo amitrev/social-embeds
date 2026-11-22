@@ -223,7 +223,7 @@ The loader uses `FACEBOOK_SDK_VERSION = 'v26.0'`, the version Meta's Embedded Po
 ### D27. Loader policy
 
 - **One per page:** at most one script per platform, and concurrent callers share one promise. A later caller gets the settled promise, so client navigation never reloads a script.
-- **Host scripts:** if the global is already present, nothing is added. If a host tag is present but still loading, the loader waits for its global instead of adding a second tag.
+- **Host scripts:** if the global is already present, nothing is added. If a host tag is present but still loading, the loader waits for its global instead of adding a second tag. That wait is bounded since D104.
 - **Retries (§6.2):** a script the browser reports as failed (`error` event) is removed and retried after 1 s and then 2 s; three attempts in all. A script that does not load within 15 s is not retried, because it may still arrive and run twice. A global that does not appear within 15 s of loading is a failure too.
 - **Failures are not cached:** an embed mounted later starts again.
 - **Cleanup:** scripts are never removed, since other embeds and the host may need them. Per-embed cleanup belongs to the components (Milestone 5).
@@ -965,11 +965,11 @@ Each platform's knowledge (the iframe URL, allowed features, aspect ratio, heigh
 
 ### D83. The element renders into the light DOM
 
-The platform scripts (X, Instagram, Threads, Facebook, Pinterest) scan the page's document for their markup and cannot see into a shadow root. The element therefore renders inside itself, as the components render inside their wrapper.
+The platform scripts (X, Instagram, Threads, Facebook, Pinterest) scan the page's document for their markup and cannot see into a shadow root. The element therefore renders inside itself, as the components render inside their wrapper. D107 adds a shadow root that only selects what shows; the output stays in the light DOM.
 
 ### D84. Input order and the template
 
-The `html` property wins over the first `<template>` child, which wins over the `url` attribute, mirroring `<SocialEmbed>`'s embed-code-first rule. A template keeps the embed code inert, so the platform's script tag never runs and the blockquote is never shown raw. The element builds markup only from a verified embed and escaped values (D68); unrecognised embed code renders nothing and fires `error`.
+The `html` property wins over the first `<template>` child, which wins over the `url` attribute (D107 puts the `html` attribute after the property), mirroring `<SocialEmbed>`'s embed-code-first rule. A template keeps the embed code inert, so the platform's script tag never runs and the blockquote is never shown raw. The element builds markup only from a verified embed and escaped values (D68); unrecognised embed code renders nothing and fires `error`.
 
 ### D85. Events
 
@@ -1220,6 +1220,69 @@ Checked in Chrome on 2026-11-21, against `next build` and `next start` on port 3
 - **Truth Social sample:** the maintainer asked to replace the Independence Day greeting, a national-holiday post that sits badly with D80. The new text post is `@truthsocial`'s notice that image uploads work again (`108318911610590772`, 2022-05-17), English and neutral. The account's text posts from 2023 to 2026 were company finance, the merger, politics, sport or the greeting. Its Web App launch post (`108330075459173041`) was the other candidate; it renders with a "Show More" button, and its frame reports 304 px, which cuts off its action row. Both posts' oEmbed `html` is byte for byte the old fixture's shape with the new id.
 - **Truth Social start height 150 px, was 300:** the frame reports its document height, and a document is never shorter than the frame. In 300 px frames, short posts kept 300 px with about 116 px of blank space under them (the new sample, in `<social-embed>`, 2026-11-22). Started at 150 px (an iframe's default, which Truth Social's own code leaves in place), the same post reported 184 px and fits. Longer posts grow from 150 as before. Posts with "Show More" are still reported about 30 px short; that comes from the frame, not the package.
 - **Imgur, checked in a visible Chrome:** on the deployed 0.7.0 `/imgur` page, scrolled slowly to the bottom, every Imgur frame posted its real height, including those created below the fold: album 485, image 433, Hide Title 385, all at 540 px wide. None reported `did not report its height`. The height 0 and the Hide Title 200 in D101 were hidden-pane artefacts, so the code is unchanged.
+
+## Review fixes (2026-11-22)
+
+A review of 0.7.1 for bugs a user would hit, and for what an app pays to bundle it. Each bug below was reproduced first: in happy-dom tests, against `dist`, or in Chrome on the deployed demo and in a scratch Next.js 16 app that installed the package.
+
+### D103. A platform component bundles only its own parser
+
+In 0.7.1 an app that imported only `YouTubeEmbed` bundled all 29 platform parsers: `resolveEmbed` called `matchUrl` and `verifyEmbed`, which walk the whole registry. Measured with esbuild (minified, gzipped, React external), against the published package and then against this change installed from its tarball:
+
+| Import                        | 0.7.1   | Now     |
+| ----------------------------- | ------- | ------- |
+| `SocialEmbed`                 | 26.4 KB | 27.2 KB |
+| `YouTubeEmbed`                | 16.6 KB | 5.7 KB  |
+| `XEmbed`                      | 16.8 KB | 6.4 KB  |
+| `TikTokEmbed`                 | 16.4 KB | 5.4 KB  |
+| `social-embeds/parser`        | 13.4 KB | 13.5 KB |
+| `social-embeds/element` (D87) | 25.5 KB | 26.1 KB |
+
+`SocialEmbed` grew by the fixes in D104 to D106; it needs every parser by design.
+
+- **One parser:** `resolveEmbed` takes the platform's parser instead of its name, and matches and verifies with `matchWith` and `verifyWith`. `verifyEmbed` and `matchUrl` keep their behaviour and look the parser up in the registry; `parserFor` does that lookup for the element.
+- **Still the same check:** verifying with one parser equals verifying with all of them only while no URL belongs to two platforms. `test/parser/one-parser.test.ts` checks every URL literal in the playground samples and the parser tests (over 200) and every fixture's canonical URL against all parsers.
+- **Message:** a URL of another platform now gets `social-embeds: not a {Platform} post URL: {url}`; telling which platform it is needs the other parsers. An `embed` of another platform still gets `expected a {Platform} embed, got {Other}`.
+- **One file per module:** with the parsers in one shared `dist` chunk, bundlers still kept each unused parser's ``new RegExp(`…${ID}…`)``: a template with substitutions may run code, and `/* @__PURE__ */` on the call does not cover its arguments. `YouTubeEmbed` was 7.0 KB that way. The `index` and `parser` entries now build with tsdown's `unbundle`, one file per source module, so `sideEffects` lets a bundler drop a whole unused module: 5.7 KB. Only `dist/index.js` carries `'use client'` (D2); `element.js` stays one file (D87). The package has 174 files, 381 kB unpacked.
+
+### D104. A host's platform tag no longer blocks the loader
+
+D27 waited up to 15 s for the global of any matching `<script src>` on the page and never added its own tag. Tags written through `innerHTML` or React's `dangerouslySetInnerHTML` never run: the README's own `fallback` example and CMS article HTML carry them, and after a client-side navigation such a tag is always inert. A host tag blocked by a content blocker never sets the global either. Every embed of that platform then failed with `… did not initialise` until a full reload. This fits the novini.bg report of an Instagram post missing after homepage to article navigation; the live build was not rechecked.
+
+The global is the only sign that the host's tag ran. The loader now waits for the page's `load` event (15 s at most), which waits for parser-inserted async scripts, then 3 s more (`HOST_GRACE_MS`) for a tag added after load that is still downloading. If the global is still missing, or a host tag fires `error`, it adds its own tag with the usual retries, ready callback and D46 handling. The D38 and D46 case of a host page adding the Facebook SDK and then Instagram's script itself now works and is tested.
+
+Evidence: Chrome, a Next.js 16 production build, client navigation to a page whose HTML holds X's blockquote and `widgets.js` tag through `dangerouslySetInnerHTML`, beside an `<SocialEmbed>` X post. The package added its own `widgets.js` and the post rendered at 697 px about 4.5 s after the click, with no console error.
+
+- **Risk:** a host tag added after page load that takes over 3 s to download runs next to the package's copy. The platform scripts are believed to guard against a second run; that is not verified.
+
+### D105. Iframe embeds report their timeout and start over on a new source
+
+- **`onError` on timeout:** TikTok, YouTube, Vimeo, Spotify, Twitch, Dailymotion, LinkedIn, Snapchat and Facebook's video iframe took `onError` for invalid input but never passed it to `IframeEmbed`, so D91's 15 s `did not load` never reached the host, also through `<SocialEmbed>`. They pass it now. `test/components/frame-timeout.test.tsx` renders every iframe component and fails if a new exported `*Embed` is left out of its table.
+- **A new source remounts the frame:** a changed `url` or `embed` set a new `src` on the same iframe. No placeholder showed, `onLoad` did not fire for the new post, the timeout did not restart, a message-sized frame kept the old height (Telegram stayed at 900 px), and a new `src` on a loaded frame adds a history entry. `IframeEmbed` now keys its frame by the plan's `src`: a new source gets a new wrapper, iframe, placeholder, starting height and timeout, as `<social-embed>` already did. Layout props never remount, and in a plan that puts the width in the `src` (Flickr) a width change still swaps only the iframe.
+
+### D106. Script embeds that fail
+
+A script embed whose script never loaded or never rendered the post kept its skeleton for good, 250 to 680 px of grey, and URL input left only `<blockquote><a></a></blockquote>`, with no way to the post. Content blockers, Brave and Firefox's tracking protection block X's and Facebook's scripts (D91 saw this).
+
+After the final failure the placeholder goes, as for iframes (D91). URL input gets a link, "View this post on {Platform}", to the verified URL read from the markup before the script runs (`src/core/post-link.ts`). Embed code keeps its fallback content. A render signal that arrives later removes the link. React and the element behave the same, and the parity test compares 23 failure cases.
+
+- **Not in the plan markup:** visible link text there would show while the post loads, against D34.
+
+### D107. The element's children and the `html` attribute
+
+- **`html` attribute:** before the tag is defined, React 19, Vue 3 and Svelte 5 write `html` as an attribute, since it is not yet a property, and server HTML carries it the same way. The element read only the property, so it rendered nothing and fired no `error`. The order is now: `html` property, `html` attribute, first `<template>`, `url`. An attribute written before the upgrade stays if the framework later removes the prop.
+- **Children are never moved:** the element took its children out at connect to use as the placeholder. A framework that still owned them then failed: React's `{loading && <p/>}` threw `NotFoundError` from `removeChild` when the condition flipped, which unmounts the React root; Lit and Vue marker comments break the same way. The element now has an open shadow root holding only `<slot name="embed">`, and its output wrapper has `slot="embed"`. The output stays in the light DOM, where the platform scripts find it (D83). The host's own children stay where they are and are simply not rendered, text included. The placeholder is copies of them, taken each time the embed starts.
+- **Output removed from outside:** a React text child update, htmx's idiomorph, Turbo 8 morphing and LiveView's morphdom replace the element's children. The wrapper went with them, and the input had not changed, so the element stayed blank. It now starts again when its wrapper is no longer its child. A `slot="embed"` child that is not its own output, from `cloneNode` or saved HTML, is removed so it neither shows nor loads twice.
+
+Evidence: Chrome, the Next.js 16 app, `<social-embed>` with an X URL and a React conditional child, a YouTube URL with a React text child, and Instagram code passed as `html` before the module loaded. All three rendered (X 225 px, YouTube 408 px, Instagram 927 px), the X and Instagram scripts found their markup in the light DOM, and two flips of the children threw nothing and kept every embed.
+
+### D108. More URL shapes, and Tenor's ratios
+
+- **Tenor:** the Embed dialog writes ratios such as `1.33333`, `1.77778` and `2.3380281690140845`; only up to 4 decimals were accepted, so most Tenor code returned `null`. Up to 20 decimals are read now, rounded to 4 as before, from 0.01 to 100.
+- **X:** the media viewer's `/status/{id}/photo/{n}` and `/video/{n}`, and `x.com/i/web/status/{id}`, which names no author and becomes `https://x.com/i/status/{id}`, as `/i/status/` already did. URL input only; embed code still needs the plain status link (D16). `/i/status/` with widgets.js was not checked live.
+- **Facebook:** `web.facebook.com`, where Facebook sends some regions, in URLs and in plugin `href`s; the canonical URL is on `www.` (D21).
+- **Giphy:** `giphy.com/stickers/…`, the "Copy GIF link" form `media.giphy.com/media/v1.{token}/{id}/giphy.gif`, other rendition files, and `i.giphy.com/{id}.gif` (D76). A sticker's canonical URL is `giphy.com/gifs/{id}`; not checked live.
+- **Streamable:** a page URL may end in `/` (D96).
 
 ## Open VERIFY items
 
