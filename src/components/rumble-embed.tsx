@@ -1,5 +1,5 @@
 import { rumblePlan } from '../core/plans/rumble';
-import { rumble } from '../parser/platforms/rumble';
+import { rumbleMatcher as rumble } from '../parser/matchers/rumble';
 import type { EmbedSource, FrameProps } from './shared';
 import { usePlan } from './use-plan';
 import { frameOf } from './iframe-embed';

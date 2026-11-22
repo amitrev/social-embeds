@@ -1,5 +1,5 @@
 import { instagramPlan, type InstagramOptions } from '../core/plans/instagram';
-import { instagram } from '../parser/platforms/instagram';
+import { instagramMatcher as instagram } from '../parser/matchers/instagram';
 import type { EmbedSource, SharedProps } from './shared';
 import { usePlan } from './use-plan';
 import { scriptOf } from './script-embed';

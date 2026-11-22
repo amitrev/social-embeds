@@ -1,5 +1,5 @@
 import { blueskyPlan, type BlueskyOptions } from '../core/plans/bluesky';
-import { bluesky } from '../parser/platforms/bluesky';
+import { blueskyMatcher as bluesky } from '../parser/matchers/bluesky';
 import type { EmbedSource, SharedProps } from './shared';
 import { usePlan } from './use-plan';
 import { fallbackPlaceholder, frameOf } from './iframe-embed';

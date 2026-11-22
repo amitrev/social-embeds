@@ -1,5 +1,5 @@
 import { truthSocialPlan } from '../core/plans/truthsocial';
-import { truthsocial } from '../parser/platforms/truthsocial';
+import { truthsocialMatcher as truthsocial } from '../parser/matchers/truthsocial';
 import type { EmbedSource, SharedProps } from './shared';
 import { usePlan } from './use-plan';
 import { frameOf } from './iframe-embed';

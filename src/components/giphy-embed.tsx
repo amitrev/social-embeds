@@ -1,5 +1,5 @@
 import { giphyPlan } from '../core/plans/giphy';
-import { giphy } from '../parser/platforms/giphy';
+import { giphyMatcher as giphy } from '../parser/matchers/giphy';
 import type { EmbedSource, FrameProps } from './shared';
 import { usePlan } from './use-plan';
 import { frameOf } from './iframe-embed';

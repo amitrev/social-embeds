@@ -121,7 +121,7 @@ export const SocialEmbed = createSocialEmbed([
 
 Each platform component takes a `url`, or an `embed` already parsed by [`social-embeds/parser`](#parser), plus the shared props and its own option props. Option props override options from the embed code.
 
-A platform component bundles only its own platform's parser: one component adds about 3.5 to 5.5 KB gzipped to an app (`FacebookEmbed` about 7.4 KB), against about 27 KB for `<SocialEmbed>`, which recognises every platform. A URL of another platform is reported as `social-embeds: not a {Platform} post URL: …`, and an `embed` of another platform as `social-embeds: expected a {Platform} embed, got {id}`.
+A platform component bundles only its own platform's parser: one component adds about 3 to 5 KB gzipped to an app (`FacebookEmbed` about 7 KB), against about 27 KB for `<SocialEmbed>`, which recognises every platform. A URL of another platform is reported as `social-embeds: not a {Platform} post URL: …`, and an `embed` of another platform as `social-embeds: expected a {Platform} embed, got {id}`.
 
 ```tsx
 import {

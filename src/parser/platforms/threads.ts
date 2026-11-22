@@ -1,16 +1,8 @@
-import { hasClass, rebuild, type Whitelist, rebuildsAs } from '../html';
+import { hasClass, rebuild } from '../html';
 import { attributeOptions, type PlatformParser } from '../platform';
-import type { ParsedEmbed } from '../types';
-import { coerce, parseUrl, type ParsedUrl } from '../url';
+import { coerce, parseUrl } from '../url';
+import { post, FALLBACK, threadsMatcher } from '../matchers/threads';
 
-const HOSTS = new Set([
-  'threads.com',
-  'www.threads.com',
-  'threads.net',
-  'www.threads.net',
-]);
-const POST_PATH =
-  /^\/(?:@[A-Za-z0-9._]{1,30}\/post|t)\/([A-Za-z0-9_-]{1,64})\/?$/;
 const SCRIPT = /^(?:https?:)?\/\/www\.threads\.(?:com|net)\/embed\.js$/;
 
 const OPTION_ATTRIBUTES = [
@@ -18,30 +10,8 @@ const OPTION_ATTRIBUTES = [
   ['data-text-post-version', 'version'],
 ] as const;
 
-const FALLBACK: Whitelist = new Map([
-  ['a', ['href']],
-  ['div', []],
-]);
-
-// Canonical URLs use /t/{code}: oEmbed code links that form, the Embed dialog /@{user}/post/{code}.
-function post(url: ParsedUrl | null): Omit<ParsedEmbed, 'options'> | null {
-  if (!url || !HOSTS.has(url.host)) return null;
-  const [, code] = POST_PATH.exec(url.path) ?? [];
-  if (code === undefined) return null;
-  return {
-    platform: 'threads',
-    kind: 'post',
-    url: `https://www.threads.com/t/${code}`,
-    id: code,
-    variant: 'sdk',
-  };
-}
-
 export const threads: PlatformParser = {
-  platform: 'threads',
-  name: 'Threads',
-  shapes: ['post sdk'],
-  trustsFallback: (html) => rebuildsAs(html, FALLBACK),
+  ...threadsMatcher,
   parse(root) {
     if (root.tag !== 'blockquote' || !hasClass(root, 'text-post-media'))
       return null;
@@ -59,8 +29,4 @@ export const threads: PlatformParser = {
     };
   },
   isOwnScript: (src) => SCRIPT.test(src),
-  match(url) {
-    const found = post(url);
-    return found && { ...found, options: {} };
-  },
 };

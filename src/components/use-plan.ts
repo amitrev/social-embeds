@@ -1,6 +1,6 @@
 import type { Plan, PlanError } from '../core/plan';
 import { resolveEmbed } from '../core/resolve';
-import type { PlatformParser } from '../parser/platform';
+import type { PlatformMatcher } from '../parser/platform';
 import type { ParsedEmbed } from '../parser/types';
 import { useReportError } from './hooks';
 import type { EmbedSource } from './shared';
@@ -19,7 +19,7 @@ export function usePlan<
   const K extends readonly (keyof O & keyof P)[],
 >(
   props: P,
-  parser: PlatformParser,
+  parser: PlatformMatcher,
   names: Every<O, K>,
   plan: (embed: ParsedEmbed, options: O) => Plan | PlanError,
 ): [Plan | undefined, Omit<P, 'url' | 'embed' | K[number]>] {

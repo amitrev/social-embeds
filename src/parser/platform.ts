@@ -4,7 +4,11 @@ import { pixels, type ParsedUrl } from './url';
 
 export type Options = ParsedEmbed['options'];
 
-export type PlatformParser = {
+/**
+ * The URL half of a platform: what a component needs to match a URL and verify an embed, without
+ * the embed-code parsing that only `parseEmbed` uses (docs/decisions.md D117).
+ */
+export type PlatformMatcher = {
   platform: Platform;
   /** For messages: `YouTube`, `Apple Music`. */
   name: string;
@@ -14,6 +18,12 @@ export type PlatformParser = {
   trustsFallback?: (html: string, embed: ParsedEmbed) => boolean;
   /** A post URL that only a network lookup could turn into an embed (docs/decisions.md D70). */
   needsLookup?: (url: ParsedUrl) => boolean;
+  match: (url: ParsedUrl) => ParsedEmbed | null;
+  /** True also for frames `parse` rejects, so generic iframe code never bypasses the platform's checks. */
+  ownsFrame?: (src: ParsedUrl) => boolean;
+};
+
+export type PlatformParser = PlatformMatcher & {
   /** The embed element (blockquote, div or iframe) of the platform's own embed code. */
   parse: (root: HtmlElement) => ParsedEmbed | null;
   /** Embed code that is a single `<script>` tag, as Telegram's is. */
@@ -28,9 +38,6 @@ export type PlatformParser = {
   allowsFbRoot?: boolean;
   /** A sibling element after the embed that is the platform's own markup, such as a credit; it is dropped. */
   isOwnExtra?: (element: HtmlElement, embed: ParsedEmbed) => boolean;
-  match: (url: ParsedUrl) => ParsedEmbed | null;
-  /** True also for frames `parse` rejects, so generic iframe code never bypasses the platform's checks. */
-  ownsFrame?: (src: ParsedUrl) => boolean;
 };
 
 /** `/embed` holds `/embed` and `/embed/…`, never `/embedded`. */

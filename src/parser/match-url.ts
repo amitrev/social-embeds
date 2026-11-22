@@ -1,4 +1,4 @@
-import type { PlatformParser } from './platform';
+import type { PlatformMatcher, PlatformParser } from './platform';
 import { platforms } from './platforms';
 import type { ParsedEmbed } from './types';
 import { type ParsedUrl, parseUrl } from './url';
@@ -24,7 +24,7 @@ export function matchUrlWith(
 
 /** `matchUrl` for one platform. */
 export function matchWith(
-  parser: PlatformParser,
+  parser: PlatformMatcher,
   url: string,
 ): ParsedEmbed | null {
   const parsed = parse(url);

@@ -1,50 +1,12 @@
-import {
-  descendants,
-  hasClass,
-  rebuild,
-  type Whitelist,
-  rebuildsAs,
-} from '../html';
+import { descendants, hasClass, rebuild } from '../html';
 import type { Options, PlatformParser } from '../platform';
-import type { ParsedEmbed } from '../types';
-import { coerce, parseUrl, type ParsedUrl } from '../url';
+import { coerce, parseUrl } from '../url';
+import { post, FALLBACK, instagramMatcher } from '../matchers/instagram';
 
-const HOSTS = new Set(['instagram.com', 'www.instagram.com']);
-const POST_PATH =
-  /^\/(?:([A-Za-z0-9._]{1,30})\/)?(p|reel|reels|tv)\/([A-Za-z0-9_-]{1,64})\/?$/;
-const TYPES = new Set(['p', 'reel', 'reels', 'tv']);
-const USER_POST_TYPES = new Set(['p', 'reel']);
 const SCRIPT = /^(?:https?:)?\/\/www\.instagram\.com\/embed\.js$/;
 
-const FALLBACK: Whitelist = new Map([
-  ['div', []],
-  ['a', ['href']],
-  ['p', []],
-]);
-
-// embed.js serves only /p/, /reel/ and /tv/ permalinks: the canonical URL drops the
-// username and maps reels to reel (docs/decisions.md D15).
-function post(url: ParsedUrl | null): Omit<ParsedEmbed, 'options'> | null {
-  if (!url || !HOSTS.has(url.host)) return null;
-  const [, user, type, code] = POST_PATH.exec(url.path) ?? [];
-  if (type === undefined || code === undefined) return null;
-  // Instagram links /{user}/p/ and /{user}/reel/ only.
-  if (user !== undefined && (TYPES.has(user) || !USER_POST_TYPES.has(type)))
-    return null;
-  return {
-    platform: 'instagram',
-    kind: 'post',
-    url: `https://www.instagram.com/${type === 'reels' ? 'reel' : type}/${code}/`,
-    id: code,
-    variant: 'sdk',
-  };
-}
-
 export const instagram: PlatformParser = {
-  platform: 'instagram',
-  name: 'Instagram',
-  shapes: ['post sdk'],
-  trustsFallback: (html) => rebuildsAs(html, FALLBACK),
+  ...instagramMatcher,
   parse(root) {
     if (root.tag !== 'blockquote' || !hasClass(root, 'instagram-media'))
       return null;
@@ -76,8 +38,4 @@ export const instagram: PlatformParser = {
     };
   },
   isOwnScript: (src) => SCRIPT.test(src),
-  match(url) {
-    const found = post(url);
-    return found && { ...found, options: {} };
-  },
 };

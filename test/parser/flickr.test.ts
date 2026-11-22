@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { matchUrl, parseEmbed } from '../../src/parser';
-import { decodeFlickrCode } from '../../src/parser/platforms/flickr';
+import { decodeFlickrCode } from '../../src/parser/matchers/flickr';
 import { verifyEmbed } from '../../src/parser/verify';
 import albumDialog from '../fixtures/flickr/embed-dialog-album.html?raw';
 import headerFooter from '../fixtures/flickr/embed-dialog-header-footer.html?raw';

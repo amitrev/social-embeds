@@ -1,5 +1,5 @@
 import { imgurPlan, type ImgurOptions } from '../core/plans/imgur';
-import { imgur } from '../parser/platforms/imgur';
+import { imgurMatcher as imgur } from '../parser/matchers/imgur';
 import type { EmbedSource, SharedProps } from './shared';
 import { usePlan } from './use-plan';
 import { fallbackPlaceholder, frameOf } from './iframe-embed';

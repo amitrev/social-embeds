@@ -1,5 +1,5 @@
 import { tenorPlan } from '../core/plans/tenor';
-import { tenor } from '../parser/platforms/tenor';
+import { tenorMatcher as tenor } from '../parser/matchers/tenor';
 import type { EmbedSource, FrameProps } from './shared';
 import { usePlan } from './use-plan';
 import { frameOf } from './iframe-embed';

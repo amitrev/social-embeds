@@ -1,5 +1,5 @@
 import { pinterestPlan, type PinterestOptions } from '../core/plans/pinterest';
-import { pinterest } from '../parser/platforms/pinterest';
+import { pinterestMatcher as pinterest } from '../parser/matchers/pinterest';
 import type { EmbedSource, SharedProps } from './shared';
 import { usePlan } from './use-plan';
 import { scriptOf } from './script-embed';

@@ -1,5 +1,5 @@
 import { vimeoPlan, type VimeoOptions } from '../core/plans/vimeo';
-import { vimeo } from '../parser/platforms/vimeo';
+import { vimeoMatcher as vimeo } from '../parser/matchers/vimeo';
 import type { EmbedSource, FrameProps } from './shared';
 import { usePlan } from './use-plan';
 import { frameOf } from './iframe-embed';

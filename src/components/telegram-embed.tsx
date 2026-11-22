@@ -1,5 +1,5 @@
 import { telegramPlan, type TelegramOptions } from '../core/plans/telegram';
-import { telegram } from '../parser/platforms/telegram';
+import { telegramMatcher as telegram } from '../parser/matchers/telegram';
 import type { EmbedSource, SharedProps } from './shared';
 import { usePlan } from './use-plan';
 import { frameOf } from './iframe-embed';
