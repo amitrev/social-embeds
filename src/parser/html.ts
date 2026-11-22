@@ -189,11 +189,17 @@ export function hasClass(element: HtmlElement, name: string): boolean {
 /** In document order. */
 export function descendants(nodes: readonly HtmlNode[]): HtmlElement[] {
   const found: HtmlElement[] = [];
+  collect(nodes, found);
+  return found;
+}
+
+// Pushes one at a time: spreading a long child list overflows the call stack.
+function collect(nodes: readonly HtmlNode[], found: HtmlElement[]): void {
   for (const node of nodes) {
     if (node.type !== 'element') continue;
-    found.push(node, ...descendants(node.children));
+    found.push(node);
+    collect(node.children, found);
   }
-  return found;
 }
 
 export type AttributeRule = string | { name: string; value: RegExp };

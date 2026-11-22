@@ -1,4 +1,4 @@
-import { frameStyle } from '../core/layout';
+import { frameStyle, srcWithSize, watchWidth } from '../core/layout';
 import type { IframePlan } from '../core/plan';
 import { FRAME_TIMEOUT_MS, MAX_REPORTED_HEIGHT } from '../core/timing';
 import { applyStyle, type MountOptions, skeleton } from './dom';
@@ -33,7 +33,7 @@ export function mountIframe(
       : [
           plan.fallbackHtml === undefined
             ? skeleton()
-            : fallback(plan.fallbackHtml),
+            : fallback(plan.fallbackHtml, plan.fallbackImage === true),
         ];
   layer.append(...content);
   frame.append(layer);
@@ -79,14 +79,13 @@ export function mountIframe(
     }, FRAME_TIMEOUT_MS);
   };
 
-  const create = () => {
+  const create = (src: string) => {
     const element = document.createElement('iframe');
-    element.src = plan.hostParam
-      ? withHost(plan.src, plan.hostParam)
-      : plan.src;
+    element.src = plan.hostParam ? withHost(src, plan.hostParam) : src;
     element.title = plan.title;
     element.setAttribute('allow', plan.allow);
-    element.setAttribute('allowfullscreen', '');
+    if (plan.allowFullscreen !== false)
+      element.setAttribute('allowfullscreen', '');
     if (plan.referrerPolicy) element.referrerPolicy = plan.referrerPolicy;
     if (plan.scrolling) element.setAttribute('scrolling', plan.scrolling);
     if (plan.sandbox !== undefined)
@@ -100,18 +99,32 @@ export function mountIframe(
     element.addEventListener('load', () => {
       if (!messageHeight) report();
     });
+    // A new src on a loaded frame would add a history entry; a new frame adds none.
+    if (iframe) iframe.replaceWith(element);
+    else frame.prepend(element);
     iframe = element;
-    frame.insertBefore(element, layer);
     if (messageHeight) window.addEventListener('message', listen);
   };
 
+  const start = () => {
+    if (!plan.sizeInSrc) {
+      create(plan.src);
+      return;
+    }
+    cancels.push(
+      watchWidth(frame, (width) => {
+        create(srcWithSize(plan, width));
+      }),
+    );
+  };
+
   if (eager) {
-    create();
+    start();
     cancels.push(whenNear(frame, false, startTimer));
   } else {
     cancels.push(
       whenNear(frame, false, () => {
-        create();
+        start();
         startTimer();
       }),
     );
@@ -125,8 +138,9 @@ export function mountIframe(
   };
 }
 
-function fallback(html: string): HTMLElement {
-  const quote = document.createElement('blockquote');
-  quote.innerHTML = html;
-  return quote;
+function fallback(html: string, image: boolean): HTMLElement {
+  const element = document.createElement(image ? 'div' : 'blockquote');
+  if (image) element.style.height = '100%';
+  element.innerHTML = html;
+  return element;
 }

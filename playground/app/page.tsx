@@ -27,6 +27,11 @@ export default function Home() {
           </li>
         ))}
         <li>
+          <Link href="/iframe">Generic iframes</Link>: iframe embed code from
+          sites without a component of their own, each with its last{' '}
+          <code>onLoad</code> or <code>onError</code>.
+        </li>
+        <li>
           <Link href="/many">Many embeds</Link>: lazy loading and one script per
           platform.
         </li>

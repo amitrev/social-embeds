@@ -20,6 +20,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
               {name}
             </Link>
           ))}
+          <Link href="/iframe">Generic iframes</Link>
           <Link href="/many">Many embeds</Link>
           <Link href="/eager">All at once</Link>
         </nav>

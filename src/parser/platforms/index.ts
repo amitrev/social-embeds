@@ -4,7 +4,9 @@ import { applepodcasts } from './applepodcasts';
 import { bluesky } from './bluesky';
 import { dailymotion } from './dailymotion';
 import { facebook } from './facebook';
+import { flickr } from './flickr';
 import { giphy } from './giphy';
+import { imgur } from './imgur';
 import { instagram } from './instagram';
 import { kick } from './kick';
 import { linkedin } from './linkedin';
@@ -12,10 +14,15 @@ import { pinterest } from './pinterest';
 import { reddit } from './reddit';
 import { snapchat } from './snapchat';
 import { soundcloud } from './soundcloud';
+import { rumble } from './rumble';
 import { spotify } from './spotify';
+import { strava } from './strava';
+import { streamable } from './streamable';
 import { telegram } from './telegram';
+import { tenor } from './tenor';
 import { threads } from './threads';
 import { tiktok } from './tiktok';
+import { truthsocial } from './truthsocial';
 import { tumblr } from './tumblr';
 import { twitch } from './twitch';
 import { vimeo } from './vimeo';
@@ -43,6 +50,13 @@ export const platforms: readonly PlatformParser[] = [
   applepodcasts,
   kick,
   giphy,
+  tenor,
+  streamable,
+  rumble,
+  truthsocial,
+  imgur,
+  strava,
+  flickr,
   bluesky,
   tumblr,
 ];

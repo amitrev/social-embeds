@@ -6,6 +6,7 @@ import { parseUrl, type ParsedUrl } from '../url';
 
 const PATH = /^\/([a-z]{2})\/podcast\/(?:[^/]{1,200}\/)?(?:id)?(\d{1,15})\/?$/;
 const EPISODE = /^\d{1,15}$/;
+const FRAME_HOST = 'embed.podcasts.apple.com';
 
 function content(
   url: ParsedUrl | null,
@@ -29,10 +30,7 @@ export const applepodcasts: PlatformParser = {
   platform: 'applepodcasts',
   parse(root) {
     if (root.tag !== 'iframe') return null;
-    const found = content(
-      parseUrl(root.attrs.get('src') ?? ''),
-      'embed.podcasts.apple.com',
-    );
+    const found = content(parseUrl(root.attrs.get('src') ?? ''), FRAME_HOST);
     return found && withSize({ ...found, options: {} }, sizeOf(root));
   },
   isOwnScript: () => false,
@@ -40,4 +38,5 @@ export const applepodcasts: PlatformParser = {
     const found = content(url, 'podcasts.apple.com');
     return found && { ...found, options: {} };
   },
+  ownsFrame: (src) => src.host === FRAME_HOST,
 };

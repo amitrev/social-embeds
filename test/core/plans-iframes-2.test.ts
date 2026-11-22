@@ -2,11 +2,18 @@ import { describe, expect, it } from 'vitest';
 import { appleMusicPlan, applePodcastsPlan } from '../../src/core/plans/apple';
 import { blueskyPlan } from '../../src/core/plans/bluesky';
 import { dailymotionPlan } from '../../src/core/plans/dailymotion';
+import { flickrPlan } from '../../src/core/plans/flickr';
 import { giphyPlan } from '../../src/core/plans/giphy';
+import { imgurPlan } from '../../src/core/plans/imgur';
 import { kickPlan } from '../../src/core/plans/kick';
 import { soundcloudPlan } from '../../src/core/plans/soundcloud';
 import { spotifyPlan } from '../../src/core/plans/spotify';
+import { stravaPlan } from '../../src/core/plans/strava';
+import { truthSocialPlan } from '../../src/core/plans/truthsocial';
 import { tumblrPlan } from '../../src/core/plans/tumblr';
+import { rumblePlan } from '../../src/core/plans/rumble';
+import { streamablePlan } from '../../src/core/plans/streamable';
+import { tenorPlan } from '../../src/core/plans/tenor';
 import { twitchPlan } from '../../src/core/plans/twitch';
 import { vimeoPlan } from '../../src/core/plans/vimeo';
 import { resolveEmbed } from '../../src/core/resolve';
@@ -25,7 +32,22 @@ import spotifyShowVideo from '../fixtures/spotify/oembed-show-video.html?raw';
 import spotifyTrack from '../fixtures/spotify/oembed-track.html?raw';
 import twitchChannel from '../fixtures/twitch/docs-channel.html?raw';
 import twitchVideo from '../fixtures/twitch/docs-video.html?raw';
+import rumbleDialog from '../fixtures/rumble/embed-dialog-iframe.html?raw';
+import rumbleOembed from '../fixtures/rumble/oembed.html?raw';
+import streamableApi from '../fixtures/streamable/api-embed-code.html?raw';
+import streamableOembed from '../fixtures/streamable/oembed.html?raw';
+import tenorDialog from '../fixtures/tenor/embed-dialog.html?raw';
 import vimeoResponsive from '../fixtures/vimeo/responsive-docs.html?raw';
+import truthVideo from '../fixtures/truthsocial/embed-dialog-video.html?raw';
+import truthText from '../fixtures/truthsocial/oembed-text.html?raw';
+import imgurAlbum from '../fixtures/imgur/embed-dialog-album.html?raw';
+import imgurHideTitle from '../fixtures/imgur/embed-dialog-album-hide-title.html?raw';
+import imgurImage from '../fixtures/imgur/oembed-image.html?raw';
+import stravaRoute from '../fixtures/strava/route-derived.html?raw';
+import flickrDialog from '../fixtures/flickr/embed-dialog.html?raw';
+import flickrHeaderFooter from '../fixtures/flickr/embed-dialog-header-footer.html?raw';
+import flickrSlideshow from '../fixtures/flickr/embed-dialog-slideshow.html?raw';
+import flickrAlbum from '../fixtures/flickr/embed-dialog-album.html?raw';
 
 function fromUrl(url: string, platform: Platform): ParsedEmbed {
   const { embed } = resolveEmbed(url, undefined, platform);
@@ -606,5 +628,516 @@ describe('giphyPlan', () => {
       ratio: { width: 1, height: 1 },
       size: { width: 480, height: 269 },
     });
+  });
+});
+
+describe('tenorPlan', () => {
+  it('defaults a URL to 4:3', () => {
+    expect(
+      tenorPlan(
+        fromUrl('https://tenor.com/view/hello-wave-gif-12345', 'tenor'),
+      ),
+    ).toEqual({
+      kind: 'iframe',
+      src: 'https://tenor.com/embed/12345',
+      title: 'Tenor GIF',
+      allow: 'fullscreen',
+      ratio: { width: 133, height: 100 },
+      size: undefined,
+    });
+  });
+
+  it('keeps the embed code ratio', () => {
+    expect(tenorPlan(fromCode(tenorDialog, 'tenor'))).toMatchObject({
+      src: 'https://tenor.com/embed/12328062661350661133',
+      size: { width: 1, height: 1 },
+    });
+  });
+});
+
+describe('streamablePlan', () => {
+  it('builds the player frame for a URL', () => {
+    expect(
+      streamablePlan(
+        fromUrl('https://streamable.com/abc123', 'streamable'),
+        {},
+      ),
+    ).toEqual({
+      kind: 'iframe',
+      src: 'https://streamable.com/e/abc123',
+      title: 'Streamable video',
+      allow: 'autoplay; fullscreen',
+      ratio: { width: 16, height: 9 },
+      size: undefined,
+    });
+  });
+
+  it('keeps the wrapper ratio and the frame size', () => {
+    expect(
+      streamablePlan(fromCode(streamableApi, 'streamable'), {}),
+    ).toMatchObject({
+      src: 'https://streamable.com/e/lttg48',
+      size: { width: 16, height: 9 },
+    });
+    expect(
+      streamablePlan(fromCode(streamableOembed, 'streamable'), {}),
+    ).toMatchObject({ size: { width: 1280, height: 720 } });
+  });
+
+  it('turns options into player parameters', () => {
+    expect(
+      streamablePlan(fromUrl('https://streamable.com/abc123', 'streamable'), {
+        autoplay: true,
+        loop: false,
+        nocontrols: true,
+        hd: true,
+        muted: true,
+      }),
+    ).toMatchObject({
+      src: 'https://streamable.com/e/abc123?autoplay=1&hd=1&loop=0&muted=1&nocontrols=1',
+    });
+  });
+
+  it('ignores inherited object names in parsed options', () => {
+    const embed = fromUrl('https://streamable.com/abc123', 'streamable');
+    expect(
+      streamablePlan(
+        { ...embed, options: { constructor: 'x', toString: 'y', muted: 1 } },
+        {},
+      ),
+    ).toMatchObject({ src: 'https://streamable.com/e/abc123?muted=1' });
+  });
+
+  it('ignores parsed options that are not player parameters', () => {
+    const embed = fromUrl('https://streamable.com/abc123', 'streamable');
+    expect(
+      streamablePlan({ ...embed, options: { id: 'x', muted: 1 } }, {}),
+    ).toMatchObject({ src: 'https://streamable.com/e/abc123?muted=1' });
+  });
+});
+
+describe('rumblePlan', () => {
+  it('keeps pub from the embed code and its size', () => {
+    expect(rumblePlan(fromCode(rumbleDialog, 'rumble'))).toEqual({
+      kind: 'iframe',
+      src: 'https://rumble.com/embed/v12onr1/?pub=4',
+      title: 'Rumble video',
+      allow: 'fullscreen',
+      ratio: { width: 16, height: 9 },
+      size: { width: 640, height: 360 },
+    });
+  });
+
+  it('adds no pub', () => {
+    expect(rumblePlan(fromCode(rumbleOembed, 'rumble'))).toMatchObject({
+      src: 'https://rumble.com/embed/v12onr1/',
+    });
+  });
+
+  it('drops options other than pub', () => {
+    const embed = fromCode(rumbleDialog, 'rumble');
+    expect(
+      rumblePlan({ ...embed, options: { pub: 4, id: 'x' } }),
+    ).toMatchObject({ src: 'https://rumble.com/embed/v12onr1/?pub=4' });
+  });
+});
+
+function readerOf(plan: ReturnType<typeof truthSocialPlan>) {
+  if (plan.kind !== 'iframe' || !plan.messageHeight) throw new Error('plan');
+  return plan.messageHeight.read;
+}
+
+describe('truthSocialPlan', () => {
+  const EXPECTED = {
+    kind: 'iframe',
+    src: 'https://truthsocial.com/@truthsocial/116862065232992052/embed',
+    title: 'Truth Social post',
+    allow: '',
+    scrolling: 'no',
+    ratio: { width: 1, height: 1 },
+    messageHeight: {
+      origin: 'https://truthsocial.com',
+      read: expect.any(Function) as unknown,
+    },
+    startHeight: 300,
+    maxWidth: 600,
+  };
+
+  it('builds the post frame for embed code', () => {
+    expect(truthSocialPlan(fromCode(truthText, 'truthsocial'))).toEqual(
+      EXPECTED,
+    );
+  });
+
+  it('builds the same frame for a URL', () => {
+    expect(
+      truthSocialPlan(
+        fromUrl(
+          'https://truthsocial.com/@truthsocial/posts/116862065232992052',
+          'truthsocial',
+        ),
+      ),
+    ).toEqual(EXPECTED);
+  });
+
+  it('reads the height of a setHeight message, with or without an id', () => {
+    const read = readerOf(truthSocialPlan(fromCode(truthText, 'truthsocial')));
+    expect(read({ type: 'setHeight', id: undefined, height: 221 })).toBe(221);
+    expect(read({ type: 'setHeight', id: 'abc', height: 506 })).toBe(506);
+    expect(read({ type: 'other', height: 221 })).toBeUndefined();
+    expect(read({ type: 'setHeight', height: '221' })).toBeUndefined();
+    expect(read('setHeight')).toBeUndefined();
+    expect(read(null)).toBeUndefined();
+  });
+
+  it('adds 165px to every height of a video post', () => {
+    const plan = truthSocialPlan(fromCode(truthVideo, 'truthsocial'));
+    expect(plan).toMatchObject({
+      src: 'https://truthsocial.com/@truthsocial/117529982042129746/embed',
+      startHeight: 300,
+    });
+    const read = readerOf(plan);
+    expect(read({ type: 'setHeight', height: 530 })).toBe(695);
+    expect(read({ type: 'other', height: 530 })).toBeUndefined();
+  });
+
+  it('reads no height from a video post that reports none', () => {
+    const read = readerOf(truthSocialPlan(fromCode(truthVideo, 'truthsocial')));
+    expect(read({ type: 'setHeight', height: 0 })).toBeUndefined();
+    expect(read({ type: 'setHeight', height: -1 })).toBeUndefined();
+  });
+
+  it('errors on a URL that is not the canonical post URL', () => {
+    const embed = fromCode(truthText, 'truthsocial');
+    expect(
+      truthSocialPlan({ ...embed, url: 'https://truthsocial.com/@a/1' }),
+    ).toEqual({
+      kind: 'error',
+      message:
+        'social-embeds: not a Truth Social post URL: https://truthsocial.com/@a/1',
+    });
+  });
+
+  it('adds 165px only for the flag set to true', () => {
+    const embed = fromCode(truthText, 'truthsocial');
+    const read = readerOf(
+      truthSocialPlan({ ...embed, options: { video: 'true' } }),
+    );
+    expect(read({ type: 'setHeight', height: 221 })).toBe(221);
+  });
+});
+
+describe('imgurPlan', () => {
+  const ALBUM = {
+    kind: 'iframe',
+    src: 'https://imgur.com/a/04b1CmA/embed?pub=true',
+    title: 'Imgur post',
+    allow: '',
+    scrolling: 'no',
+    ratio: { width: 1, height: 1 },
+    messageHeight: {
+      origin: 'https://imgur.com',
+      read: expect.any(Function) as unknown,
+    },
+    startHeight: 500,
+    maxWidth: 540,
+  };
+
+  it('builds the album frame and carries the verified title link', () => {
+    expect(imgurPlan(fromCode(imgurAlbum, 'imgur'), {})).toEqual({
+      ...ALBUM,
+      fallbackHtml:
+        '<a href="https://imgur.com/a/04b1CmA">It&#39;s Imgur&#39;s 16th Birthday Week! Share Memories and Reminisce.</a>',
+    });
+  });
+
+  it('builds the image frame', () => {
+    expect(imgurPlan(fromCode(imgurImage, 'imgur'), {})).toMatchObject({
+      src: 'https://imgur.com/yOBT04V/embed?pub=true',
+      fallbackHtml:
+        '<a href="https://imgur.com/yOBT04V">View post on imgur.com</a>',
+    });
+  });
+
+  it.each([
+    'https://imgur.com/a/04b1CmA',
+    'https://imgur.com/gallery/its-imgurs-16th-birthday-week-04b1CmA',
+  ])('builds the album frame for %s', (url) => {
+    expect(imgurPlan(fromUrl(url, 'imgur'), {})).toEqual(ALBUM);
+  });
+
+  it('builds the image frame for a file URL', () => {
+    expect(
+      imgurPlan(fromUrl('https://i.imgur.com/yOBT04V.jpeg', 'imgur'), {}),
+    ).toMatchObject({ src: 'https://imgur.com/yOBT04V/embed?pub=true' });
+  });
+
+  it('keeps the hidden title and analytics of the embed code', () => {
+    expect(imgurPlan(fromCode(imgurHideTitle, 'imgur'), {})).toMatchObject({
+      src: 'https://imgur.com/a/04b1CmA/embed?pub=true&context=false',
+    });
+    const embed = fromCode(imgurAlbum, 'imgur');
+    expect(
+      imgurPlan({ ...embed, options: { analytics: false } }, {}),
+    ).toMatchObject({
+      src: 'https://imgur.com/a/04b1CmA/embed?pub=true&analytics=false',
+    });
+  });
+
+  it('lets the context prop replace the embed code', () => {
+    expect(
+      imgurPlan(fromCode(imgurHideTitle, 'imgur'), { context: true }),
+    ).toMatchObject({ src: 'https://imgur.com/a/04b1CmA/embed?pub=true' });
+    expect(
+      imgurPlan(fromCode(imgurAlbum, 'imgur'), { context: false }),
+    ).toMatchObject({
+      src: 'https://imgur.com/a/04b1CmA/embed?pub=true&context=false',
+    });
+  });
+
+  it('ignores options that are not kept', () => {
+    const embed = fromCode(imgurAlbum, 'imgur');
+    expect(
+      imgurPlan(
+        { ...embed, options: { id: 'x', pub: 'false', context: 'no', w: 1 } },
+        {},
+      ),
+    ).toMatchObject({ src: 'https://imgur.com/a/04b1CmA/embed?pub=true' });
+  });
+
+  it('reads the height of a resize_imgur message', () => {
+    const plan = imgurPlan(fromCode(imgurAlbum, 'imgur'), {});
+    if (plan.kind !== 'iframe' || !plan.messageHeight) throw new Error('plan');
+    const { read } = plan.messageHeight;
+    expect(
+      read(
+        '{"message":"resize_imgur","href":"https://imgur.com/a/04b1CmA/embed?pub=true","height":415,"width":360,"context":true}',
+      ),
+    ).toBe(415);
+    expect(read('{"message":"404_imgur_embed"}')).toBeUndefined();
+    expect(read({ message: 'resize_imgur', height: 415 })).toBeUndefined();
+  });
+});
+
+describe('stravaPlan', () => {
+  const ROUTE = '3247927232574435836';
+
+  it('builds the route frame for embed code', () => {
+    expect(stravaPlan(fromCode(stravaRoute, 'strava'), {})).toEqual({
+      kind: 'iframe',
+      src: `https://strava-embeds.com/route/${ROUTE}?style=standard#ns=social-embeds`,
+      title: 'Strava route',
+      allow: '',
+      scrolling: 'no',
+      ratio: { width: 1, height: 1 },
+      messageHeight: {
+        origin: 'https://strava-embeds.com',
+        read: expect.any(Function) as unknown,
+      },
+      startHeight: 650,
+      maxWidth: 554,
+    });
+  });
+
+  it('builds the activity frame for a URL', () => {
+    expect(
+      stravaPlan(
+        fromUrl('https://www.strava.com/activities/123456', 'strava'),
+        {},
+      ),
+    ).toMatchObject({
+      src: 'https://strava-embeds.com/activity/123456?style=standard#ns=social-embeds',
+      title: 'Strava activity',
+      maxWidth: 554,
+    });
+  });
+
+  it('keeps the style, full width and map hash of the embed code', () => {
+    const code = stravaRoute.replace(
+      'data-style="standard"',
+      'data-style="minimal" data-full-width="true" data-map-hash="a1_b-2"',
+    );
+    const plan = stravaPlan(fromCode(code, 'strava'), {});
+    expect(plan).toMatchObject({
+      src: `https://strava-embeds.com/route/${ROUTE}?style=minimal&fullWidth=true#ns=social-embeds&mapHash=a1_b-2`,
+    });
+    expect(plan.kind === 'iframe' ? plan.maxWidth : 'error').toBeUndefined();
+  });
+
+  it('lets the option props replace the embed code', () => {
+    const code = stravaRoute.replace(
+      'data-style="standard"',
+      'data-style="minimal" data-full-width="true"',
+    );
+    expect(
+      stravaPlan(fromCode(code, 'strava'), {
+        embedStyle: 'standard',
+        fullWidth: false,
+        mapHash: 'x y',
+      }),
+    ).toMatchObject({
+      src: `https://strava-embeds.com/route/${ROUTE}?style=standard#ns=social-embeds&mapHash=x%20y`,
+      maxWidth: 554,
+    });
+  });
+
+  it('gives an activity no full width', () => {
+    const embed = fromUrl('https://www.strava.com/activities/123456', 'strava');
+    expect(
+      stravaPlan(
+        { ...embed, options: { fullWidth: true } },
+        { fullWidth: true },
+      ),
+    ).toMatchObject({
+      src: 'https://strava-embeds.com/activity/123456?style=standard#ns=social-embeds',
+      maxWidth: 554,
+    });
+  });
+
+  it('keeps the verified type and id when options name others', () => {
+    const embed = fromCode(stravaRoute, 'strava');
+    expect(
+      stravaPlan(
+        {
+          ...embed,
+          options: {
+            embedId: '1',
+            embedType: 'activity',
+            id: '2',
+            type: 'activity',
+            style: 'evil',
+            fromEmbed: true,
+          },
+        },
+        {},
+      ),
+    ).toMatchObject({
+      src: `https://strava-embeds.com/route/${ROUTE}?style=standard#ns=social-embeds`,
+    });
+  });
+
+  it('reads the height of a BROADCAST_IFRAME_HEIGHT message', () => {
+    const plan = stravaPlan(fromCode(stravaRoute, 'strava'), {});
+    if (plan.kind !== 'iframe' || !plan.messageHeight) throw new Error('plan');
+    const { read } = plan.messageHeight;
+    expect(read(['social-embeds', 'BROADCAST_IFRAME_HEIGHT', 571])).toBe(571);
+    expect(read([null, 'BROADCAST_IFRAME_HEIGHT', 571])).toBe(571);
+    expect(read(['social-embeds', 'BROADCAST_HOST_FOCUS', {}])).toBeUndefined();
+    expect(
+      read(['social-embeds', 'BROADCAST_IFRAME_HEIGHT', '571']),
+    ).toBeUndefined();
+    expect(read({ height: 571 })).toBeUndefined();
+  });
+});
+
+describe('flickrPlan', () => {
+  const PHOTO = 'https://www.flickr.com/photos/flickr/55618331478/';
+  const IMAGE_STYLE = 'display:block;width:100%;height:100%;object-fit:cover';
+
+  it('builds the photo frame at the image ratio, with the image as fallback', () => {
+    expect(flickrPlan(fromCode(flickrDialog, 'flickr'), {})).toEqual({
+      kind: 'iframe',
+      src: 'https://embedr.flickr.com/photos/55618331478',
+      title: 'Flickr photo',
+      allow: '',
+      scrolling: 'no',
+      ratio: { width: 4, height: 3 },
+      size: { width: 4096, height: 2301 },
+      sizeInSrc: true,
+      maxWidth: 4096,
+      fallbackHtml: `<a href="${PHOTO}"><img style="${IMAGE_STYLE}" src="https://live.staticflickr.com/65535/55618331478_aa284e58b6_4k.jpg" width="4096" height="2301" alt="Flickr for the Planet Feature - Rio Arrayanes, Patagonia Argentina"></a>`,
+      fallbackImage: true,
+    });
+  });
+
+  it('builds the album frame', () => {
+    expect(flickrPlan(fromCode(flickrAlbum, 'flickr'), {})).toMatchObject({
+      src: 'https://embedr.flickr.com/photosets/72157716823987722',
+      title: 'Flickr album',
+      size: { width: 800, height: 600 },
+      maxWidth: 800,
+    });
+  });
+
+  it('keeps the header, footer and slideshow of the embed code', () => {
+    expect(
+      flickrPlan(fromCode(flickrHeaderFooter, 'flickr'), {}),
+    ).toMatchObject({
+      src: 'https://embedr.flickr.com/photos/55618331478?header=true&footer=true',
+    });
+    expect(flickrPlan(fromCode(flickrSlideshow, 'flickr'), {})).toMatchObject({
+      src: 'https://embedr.flickr.com/photos/55618331478?context=true',
+      size: { width: 800, height: 449 },
+      maxWidth: 800,
+    });
+  });
+
+  it('lets the option props replace the embed code', () => {
+    expect(
+      flickrPlan(fromCode(flickrHeaderFooter, 'flickr'), {
+        header: false,
+        context: true,
+      }),
+    ).toMatchObject({
+      src: 'https://embedr.flickr.com/photos/55618331478?footer=true&context=true',
+    });
+  });
+
+  it('renders a URL at 4:3 with no maximum width and no fallback', () => {
+    expect(flickrPlan(fromUrl(PHOTO, 'flickr'), {})).toEqual({
+      kind: 'iframe',
+      src: 'https://embedr.flickr.com/photos/55618331478',
+      title: 'Flickr photo',
+      allow: '',
+      scrolling: 'no',
+      ratio: { width: 4, height: 3 },
+      sizeInSrc: true,
+      fallbackImage: true,
+    });
+  });
+
+  it('builds the same frame for a flic.kr URL as for the long URL', () => {
+    const short = flickrPlan(
+      fromUrl('https://flic.kr/p/2sJNueC', 'flickr'),
+      {},
+    );
+    expect(short).toEqual(flickrPlan(fromUrl(PHOTO, 'flickr'), {}));
+  });
+
+  it('builds the album frame for an album URL', () => {
+    expect(
+      flickrPlan(
+        fromUrl(
+          'https://www.flickr.com/photos/flickr/albums/72157716823987722',
+          'flickr',
+        ),
+        {},
+      ),
+    ).toMatchObject({
+      src: 'https://embedr.flickr.com/photosets/72157716823987722',
+      title: 'Flickr album',
+    });
+  });
+
+  it('treats a user named albums as a photo', () => {
+    expect(
+      flickrPlan(
+        fromUrl('https://www.flickr.com/photos/albums/55618331478/', 'flickr'),
+        {},
+      ),
+    ).toMatchObject({ src: 'https://embedr.flickr.com/photos/55618331478' });
+  });
+
+  it('ignores options that are not kept', () => {
+    const embed = fromCode(flickrDialog, 'flickr');
+    expect(
+      flickrPlan(
+        {
+          ...embed,
+          options: { id: '1', secret: 'x', width: 9, header: 'true' },
+        },
+        {},
+      ),
+    ).toMatchObject({ src: 'https://embedr.flickr.com/photos/55618331478' });
   });
 });

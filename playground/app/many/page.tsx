@@ -1,4 +1,14 @@
 import { ReportedEmbed } from '../../components/reported-embed';
+import {
+  FLICKR_PHOTO,
+  genericMap,
+  IMGUR_POST,
+  RUMBLE_VIDEO,
+  STRAVA_ROUTE,
+  STREAMABLE_VIDEO,
+  TENOR_GIF,
+  TRUTH_SOCIAL_POST,
+} from '../../samples';
 
 const YOUTUBE = 'https://www.youtube.com/watch?v=jNQXAC9IVRw';
 const TIKTOK = 'https://www.tiktok.com/@tiktok/video/7704834703446117662';
@@ -31,6 +41,8 @@ const TUMBLR = 'https://staff.tumblr.com/post/828009069026721792';
 const KICK = 'https://kick.com/kick';
 const GIPHY =
   'https://giphy.com/gifs/originals-animation-kitten-logo-l41YlHs99JsSptZf2';
+// Google Maps' Share → Embed a map code, a generic iframe.
+const MAP = { html: genericMap() };
 
 // X comes last, so its script loads only once you scroll down to it.
 const EMBEDS = [
@@ -64,6 +76,14 @@ const EMBEDS = [
   TUMBLR,
   KICK,
   GIPHY,
+  TRUTH_SOCIAL_POST,
+  IMGUR_POST,
+  TENOR_GIF,
+  STREAMABLE_VIDEO,
+  STRAVA_ROUTE,
+  FLICKR_PHOTO,
+  RUMBLE_VIDEO,
+  MAP,
   X_1,
   X_2,
   X_3,
@@ -79,19 +99,25 @@ export default function ManyEmbeds() {
     <>
       <h1>Many embeds</h1>
       <p>
-        {EMBEDS.length} embeds from post URLs, some repeated, all with the
-        default <code>lazy</code> loading. An embed loads when it comes within
-        200 px of the viewport, and each platform script loads once, with the
-        first embed that needs it. The X posts are last, so the X script appears
-        in the bar only after you scroll to them. An embed that fails shows its{' '}
-        <code>onError</code> message below it.
+        {EMBEDS.length} embeds from post URLs, some repeated, and from Google
+        Maps&apos; embed code, all with the default <code>lazy</code> loading.
+        An embed loads when it comes within 200 px of the viewport, and each
+        platform script loads once, with the first embed that needs it. The X
+        posts are last, so the X script appears in the bar only after you scroll
+        to them. An embed that fails shows its <code>onError</code> message
+        below it.
       </p>
-      {EMBEDS.map((url, index) => (
+      {EMBEDS.map((item, index) => (
         <article key={index}>
           <h3>
-            {index + 1}. <code>{url}</code>
+            {index + 1}.{' '}
+            <code>
+              {typeof item === 'string' ? item : 'Google Maps embed code'}
+            </code>
           </h3>
-          <ReportedEmbed url={url} />
+          <ReportedEmbed
+            {...(typeof item === 'string' ? { url: item } : item)}
+          />
         </article>
       ))}
     </>

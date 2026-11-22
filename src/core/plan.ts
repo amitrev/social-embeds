@@ -13,8 +13,11 @@ export type IframePlan = {
   src: string;
   title: string;
   allow: string;
-  referrerPolicy?: 'strict-origin-when-cross-origin';
+  /** Default `true`. */
+  allowFullscreen?: boolean;
+  referrerPolicy?: Exclude<ReferrerPolicy, ''>;
   scrolling?: 'no';
+  /** `''` sandboxes the frame fully. */
   sandbox?: string;
   /** Used when the input carries no size. */
   ratio: { width: number; height: number };
@@ -31,8 +34,15 @@ export type IframePlan = {
   borderRadius?: number;
   /** The platform's default; a host `maxWidth` replaces it. */
   maxWidth?: number;
-  /** Verified fallback content shown as the placeholder (Bluesky). */
+  /** Verified fallback content shown as the placeholder: a quote's content, in a `<blockquote>`. */
   fallbackHtml?: string;
+  /** `fallbackHtml` is a linked image that fills the box instead (Flickr). */
+  fallbackImage?: boolean;
+  /**
+   * The frame lays out at the pixel size its URL names and never reflows (Flickr): `src` gets the
+   * box's width and the height from the ratio, rebuilt when that width changes (docs/decisions.md D100).
+   */
+  sizeInSrc?: boolean;
 };
 
 export type ScriptPlan = {

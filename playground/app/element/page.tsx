@@ -1,10 +1,19 @@
 import { ElementEmbed } from '../../components/element-embed';
-import { embedCodes, PLATFORMS, URLS, type PlatformKey } from '../../samples';
+import {
+  embedCodes,
+  genericMap,
+  PLATFORMS,
+  URLS,
+  type PlatformKey,
+} from '../../samples';
 
-const TEMPLATES = (['x', 'instagram'] as const).map((key) => ({
-  key,
-  code: embedCodes(key)[0].value,
-}));
+const TEMPLATES = [
+  ...(['x', 'instagram'] as const).map((key) => ({
+    name: PLATFORMS[key],
+    code: embedCodes(key)[0].value,
+  })),
+  { name: 'Generic iframe (Google Maps)', code: genericMap() },
+];
 
 export default function ElementPage() {
   return (
@@ -15,13 +24,14 @@ export default function ElementPage() {
       <p>
         The custom element from <code>social-embeds/element</code>, with no
         React in the embeds. Each one shows the last <code>load</code> or{' '}
-        <code>error</code> event it fired. Bluesky&apos;s handle URL and
-        Dailymotion without a Player ID are meant to report errors.
+        <code>error</code> event it fired. Bluesky&apos;s handle URL,
+        Rumble&apos;s page URL and Dailymotion without a Player ID are meant to
+        report errors.
       </p>
       <h2>Embed code in a template</h2>
-      {TEMPLATES.map(({ key, code }) => (
-        <article key={key}>
-          <h3>{PLATFORMS[key]}</h3>
+      {TEMPLATES.map(({ name, code }) => (
+        <article key={name}>
+          <h3>{name}</h3>
           <ElementEmbed code={code} />
         </article>
       ))}

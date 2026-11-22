@@ -2,6 +2,7 @@ import {
   type Options,
   type PlatformParser,
   sizeOf,
+  underPath,
   unwrapRatio,
   withSize,
 } from '../platform';
@@ -15,6 +16,8 @@ const PLAYER_ID = /^x[a-z0-9]{3,12}$/;
 const WRAPPER =
   /^position:\s*relative;\s*padding-bottom:\s*(\d{1,3}(?:\.\d{1,4})?)%;\s*height:\s*0;\s*overflow:\s*hidden;?$/;
 const HOSTS = new Set(['dailymotion.com', 'www.dailymotion.com']);
+const PLAYER_HOST = 'geo.dailymotion.com';
+const SHORT_HOST = 'dai.ly';
 
 function video(id: string, options: Options): ParsedEmbed {
   return {
@@ -29,8 +32,7 @@ function video(id: string, options: Options): ParsedEmbed {
 
 /** A geo.dailymotion.com player, with or without a Player ID. Playlists are left out. */
 function fromPlayer(url: ParsedUrl): ParsedEmbed | null {
-  if (url.host !== 'geo.dailymotion.com' || url.query.has('playlist'))
-    return null;
+  if (url.host !== PLAYER_HOST || url.query.has('playlist')) return null;
   const match = /^\/player(?:\/([a-z0-9]+))?\.html$/.exec(url.path);
   if (!match) return null;
   const [, playerId] = match;
@@ -47,7 +49,7 @@ function fromPlayer(url: ParsedUrl): ParsedEmbed | null {
 }
 
 function fromPage(url: ParsedUrl): ParsedEmbed | null {
-  if (url.host === 'dai.ly') {
+  if (url.host === SHORT_HOST) {
     const id = url.path.replace(/^\/|\/$/g, '');
     return VIDEO_ID.test(id) ? video(id, {}) : null;
   }
@@ -71,4 +73,9 @@ export const dailymotion: PlatformParser = {
   match(url) {
     return fromPlayer(url) ?? fromPage(url);
   },
+  ownsFrame: (src) =>
+    src.host === PLAYER_HOST ||
+    src.host === SHORT_HOST ||
+    (HOSTS.has(src.host) &&
+      (underPath(src.path, '/embed') || underPath(src.path, '/video'))),
 };

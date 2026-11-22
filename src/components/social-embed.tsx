@@ -1,12 +1,15 @@
 import { type ReactNode, useMemo } from 'react';
-import { matchUrl, parseEmbed } from '../parser';
+import { matchUrl, parseEmbed, parseIframe } from '../parser';
 import { sourceError } from '../core/resolve';
 import { AppleMusicEmbed, ApplePodcastsEmbed } from './apple-embed';
 import { BlueskyEmbed, type BlueskyOptions } from './bluesky-embed';
 import { DailymotionEmbed, type DailymotionOptions } from './dailymotion-embed';
 import { FacebookEmbed, type FacebookOptions } from './facebook-embed';
+import { FlickrEmbed, type FlickrOptions } from './flickr-embed';
+import { GenericIframeEmbed } from './generic-iframe-embed';
 import { GiphyEmbed } from './giphy-embed';
 import { useReportError } from './hooks';
+import { ImgurEmbed, type ImgurOptions } from './imgur-embed';
 import { InstagramEmbed, type InstagramOptions } from './instagram-embed';
 import { KickEmbed, type KickOptions } from './kick-embed';
 import { LinkedInEmbed, type LinkedInOptions } from './linkedin-embed';
@@ -16,9 +19,14 @@ import type { FrameProps } from './shared';
 import { SnapchatEmbed } from './snapchat-embed';
 import { SoundCloudEmbed, type SoundCloudOptions } from './soundcloud-embed';
 import { SpotifyEmbed } from './spotify-embed';
+import { StravaEmbed, type StravaOptions } from './strava-embed';
+import { StreamableEmbed, type StreamableOptions } from './streamable-embed';
+import { RumbleEmbed } from './rumble-embed';
+import { TenorEmbed } from './tenor-embed';
 import { TelegramEmbed, type TelegramOptions } from './telegram-embed';
 import { ThreadsEmbed, type ThreadsOptions } from './threads-embed';
 import { TikTokEmbed, type TikTokOptions } from './tiktok-embed';
+import { TruthSocialEmbed } from './truthsocial-embed';
 import { TumblrEmbed } from './tumblr-embed';
 import { TwitchEmbed, type TwitchOptions } from './twitch-embed';
 import { VimeoEmbed, type VimeoOptions } from './vimeo-embed';
@@ -47,13 +55,17 @@ type PlatformOption =
   | keyof DailymotionOptions
   | keyof BlueskyOptions
   | keyof SoundCloudOptions
-  | keyof KickOptions;
+  | keyof KickOptions
+  | keyof StreamableOptions
+  | keyof ImgurOptions
+  | keyof StravaOptions
+  | keyof FlickrOptions;
 
 export type SocialEmbedProps = SocialEmbedSource &
   Omit<FrameProps, PlatformOption> & {
     /**
-     * Called with the original string when `html` is not a recognised embed code. Without
-     * it, nothing is rendered and `onError` is called.
+     * Called with the original string when `html` is neither a platform's embed code nor a
+     * safe iframe. Without it, nothing is rendered and `onError` is called.
      */
     fallback?: (html: string) => ReactNode;
   };
@@ -66,8 +78,13 @@ export function SocialEmbed(props: SocialEmbedProps) {
     () => (html !== undefined ? parseEmbed(html) : matchUrl(url)),
     [html, url],
   );
+  const iframe = useMemo(
+    () => (embed === null && html !== undefined ? parseIframe(html) : null),
+    [embed, html],
+  );
   // With a fallback, unrecognised embed code is the host's to handle, not an error.
-  const unrecognised = embed === null && !(html !== undefined && fallback);
+  const unrecognised =
+    embed === null && iframe === null && !(html !== undefined && fallback);
   useReportError(
     unrecognised
       ? sourceError(html !== undefined ? { html } : { url })
@@ -75,6 +92,16 @@ export function SocialEmbed(props: SocialEmbedProps) {
     onError,
   );
 
+  if (iframe) {
+    return (
+      <GenericIframeEmbed
+        {...shared}
+        {...frame}
+        onError={onError}
+        embed={iframe}
+      />
+    );
+  }
   if (!embed) {
     return html !== undefined && fallback ? fallback(html) : null;
   }
@@ -171,6 +198,33 @@ export function SocialEmbed(props: SocialEmbedProps) {
     case 'giphy':
       return (
         <GiphyEmbed {...shared} {...frame} onError={onError} embed={embed} />
+      );
+    case 'tenor':
+      return (
+        <TenorEmbed {...shared} {...frame} onError={onError} embed={embed} />
+      );
+    case 'streamable':
+      return (
+        <StreamableEmbed
+          {...shared}
+          {...frame}
+          onError={onError}
+          embed={embed}
+        />
+      );
+    case 'rumble':
+      return (
+        <RumbleEmbed {...shared} {...frame} onError={onError} embed={embed} />
+      );
+    case 'truthsocial':
+      return <TruthSocialEmbed {...shared} onError={onError} embed={embed} />;
+    case 'imgur':
+      return <ImgurEmbed {...shared} onError={onError} embed={embed} />;
+    case 'strava':
+      return <StravaEmbed {...shared} onError={onError} embed={embed} />;
+    case 'flickr':
+      return (
+        <FlickrEmbed {...shared} {...frame} onError={onError} embed={embed} />
       );
   }
 }

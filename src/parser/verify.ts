@@ -27,6 +27,13 @@ const SHAPES: Record<Platform, readonly string[]> = {
   tumblr: ['post iframe'],
   kick: ['video iframe'],
   giphy: ['video iframe'],
+  truthsocial: ['post iframe'],
+  imgur: ['post iframe'],
+  tenor: ['video iframe'],
+  streamable: ['video iframe'],
+  strava: ['post iframe'],
+  flickr: ['post iframe'],
+  rumble: ['video iframe'],
 };
 
 /**

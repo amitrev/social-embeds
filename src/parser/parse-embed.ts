@@ -1,4 +1,4 @@
-import { type HtmlElement, parseHtml } from './html';
+import { type HtmlElement, type HtmlNode, parseHtml } from './html';
 import type { Options } from './platform';
 import { platforms } from './platforms';
 import type { ParsedEmbed } from './types';
@@ -12,8 +12,21 @@ export function parseEmbed(html: string): ParsedEmbed | null {
   // Callers without type checking may pass anything.
   if (typeof html !== 'string') return null;
   const nodes = parseHtml(html);
-  if (!nodes) return null;
+  return nodes ? parseNodes(nodes) : parseRepaired(html);
+}
 
+function parseRepaired(html: string): ParsedEmbed | null {
+  for (const platform of platforms) {
+    const repaired = platform.repair?.(html);
+    const nodes =
+      repaired === undefined || repaired === null ? null : parseHtml(repaired);
+    const embed = nodes && parseNodes(nodes);
+    if (embed?.platform === platform.platform) return embed;
+  }
+  return null;
+}
+
+function parseNodes(nodes: readonly HtmlNode[]): ParsedEmbed | null {
   let root: HtmlElement | undefined;
   let extra: HtmlElement | undefined;
   const scripts: HtmlElement[] = [];

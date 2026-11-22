@@ -69,6 +69,14 @@ describe('parseHtml', () => {
     ]);
   });
 
+  it('lists 200,000 sibling elements without overflowing the stack', () => {
+    const nodes = parseHtml(`<div>${'<br>'.repeat(200_000)}</div>`) ?? [];
+    const found = descendants(nodes);
+    expect(found).toHaveLength(200_001);
+    expect(found[0]?.tag).toBe('div');
+    expect(found[200_000]?.tag).toBe('br');
+  });
+
   it('reads script content as raw text', () => {
     const script = only(parseHtml('<script>if (a < b) {}</SCRIPT >'));
     expect(script.children).toEqual([{ type: 'text', raw: 'if (a < b) {}' }]);

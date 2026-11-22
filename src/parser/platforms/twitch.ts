@@ -2,6 +2,7 @@ import {
   type Options,
   type PlatformParser,
   sizeOf,
+  underPath,
   withSize,
 } from '../platform';
 import type { ParsedEmbed } from '../types';
@@ -10,6 +11,8 @@ import { coerce, parseUrl, type ParsedUrl } from '../url';
 // `parent` names the embedding page, so it is never read from the input (docs/decisions.md D62).
 
 const HOSTS = new Set(['twitch.tv', 'www.twitch.tv', 'm.twitch.tv']);
+const PLAYER_HOST = 'player.twitch.tv';
+const CLIPS_HOST = 'clips.twitch.tv';
 const CHANNEL = /^[A-Za-z0-9_]{3,25}$/;
 const VIDEO = /^v?(\d{1,12})$/;
 const COLLECTION = /^[A-Za-z0-9_-]{6,30}$/;
@@ -74,7 +77,7 @@ function fromPlayer(url: ParsedUrl): Target | null {
 }
 
 function fromPage(url: ParsedUrl): { found: Target; options: Options } | null {
-  if (url.host === 'clips.twitch.tv') {
+  if (url.host === CLIPS_HOST) {
     const slug = url.path.replace(/^\/|\/$/g, '');
     return CLIP.test(slug) ? { found: clip(slug), options: {} } : null;
   }
@@ -114,9 +117,9 @@ export const twitch: PlatformParser = {
     const src = parseUrl(root.attrs.get('src') ?? '');
     if (!src) return null;
     let found: Target | null = null;
-    if (src.host === 'player.twitch.tv' && /^\/?$/.test(src.path))
+    if (src.host === PLAYER_HOST && /^\/?$/.test(src.path))
       found = fromPlayer(src);
-    if (src.host === 'clips.twitch.tv' && src.path === '/embed') {
+    if (src.host === CLIPS_HOST && src.path === '/embed') {
       const slug = src.query.get('clip') ?? '';
       found = CLIP.test(slug) ? clip(slug) : null;
     }
@@ -130,4 +133,7 @@ export const twitch: PlatformParser = {
     const page = fromPage(url);
     return page && { ...page.found, options: page.options };
   },
+  ownsFrame: (src) =>
+    src.host === PLAYER_HOST ||
+    (src.host === CLIPS_HOST && underPath(src.path, '/embed')),
 };

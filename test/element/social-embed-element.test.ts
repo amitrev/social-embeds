@@ -3,7 +3,9 @@ import { dailymotionPlan } from '../../src/core/plans/dailymotion';
 import { youtubePlan } from '../../src/core/plans/youtube';
 import { lookupMessage } from '../../src/core/resolve';
 import { SocialEmbedElement } from '../../src/element';
-import { matchUrl, type ParsedEmbed } from '../../src/parser';
+import { matchUrl, type ParsedEmbed, parseIframe } from '../../src/parser';
+import datawrapperCode from '../fixtures/generic/datawrapper-oembed.html?raw';
+import mapsCode from '../fixtures/generic/google-maps-embed.html?raw';
 import vimeoCode from '../fixtures/vimeo/oembed.html?raw';
 import xCode from '../fixtures/x/oembed-basic.html?raw';
 import youtubeCode from '../fixtures/youtube/share.html?raw';
@@ -19,6 +21,8 @@ const YOUTUBE_SHORT = 'https://youtu.be/jNQXAC9IVRw?t=11';
 const TELEGRAM = 'https://t.me/telegram/83';
 const DAILYMOTION = 'https://www.dailymotion.com/video/x84sh87';
 const BLUESKY_HANDLE = 'https://bsky.app/profile/bsky.app/post/3l6oveex3ii2l';
+const RUMBLE_PAGE =
+  'https://rumble.com/v15atp3-rumble-basics-how-to-upload-a-video-ios-app.html';
 
 const page = window as unknown as Record<string, unknown>;
 
@@ -249,12 +253,96 @@ describe('<social-embed>', () => {
     expect(element.childElementCount).toBe(0);
   });
 
+  it('renders generic iframe code from a template and fires load', async () => {
+    const element = create({ eager: '' }, `<template>${mapsCode}</template>`);
+    document.body.append(element);
+    const { loads, errors } = listen(element);
+    expect(iframes(element)).toHaveLength(1);
+    const iframe = element.querySelector('iframe');
+    expect(iframe?.getAttribute('src')).toBe(parseIframe(mapsCode)?.src);
+    expect(iframe?.title).toBe('Embedded content');
+    expect(iframe?.hasAttribute('allowfullscreen')).toBe(true);
+    expect(iframe?.getAttribute('referrerpolicy')).toBe(
+      'strict-origin-when-cross-origin',
+    );
+    iframe?.dispatchEvent(new Event('load'));
+    await flush();
+    expect(loads).toHaveBeenCalledOnce();
+    expect(errors).not.toHaveBeenCalled();
+  });
+
+  it('sizes generic iframe code from the code', () => {
+    const element = create({ eager: '' });
+    element.html = mapsCode;
+    document.body.append(element);
+    const wrapper = element.firstElementChild as HTMLElement;
+    expect(wrapper.style.aspectRatio).toBe('600 / 450');
+    expect(wrapper.style.maxWidth).toBe('600px');
+    element.html = datawrapperCode;
+    const fixed = element.firstElementChild as HTMLElement;
+    expect(fixed.style.height).toBe('200px');
+    element.setAttribute('height', '300');
+    expect((element.firstElementChild as HTMLElement).style.height).toBe(
+      '300px',
+    );
+  });
+
+  it('passes an empty sandbox and leaves out a missing allowfullscreen', () => {
+    const element = create({ eager: '' });
+    element.html =
+      '<iframe src="https://example.com/" sandbox srcdoc="<b>x</b>"></iframe>';
+    document.body.append(element);
+    const iframe = element.querySelector('iframe');
+    expect(iframe?.getAttribute('sandbox')).toBe('');
+    expect(iframe?.hasAttribute('allowfullscreen')).toBe(false);
+    expect(iframe?.hasAttribute('srcdoc')).toBe(false);
+  });
+
+  it.each([
+    ['a YouTube iframe with a bad id', 'https://www.youtube.com/embed/!!bad'],
+    ['an http iframe', 'http://example.com/'],
+  ])('reports %s as unrecognised embed code', async (_, src) => {
+    const element = create();
+    element.html = `<iframe src="${src}"></iframe>`;
+    document.body.append(element);
+    const { errors } = listen(element);
+    await flush();
+    expect(errors.mock.calls[0]?.[0].message).toBe(
+      'social-embeds: unrecognised embed code',
+    );
+    expect(element.childElementCount).toBe(0);
+  });
+
+  it('never renders a URL as a generic iframe', async () => {
+    const url = 'https://www.google.com/maps/embed?pb=x';
+    const element = create({ url, eager: '' });
+    document.body.append(element);
+    const { errors } = listen(element);
+    await flush();
+    expect(errors.mock.calls[0]?.[0].message).toBe(
+      `social-embeds: not a supported post URL: ${url}`,
+    );
+    expect(element.childElementCount).toBe(0);
+  });
+
   it('reports a Bluesky URL that needs a lookup', async () => {
     const element = create({ url: BLUESKY_HANDLE });
     document.body.append(element);
     const { errors } = listen(element);
     await flush();
     expect(errors.mock.calls[0]?.[0].message).toBe(lookupMessage('bluesky'));
+  });
+
+  it('reports a Rumble page URL that needs a lookup', async () => {
+    const element = create({ url: RUMBLE_PAGE, eager: '' });
+    document.body.append(element);
+    const { errors } = listen(element);
+    await flush();
+    expect(errors).toHaveBeenCalledOnce();
+    expect(errors.mock.calls[0]?.[0].message).toBe(
+      'social-embeds: a Rumble URL needs a lookup: use the embed code',
+    );
+    expect(element.childElementCount).toBe(0);
   });
 
   it('reports a Dailymotion URL without a Player ID', async () => {

@@ -1,6 +1,7 @@
 import { cleanup, render } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { SocialEmbed } from '../../src';
+import { parseIframe } from '../../src/parser';
 import dailymotionOembed from '../fixtures/dailymotion/oembed.html?raw';
 import dailymotion from '../fixtures/dailymotion/player-id-docs.html?raw';
 import fbVideo from '../fixtures/facebook/video-sdk-docs.html?raw';
@@ -24,12 +25,31 @@ import giphy from '../fixtures/giphy/embed-responsive.html?raw';
 import kick from '../fixtures/kick/player-channel.html?raw';
 import soundcloud from '../fixtures/soundcloud/share-visual.html?raw';
 import tumblr from '../fixtures/tumblr/oembed.html?raw';
-import { installObserver } from './helpers';
+import mapsFixture from '../fixtures/generic/google-maps-embed.html?raw';
+import { installObserver, installResizeObserver } from './helpers';
 
 vi.mock('../../src/loader/platform-scripts', () => ({
   FACEBOOK_SDK_VERSION: 'v26.0',
   loadPlatformScript: vi.fn(() => new Promise(() => {})),
 }));
+
+const fixtures = import.meta.glob<string>('../fixtures/*/*.html', {
+  query: '?raw',
+  import: 'default',
+  eager: true,
+});
+
+function fixture(path: string): string {
+  const html = fixtures[`../fixtures/${path}`];
+  if (html === undefined) throw new Error(`no fixture ${path}`);
+  return html;
+}
+
+const generic = Object.fromEntries(
+  Object.entries(fixtures)
+    .filter(([path]) => path.startsWith('../fixtures/generic/'))
+    .map(([path, html]) => [path.replace('../fixtures/generic/', ''), html]),
+);
 
 function rendered(container: HTMLElement): string {
   const iframe = container.querySelector('iframe');
@@ -54,6 +74,8 @@ function rendered(container: HTMLElement): string {
 
 beforeEach(() => {
   installObserver();
+  // Flickr's frame waits for the box's width.
+  installResizeObserver(640);
 });
 
 afterEach(() => {
@@ -141,6 +163,111 @@ describe('SocialEmbed with embed code', () => {
     ],
     ['Kick', kick, 'iframe https://player.kick.com/kick'],
     ['Giphy', giphy, 'iframe https://giphy.com/embed/l41YlHs99JsSptZf2'],
+    [
+      'Truth Social video',
+      fixture('truthsocial/embed-dialog-video.html'),
+      'iframe https://truthsocial.com/@truthsocial/117529982042129746/embed',
+    ],
+    [
+      'Truth Social oEmbed',
+      fixture('truthsocial/oembed-text.html'),
+      'iframe https://truthsocial.com/@truthsocial/116862065232992052/embed',
+    ],
+    [
+      'Imgur Embed dialog',
+      fixture('imgur/embed-dialog-album.html'),
+      'iframe https://imgur.com/a/04b1CmA/embed?pub=true',
+    ],
+    [
+      'Imgur Embed dialog with Hide Title',
+      fixture('imgur/embed-dialog-album-hide-title.html'),
+      'iframe https://imgur.com/a/04b1CmA/embed?pub=true&context=false',
+    ],
+    [
+      'Imgur oEmbed album',
+      fixture('imgur/oembed-album.html'),
+      'iframe https://imgur.com/a/04b1CmA/embed?pub=true',
+    ],
+    [
+      'Imgur oEmbed image',
+      fixture('imgur/oembed-image.html'),
+      'iframe https://imgur.com/yOBT04V/embed?pub=true',
+    ],
+    [
+      'Tenor Embed dialog',
+      fixture('tenor/embed-dialog.html'),
+      'iframe https://tenor.com/embed/12328062661350661133',
+    ],
+    [
+      'Tenor oEmbed',
+      fixture('tenor/oembed.html'),
+      'iframe https://tenor.com/embed/12328062661350661133',
+    ],
+    [
+      'Streamable API',
+      fixture('streamable/api-embed-code.html'),
+      'iframe https://streamable.com/e/lttg48',
+    ],
+    [
+      'Streamable help center',
+      fixture('streamable/embed-docs.html'),
+      'iframe https://streamable.com/e/lttg48',
+    ],
+    [
+      'Streamable oEmbed',
+      fixture('streamable/oembed.html'),
+      'iframe https://streamable.com/e/lttg48',
+    ],
+    [
+      'Streamable player copy',
+      fixture('streamable/player-copy-embed.html'),
+      'iframe https://streamable.com/e/lttg48',
+    ],
+    [
+      'Strava route',
+      fixture('strava/route-derived.html'),
+      'iframe https://strava-embeds.com/route/3247927232574435836?style=standard#ns=social-embeds',
+    ],
+    [
+      'Flickr Embed dialog',
+      fixture('flickr/embed-dialog.html'),
+      'iframe https://embedr.flickr.com/photos/55618331478?width=640&height=360',
+    ],
+    [
+      'Flickr Embed dialog with header and footer',
+      fixture('flickr/embed-dialog-header-footer.html'),
+      'iframe https://embedr.flickr.com/photos/55618331478?width=640&height=360&header=true&footer=true',
+    ],
+    [
+      'Flickr Embed dialog with slideshow',
+      fixture('flickr/embed-dialog-slideshow.html'),
+      'iframe https://embedr.flickr.com/photos/55618331478?width=640&height=359&context=true',
+    ],
+    [
+      'Flickr Embed dialog album',
+      fixture('flickr/embed-dialog-album.html'),
+      'iframe https://embedr.flickr.com/photosets/72157716823987722?width=640&height=480',
+    ],
+    [
+      'Flickr oEmbed',
+      fixture('flickr/oembed.html'),
+      'iframe https://embedr.flickr.com/photos/55618331478?width=640&height=359',
+    ],
+    [
+      'Flickr oEmbed album',
+      fixture('flickr/oembed-album.html'),
+      'iframe https://embedr.flickr.com/photosets/72157716823987722?width=640&height=480',
+    ],
+    [
+      'Rumble Embed dialog',
+      fixture('rumble/embed-dialog-iframe.html'),
+      'iframe https://rumble.com/embed/v12onr1/?pub=4',
+    ],
+    [
+      'Rumble oEmbed',
+      fixture('rumble/oembed.html'),
+      'iframe https://rumble.com/embed/v12onr1/',
+    ],
   ])('routes %s embed code to its component', (_, html, expected) => {
     const { container } = render(<SocialEmbed html={html} lazy={false} />);
     expect(rendered(container)).toBe(expected);
@@ -148,7 +275,7 @@ describe('SocialEmbed with embed code', () => {
 
   it('hands unrecognised embed code to fallback, unchanged', () => {
     const html =
-      '<p>Sanitised by the CMS</p><iframe src="https://maps.test"></iframe>';
+      '<p>Sanitised by the CMS</p><img src="https://maps.test/map.png">';
     const fallback = vi.fn((code: string) => (
       <div data-testid="host">{code}</div>
     ));
@@ -170,6 +297,101 @@ describe('SocialEmbed with embed code', () => {
     expect(onError).toHaveBeenCalledTimes(1);
     expect(onError).toHaveBeenCalledWith(
       new Error('social-embeds: unrecognised embed code'),
+    );
+  });
+});
+
+describe('SocialEmbed with generic iframe code', () => {
+  it.each(Object.entries(generic))(
+    'renders the %s code as a generic iframe',
+    (_, html) => {
+      const fallback = vi.fn(() => <p>fallback</p>);
+      const onError = vi.fn();
+      const { container } = render(
+        <SocialEmbed
+          html={html}
+          fallback={fallback}
+          onError={onError}
+          lazy={false}
+        />,
+      );
+      expect(rendered(container)).toBe(
+        `iframe ${parseIframe(html)?.src ?? ''}`,
+      );
+      expect(fallback).not.toHaveBeenCalled();
+      expect(onError).not.toHaveBeenCalled();
+    },
+  );
+
+  it('renders generic iframe code instead of calling fallback', () => {
+    const fallback = vi.fn(() => <p>fallback</p>);
+    render(<SocialEmbed html={mapsFixture} fallback={fallback} lazy={false} />);
+    expect(fallback).not.toHaveBeenCalled();
+  });
+
+  it('passes the frame props to the generic iframe', () => {
+    const { container } = render(
+      <SocialEmbed
+        html={mapsFixture}
+        className="map"
+        maxWidth={400}
+        height={300}
+        lazy={false}
+      />,
+    );
+    const wrapper = container.firstElementChild as HTMLElement;
+    expect(wrapper.className).toBe('map');
+    expect(wrapper.style.maxWidth).toBe('400px');
+    expect(wrapper.style.height).toBe('300px');
+  });
+
+  it.each([
+    [
+      'a YouTube iframe with a bad id',
+      '<iframe src="https://www.youtube.com/embed/!!bad"></iframe>',
+    ],
+    [
+      'an unknown Facebook plugin',
+      '<iframe src="https://www.facebook.com/plugins/unknown.php?href=x"></iframe>',
+    ],
+    ['an http iframe', '<iframe src="http://example.com/"></iframe>'],
+    ['a javascript: iframe', '<iframe src="javascript:alert(1)"></iframe>'],
+    ['two iframes', `${mapsFixture}${mapsFixture}`],
+    ['code without an iframe', '<p>hello</p>'],
+    ['Rumble’s script player code', fixture('rumble/embed-dialog-js.html')],
+  ])('hands %s to fallback', (_, html) => {
+    const fallback = vi.fn((code: string) => <p data-testid="host">{code}</p>);
+    const { container, getByTestId } = render(
+      <SocialEmbed html={html} fallback={fallback} lazy={false} />,
+    );
+    expect(fallback).toHaveBeenCalledWith(html);
+    expect(getByTestId('host').textContent).toBe(html);
+    expect(container.querySelector('iframe')).toBeNull();
+  });
+
+  it('reports a rejected iframe without a fallback', () => {
+    const onError = vi.fn();
+    const { container } = render(
+      <SocialEmbed
+        html='<iframe src="http://example.com/"></iframe>'
+        onError={onError}
+      />,
+    );
+    expect(container.innerHTML).toBe('');
+    expect(onError).toHaveBeenCalledWith(
+      new Error('social-embeds: unrecognised embed code'),
+    );
+  });
+
+  it('never renders a URL as a generic iframe', () => {
+    const onError = vi.fn();
+    const url = 'https://www.google.com/maps/embed?pb=x';
+    const { container } = render(
+      <SocialEmbed url={url} onError={onError} lazy={false} />,
+    );
+    expect(container.innerHTML).toBe('');
+    expect(onError).toHaveBeenCalledWith(
+      new Error(`social-embeds: not a supported post URL: ${url}`),
     );
   });
 });
@@ -219,6 +441,39 @@ describe('SocialEmbed with a URL', () => {
     [
       'https://clips.twitch.tv/LivelyFrigidApeLeeroyJenkins-D01Eij0_9y-oFwAu',
       `iframe https://clips.twitch.tv/embed?clip=LivelyFrigidApeLeeroyJenkins-D01Eij0_9y-oFwAu&parent=${window.location.hostname}`,
+    ],
+    [
+      'https://truthsocial.com/@truthsocial/posts/117529982042129746',
+      'iframe https://truthsocial.com/@truthsocial/117529982042129746/embed',
+    ],
+    [
+      'https://imgur.com/gallery/04b1CmA',
+      'iframe https://imgur.com/a/04b1CmA/embed?pub=true',
+    ],
+    [
+      'https://i.imgur.com/yOBT04V.jpeg',
+      'iframe https://imgur.com/yOBT04V/embed?pub=true',
+    ],
+    [
+      'https://tenor.com/en-GB/view/happy-cat-day-national-cat-day-cat-day-cat-cat-lover-gif-12328062661350661133',
+      'iframe https://tenor.com/embed/12328062661350661133',
+    ],
+    ['https://streamable.com/lttg48', 'iframe https://streamable.com/e/lttg48'],
+    [
+      'https://www.strava.com/routes/3247927232574435836',
+      'iframe https://strava-embeds.com/route/3247927232574435836?style=standard#ns=social-embeds',
+    ],
+    [
+      'https://flic.kr/p/2sJNueC',
+      'iframe https://embedr.flickr.com/photos/55618331478?width=640&height=480',
+    ],
+    [
+      'https://www.flickr.com/photos/flickr/albums/72157716823987722',
+      'iframe https://embedr.flickr.com/photosets/72157716823987722?width=640&height=480',
+    ],
+    [
+      'https://rumble.com/embed/v12onr1/',
+      'iframe https://rumble.com/embed/v12onr1/',
     ],
   ])('routes %s', (url, expected) => {
     const { container } = render(<SocialEmbed url={url} lazy={false} />);
@@ -394,6 +649,41 @@ describe('SocialEmbed props', () => {
       expect((container.firstElementChild as HTMLElement).style.height).toBe(
         '400px',
       );
+      cleanup();
+    }
+  });
+
+  it('forwards height to Tenor, Streamable, Rumble and Flickr, not to Truth Social, Imgur or Strava', () => {
+    for (const url of [
+      'https://tenor.com/view/12328062661350661133',
+      'https://streamable.com/lttg48',
+      'https://rumble.com/embed/v12onr1/',
+      'https://flic.kr/p/2sJNueC',
+    ]) {
+      const { container } = render(
+        <SocialEmbed url={url} height={400} maxHeight={300} />,
+      );
+      const wrapper = container.firstElementChild as HTMLElement;
+      expect(wrapper.style.height).toBe('400px');
+      expect(wrapper.style.maxHeight).toBe('300px');
+      cleanup();
+    }
+
+    // These size themselves from their frames' messages, starting at the plan's height.
+    for (const [url, start] of [
+      [
+        'https://truthsocial.com/@truthsocial/posts/117529982042129746',
+        '300px',
+      ],
+      ['https://imgur.com/a/04b1CmA', '500px'],
+      ['https://www.strava.com/routes/3247927232574435836', '650px'],
+    ] as const) {
+      const { container } = render(
+        <SocialEmbed url={url} height={400} maxHeight={300} />,
+      );
+      const wrapper = container.firstElementChild as HTMLElement;
+      expect(wrapper.style.height).toBe(start);
+      expect(wrapper.style.maxHeight).toBe('');
       cleanup();
     }
   });

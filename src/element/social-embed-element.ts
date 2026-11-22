@@ -1,8 +1,10 @@
+import type { Plan, PlanError } from '../core/plan';
 import { planEmbed } from '../core/plan-embed';
+import { genericPlan } from '../core/plans/generic';
 import { resolveEmbed, sourceError } from '../core/resolve';
-import { matchUrl, parseEmbed } from '../parser';
+import { matchUrl, parseEmbed, parseIframe } from '../parser';
 import type { MountOptions } from './dom';
-import { type Input, readInput } from './input';
+import { type Input, readInput, type Source } from './input';
 import { mountIframe } from './mount-iframe';
 import { mountScript } from './mount-script';
 
@@ -26,6 +28,23 @@ function capture(host: Element): Node[] {
       kept.push(node);
   }
   return kept;
+}
+
+/** Named platforms first, then a generic iframe for `html`; a URL never goes generic. */
+function planSource(source: Source): Plan | PlanError {
+  const embed =
+    'html' in source ? parseEmbed(source.html) : matchUrl(source.url);
+  if (!embed) {
+    const iframe = 'html' in source ? parseIframe(source.html) : null;
+    return iframe
+      ? genericPlan(iframe)
+      : { kind: 'error', message: sourceError(source) };
+  }
+  // Verifies the embed, so markup such as Bluesky's fallback is safe to insert (D68).
+  const resolved = resolveEmbed(undefined, embed, embed.platform);
+  if (resolved.error !== undefined)
+    return { kind: 'error', message: resolved.error };
+  return planEmbed(resolved.embed);
 }
 
 const UPGRADED = [
@@ -216,19 +235,7 @@ export class SocialEmbedElement extends Base {
       dispatch(new ErrorEvent('error', { error, message: error.message }));
     };
 
-    const embed =
-      'html' in source ? parseEmbed(source.html) : matchUrl(source.url);
-    if (!embed) {
-      onError(new Error(sourceError(source)));
-      return;
-    }
-    // Verifies the embed, so markup such as Bluesky's fallback is safe to insert (D68).
-    const resolved = resolveEmbed(undefined, embed, embed.platform);
-    if (resolved.error !== undefined) {
-      onError(new Error(resolved.error));
-      return;
-    }
-    const plan = planEmbed(resolved.embed);
+    const plan = planSource(source);
     if (plan.kind === 'error') {
       onError(new Error(plan.message));
       return;

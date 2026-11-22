@@ -1,6 +1,6 @@
 import { blueskyPlan, type BlueskyOptions } from '../core/plans/bluesky';
 import { useReportError } from './hooks';
-import { IframeEmbed, planProps } from './iframe-embed';
+import { fallbackPlaceholder, IframeEmbed, planProps } from './iframe-embed';
 import { type EmbedSource, resolveEmbed, type SharedProps } from './shared';
 
 export type { BlueskyOptions };
@@ -32,20 +32,13 @@ export function BlueskyEmbed(props: BlueskyEmbedProps) {
   );
   if (plan?.kind !== 'iframe') return null;
 
-  const { fallbackHtml } = plan;
   return (
     <IframeEmbed
       {...shared}
       {...planProps(plan)}
       onError={onError}
       maxWidth={maxWidth ?? plan.maxWidth}
-      placeholder={
-        placeholder ??
-        (fallbackHtml === undefined ? undefined : (
-          // Verified by resolveEmbed: only what the parser's whitelist rebuilds.
-          <blockquote dangerouslySetInnerHTML={{ __html: fallbackHtml }} />
-        ))
-      }
+      placeholder={placeholder ?? fallbackPlaceholder(plan)}
     />
   );
 }

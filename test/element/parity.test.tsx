@@ -3,8 +3,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { URLS } from '../../playground/samples';
 import { SocialEmbed } from '../../src';
 import '../../src/element';
-import { type Platform, parseEmbed } from '../../src/parser';
-import { installObserver } from '../components/helpers';
+import { type Platform, parseEmbed, parseIframe } from '../../src/parser';
+import { installObserver, installResizeObserver } from '../components/helpers';
 
 vi.mock('../../src/loader/platform-scripts', () => ({
   FACEBOOK_SDK_VERSION: 'v26.0',
@@ -61,6 +61,13 @@ const PLATFORMS = {
   tumblr: true,
   kick: true,
   giphy: true,
+  truthsocial: true,
+  imgur: true,
+  tenor: true,
+  streamable: true,
+  strava: true,
+  flickr: true,
+  rumble: true,
 } satisfies Record<Platform, true>;
 
 type Rendered = {
@@ -81,6 +88,7 @@ function placeholderKind(layer: Element | null | undefined): string {
   if (skeleton instanceof HTMLElement)
     return `skeleton:${skeleton.style.minHeight}`;
   if (layer?.querySelector('blockquote')) return 'blockquote';
+  if (layer?.querySelector('a > img')) return 'image';
   return 'none';
 }
 
@@ -146,6 +154,8 @@ async function viaElement(source: { html: string } | { url: string }) {
 
 beforeEach(() => {
   installObserver();
+  // Frames with their size in the src wait for the box's width (Flickr).
+  installResizeObserver(640);
 });
 
 afterEach(() => {
@@ -156,17 +166,29 @@ afterEach(() => {
 
 const entries = Object.entries(fixtures);
 const parsed = entries.filter(([, html]) => parseEmbed(html) !== null);
+const generic = entries.filter(
+  ([path, html]) =>
+    path.startsWith('../fixtures/generic/') &&
+    parseEmbed(html) === null &&
+    parseIframe(html) !== null,
+);
 const skipped = entries
   .filter(([, html]) => parseEmbed(html) === null)
+  .filter(([path]) => !generic.some(([kept]) => kept === path))
   .map(([path]) => path.replace('../fixtures/', ''));
 
-type Case = { label: string; platform: Platform; source: Source };
+type Case = { label: string; platform: Platform | 'generic'; source: Source };
 type Source = { html: string } | { url: string };
 
 const cases: Case[] = [
   ...parsed.map(([path, html]) => ({
     label: path,
     platform: parseEmbed(html)?.platform as Platform,
+    source: { html },
+  })),
+  ...generic.map(([path, html]) => ({
+    label: path,
+    platform: 'generic' as const,
     source: { html },
   })),
   ...Object.entries(URLS).flatMap(([platform, samples]) =>
@@ -179,7 +201,7 @@ const cases: Case[] = [
 ];
 
 const seen = { iframe: 0, script: 0, error: [] as string[] };
-const platforms = new Set<Platform>();
+const platforms = new Set<Platform | 'generic'>();
 
 // Nothing has loaded, so a placeholder must be showing, unless the markup is the fallback.
 function check(side: Rendered): void {
@@ -187,7 +209,7 @@ function check(side: Rendered): void {
     expect(side.iframe?.src).toBeTruthy();
     expect(side.iframe?.title).toBeTruthy();
     expect(side.iframe?.allow).not.toBeNull();
-    expect(side.placeholder).toMatch(/^(skeleton:|blockquote)/);
+    expect(side.placeholder).toMatch(/^(skeleton:|blockquote|image)/);
   } else if (side.kind === 'script') {
     expect(side.container).toBeTruthy();
     if (side.placeholder === 'none')
@@ -202,9 +224,11 @@ function check(side: Rendered): void {
 }
 
 describe('<social-embed> and <SocialEmbed>', () => {
-  it('skips only the fixtures that are not embed code', () => {
-    expect([...skipped].sort()).toEqual([]);
-    expect(parsed).toHaveLength(53);
+  it('parses every fixture or renders it as a generic iframe, except Rumble’s script player', () => {
+    // Rumble's script player code has no iframe, and the package accepts only its iframe code.
+    expect([...skipped].sort()).toEqual(['rumble/embed-dialog-js.html']);
+    expect(parsed).toHaveLength(74);
+    expect(generic).toHaveLength(8);
   });
 
   it.each(cases.map((item) => [item.label, item] as const))(
@@ -223,13 +247,16 @@ describe('<social-embed> and <SocialEmbed>', () => {
   );
 
   it('covered every platform and the known case kinds', () => {
-    expect([...platforms].sort()).toEqual(Object.keys(PLATFORMS).sort());
-    expect(seen.iframe).toBe(63);
+    expect([...platforms].sort()).toEqual(
+      [...Object.keys(PLATFORMS), 'generic'].sort(),
+    );
+    expect(seen.iframe).toBe(103);
     expect(seen.script).toBe(23);
     expect(seen.error).toEqual([
       '../fixtures/dailymotion/oembed.html',
       'URL dailymotion Video, no Player ID: reports an error',
       'URL bluesky Post, by handle: reports a lookup error',
+      'URL rumble Page URL: reports a lookup error',
     ]);
   });
 });

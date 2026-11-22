@@ -12,13 +12,25 @@ export type PlatformParser = {
   parse: (root: HtmlElement) => ParsedEmbed | null;
   /** Embed code that is a single `<script>` tag, as Telegram's is. */
   parseScript?: (script: HtmlElement) => ParsedEmbed | null;
+  /**
+   * For code the HTML parser rejects: the same code without the stray markup this platform's own
+   * tool writes, or `null`. The result must still parse as this platform's embed.
+   */
+  repair?: (html: string) => string | null;
   isOwnScript: (src: string) => boolean;
   scriptOptions?: (src: string) => Options;
   allowsFbRoot?: boolean;
   /** A sibling element after the embed that is the platform's own markup, such as a credit; it is dropped. */
   isOwnExtra?: (element: HtmlElement, embed: ParsedEmbed) => boolean;
   match: (url: ParsedUrl) => ParsedEmbed | null;
+  /** True also for frames `parse` rejects, so generic iframe code never bypasses the platform's checks. */
+  ownsFrame?: (src: ParsedUrl) => boolean;
 };
+
+/** `/embed` holds `/embed` and `/embed/…`, never `/embedded`. */
+export function underPath(path: string, folder: string): boolean {
+  return path === folder || path.startsWith(`${folder}/`);
+}
 
 /** The first attribute present for a key wins. */
 export function attributeOptions(

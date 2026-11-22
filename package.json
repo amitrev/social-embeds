@@ -31,7 +31,15 @@
     "apple-podcasts",
     "tumblr",
     "kick",
-    "giphy"
+    "giphy",
+    "truth-social",
+    "imgur",
+    "tenor",
+    "streamable",
+    "strava",
+    "flickr",
+    "rumble",
+    "iframe"
   ],
   "license": "MIT",
   "author": "Atanas Mitrev",
