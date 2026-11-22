@@ -1,5 +1,5 @@
 import { facebookPlan, type FacebookOptions } from '../core/plans/facebook';
-import { facebook } from '../parser/platforms/facebook';
+import { facebookMatcher as facebook } from '../parser/matchers/facebook';
 import { frameOf } from './iframe-embed';
 import { scriptOf } from './script-embed';
 import type { EmbedSource, FrameProps } from './shared';

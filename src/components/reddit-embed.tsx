@@ -1,5 +1,5 @@
 import { redditPlan, type RedditOptions } from '../core/plans/reddit';
-import { reddit } from '../parser/platforms/reddit';
+import { redditMatcher as reddit } from '../parser/matchers/reddit';
 import type { EmbedSource, SharedProps } from './shared';
 import { usePlan } from './use-plan';
 import { frameOf } from './iframe-embed';

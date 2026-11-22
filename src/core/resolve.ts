@@ -1,7 +1,7 @@
 import { needsLookup } from '../parser/lookup';
 import { matchWith } from '../parser/match-url';
 import { parseUrl } from '../parser/url';
-import type { PlatformParser } from '../parser/platform';
+import type { PlatformMatcher } from '../parser/platform';
 import type { ParsedEmbed, Platform } from '../parser/types';
 import { verifyWith } from '../parser/verify';
 
@@ -19,7 +19,7 @@ export function lookupMessage(name: string): string {
 export function resolveEmbed(
   url: string | undefined,
   given: ParsedEmbed | undefined,
-  parser: PlatformParser,
+  parser: PlatformMatcher,
 ): { embed: ParsedEmbed; error?: never } | { embed?: never; error: string } {
   const { platform, name } = parser;
   const embed = given ?? (url === undefined ? null : matchWith(parser, url));
@@ -58,7 +58,7 @@ export function sourceError(
     : `social-embeds: not a supported post URL: ${source.url}`;
 }
 
-function lookupNeeded(parser: PlatformParser, url: string): boolean {
+function lookupNeeded(parser: PlatformMatcher, url: string): boolean {
   const parsed = typeof url === 'string' ? parseUrl(url) : null;
   return parsed !== null && parser.needsLookup?.(parsed) === true;
 }

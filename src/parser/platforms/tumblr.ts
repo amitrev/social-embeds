@@ -1,16 +1,8 @@
 import { hasClass } from '../html';
+import { parseUrl } from '../url';
 import type { PlatformParser } from '../platform';
-import type { ParsedEmbed } from '../types';
-import { parseUrl, type ParsedUrl } from '../url';
+import { fromUrl, POST, BLOG, tumblrMatcher } from '../matchers/tumblr';
 
-// The frame renders by blog name, so the embed code's token is dropped (docs/decisions.md D74).
-
-const BLOG = '([a-z0-9-]{1,32})';
-const POST = '(\\d{1,20})';
-const WWW_HOSTS = new Set(['www.tumblr.com', 'tumblr.com']);
-const WWW_PATH = new RegExp(`^/${BLOG}/${POST}(?:/[^/]{1,200})?/?$`);
-const BLOG_HOST = new RegExp(`^${BLOG}\\.tumblr\\.com$`);
-const BLOG_PATH = new RegExp(`^/post/${POST}(?:/[^/]{1,200})?/?$`);
 const FRAME_PATH = new RegExp(
   `^/embed/post/(?:t:[A-Za-z0-9_-]{1,64}|${BLOG})/${POST}/v2$`,
 );
@@ -18,47 +10,11 @@ const FRAME_PATH = new RegExp(
 const OLD_FRAME_PATH = new RegExp(
   `^/embed/post/(?:t:)?[A-Za-z0-9_-]{1,64}/${POST}$`,
 );
-// tumblr.com pages and blog subdomains that are not a blog.
-const NOT_BLOGS = new Set([
-  'dashboard',
-  'explore',
-  'tagged',
-  'search',
-  'settings',
-  'blog',
-  'www',
-  'assets',
-  'embed',
-  'api',
-  'help',
-]);
 const SCRIPT =
   /^(?:https?:)?\/\/(?:secure\.)?assets\.tumblr\.com\/post\.js(?:\?[^#]*)?$/;
 
-function fromUrl(url: ParsedUrl | null): Omit<ParsedEmbed, 'options'> | null {
-  if (!url) return null;
-  let blog: string | undefined;
-  let id: string | undefined;
-  if (WWW_HOSTS.has(url.host)) [, blog, id] = WWW_PATH.exec(url.path) ?? [];
-  else {
-    [, blog] = BLOG_HOST.exec(url.host) ?? [];
-    [, id] = BLOG_PATH.exec(url.path) ?? [];
-  }
-  if (blog === undefined || id === undefined || NOT_BLOGS.has(blog))
-    return null;
-  return {
-    platform: 'tumblr',
-    kind: 'post',
-    url: `https://www.tumblr.com/${blog}/${id}`,
-    id,
-    variant: 'iframe',
-  };
-}
-
 export const tumblr: PlatformParser = {
-  platform: 'tumblr',
-  name: 'Tumblr',
-  shapes: ['post iframe'],
+  ...tumblrMatcher,
   parse(root) {
     if (root.tag !== 'div' || !hasClass(root, 'tumblr-post')) return null;
     const frame = parseUrl(root.attrs.get('data-href') ?? '');
@@ -82,8 +38,4 @@ export const tumblr: PlatformParser = {
     return { ...found, options: {} };
   },
   isOwnScript: (src) => SCRIPT.test(src),
-  match(url) {
-    const found = fromUrl(url);
-    return found && { ...found, options: {} };
-  },
 };

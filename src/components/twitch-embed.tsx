@@ -1,5 +1,5 @@
 import { twitchPlan, type TwitchOptions } from '../core/plans/twitch';
-import { twitch } from '../parser/platforms/twitch';
+import { twitchMatcher as twitch } from '../parser/matchers/twitch';
 import type { EmbedSource, FrameProps } from './shared';
 import { usePlan } from './use-plan';
 import { frameOf } from './iframe-embed';

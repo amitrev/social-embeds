@@ -1,27 +1,8 @@
-import {
-  descendants,
-  hasClass,
-  parseHtml,
-  rebuild,
-  rebuildsAs,
-  type Whitelist,
-} from '../html';
+import { hasClass, rebuild } from '../html';
 import { attributeOptions, type PlatformParser } from '../platform';
-import type { ParsedEmbed } from '../types';
-import { coerce, parseUrl, type ParsedUrl } from '../url';
+import { coerce } from '../url';
+import { lastStatus, FALLBACK, xMatcher } from '../matchers/x';
 
-const HOSTS = new Set([
-  'x.com',
-  'www.x.com',
-  'mobile.x.com',
-  'twitter.com',
-  'www.twitter.com',
-  'mobile.twitter.com',
-]);
-const STATUS_PATH = /^\/([A-Za-z0-9_]{1,15})\/status\/(\d{1,20})\/?$/;
-// URL input only: the media viewer's `/photo/{n}` and `/video/{n}`, and `/i/web/`, which names no author.
-const LINK_PATH =
-  /^\/(?:([A-Za-z0-9_]{1,15})|i\/web)\/status\/(\d{1,20})(?:\/(?:photo|video)\/[1-4])?\/?$/;
 const SCRIPT = /^(?:https?:)?\/\/platform\.(?:x|twitter)\.com\/widgets\.js$/;
 
 // publish.x.com emits a plain `align` attribute; `data-align` is the documented spelling.
@@ -36,42 +17,8 @@ const OPTION_ATTRIBUTES = [
   ['data-width', 'width'],
 ] as const;
 
-const FALLBACK: Whitelist = new Map([
-  ['p', ['lang', 'dir']],
-  ['a', ['href']],
-  ['br', []],
-]);
-
-function post(
-  url: ParsedUrl | null,
-  path = STATUS_PATH,
-): Omit<ParsedEmbed, 'options'> | null {
-  if (!url || !HOSTS.has(url.host)) return null;
-  // `/i/status/{id}` is X's own URL for a post without its author.
-  const [, user = 'i', id] = path.exec(url.path) ?? [];
-  if (id === undefined) return null;
-  return {
-    platform: 'x',
-    kind: 'post',
-    url: `https://x.com/${user}/status/${id}`,
-    id,
-    variant: 'sdk',
-  };
-}
-
-// widgets.js renders the post that the blockquote's last status link names.
-function fallbackNamesPost(html: string, id: string): boolean {
-  const [root] =
-    parseHtml(`<blockquote class="twitter-tweet">${html}</blockquote>`) ?? [];
-  return root?.type === 'element' && x.parse(root)?.id === id;
-}
-
 export const x: PlatformParser = {
-  platform: 'x',
-  name: 'X',
-  shapes: ['post sdk'],
-  trustsFallback: (html, embed) =>
-    rebuildsAs(html, FALLBACK) && fallbackNamesPost(html, embed.id),
+  ...xMatcher,
   parse(root) {
     // `twitter-video` is older code for a post with a video.
     if (
@@ -79,15 +26,7 @@ export const x: PlatformParser = {
       !(hasClass(root, 'twitter-tweet') || hasClass(root, 'twitter-video'))
     )
       return null;
-    // The status link is the last link in the blockquote; earlier ones belong to the text.
-    const status = descendants(root.children)
-      .reverse()
-      .map((element) =>
-        element.tag === 'a'
-          ? post(parseUrl(element.attrs.get('href') ?? ''))
-          : null,
-      )
-      .find((found) => found !== null);
+    const status = lastStatus(root.children);
     if (!status) return null;
     return {
       ...status,
@@ -96,8 +35,4 @@ export const x: PlatformParser = {
     };
   },
   isOwnScript: (src) => SCRIPT.test(src),
-  match(url) {
-    const status = post(url, LINK_PATH);
-    return status && { ...status, options: {} };
-  },
 };

@@ -1,5 +1,5 @@
 import { snapchatPlan } from '../core/plans/snapchat';
-import { snapchat } from '../parser/platforms/snapchat';
+import { snapchatMatcher as snapchat } from '../parser/matchers/snapchat';
 import type { EmbedSource, FrameProps } from './shared';
 import { usePlan } from './use-plan';
 import { frameOf } from './iframe-embed';

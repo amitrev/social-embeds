@@ -1,5 +1,5 @@
 import { threadsPlan, type ThreadsOptions } from '../core/plans/threads';
-import { threads } from '../parser/platforms/threads';
+import { threadsMatcher as threads } from '../parser/matchers/threads';
 import type { EmbedSource, SharedProps } from './shared';
 import { usePlan } from './use-plan';
 import { scriptOf } from './script-embed';

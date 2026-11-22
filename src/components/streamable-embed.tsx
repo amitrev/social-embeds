@@ -1,4 +1,4 @@
-import { streamable } from '../parser/platforms/streamable';
+import { streamableMatcher as streamable } from '../parser/matchers/streamable';
 import {
   streamablePlan,
   type StreamableOptions,

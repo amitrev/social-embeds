@@ -1,4 +1,4 @@
-import { soundcloud } from '../parser/platforms/soundcloud';
+import { soundcloudMatcher as soundcloud } from '../parser/matchers/soundcloud';
 import {
   soundcloudPlan,
   type SoundCloudOptions,

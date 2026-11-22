@@ -1,5 +1,5 @@
 import { spotifyPlan, type SpotifyOptions } from '../core/plans/spotify';
-import { spotify } from '../parser/platforms/spotify';
+import { spotifyMatcher as spotify } from '../parser/matchers/spotify';
 import type { EmbedSource, FrameProps } from './shared';
 import { usePlan } from './use-plan';
 import { frameOf } from './iframe-embed';

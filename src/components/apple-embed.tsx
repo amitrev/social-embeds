@@ -1,6 +1,6 @@
 import { appleMusicPlan, applePodcastsPlan } from '../core/plans/apple';
-import { applemusic } from '../parser/platforms/applemusic';
-import { applepodcasts } from '../parser/platforms/applepodcasts';
+import { applemusicMatcher as applemusic } from '../parser/matchers/applemusic';
+import { applepodcastsMatcher as applepodcasts } from '../parser/matchers/applepodcasts';
 import type { EmbedSource, FrameProps } from './shared';
 import { usePlan } from './use-plan';
 import { frameOf } from './iframe-embed';

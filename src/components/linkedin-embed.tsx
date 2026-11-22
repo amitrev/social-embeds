@@ -1,5 +1,5 @@
 import { linkedinPlan, type LinkedInOptions } from '../core/plans/linkedin';
-import { linkedin } from '../parser/platforms/linkedin';
+import { linkedinMatcher as linkedin } from '../parser/matchers/linkedin';
 import type { EmbedSource, FrameProps } from './shared';
 import { usePlan } from './use-plan';
 import { frameOf } from './iframe-embed';

@@ -1,55 +1,22 @@
-import { blueskyNeedsLookup } from '../lookup';
-import {
-  descendants,
-  hasClass,
-  rebuild,
-  type Whitelist,
-  rebuildsAs,
-} from '../html';
+import { descendants, hasClass, rebuild } from '../html';
 import type { Options, PlatformParser } from '../platform';
-import type { ParsedEmbed } from '../types';
-import { parseUrl, type ParsedUrl } from '../url';
+import { parseUrl } from '../url';
+import {
+  fromUrl,
+  post,
+  RKEY,
+  DID,
+  FALLBACK,
+  blueskyMatcher,
+} from '../matchers/bluesky';
 
-// Only a DID names a post without a lookup; handle URLs return null (docs/decisions.md D70).
-
-const DID = '(did:(?:plc:[a-z2-7]{24}|web:[a-z0-9.-]{1,253}))';
-// The AT Protocol forbids the record keys `.` and `..`, which would also move the frame's path.
-const RKEY = '((?!\\.{1,2}(?:/|$))[A-Za-z0-9._~:-]{1,512})';
-const HOSTS = new Set(['bsky.app', 'www.bsky.app']);
-const POST_PATH = new RegExp(`^/profile/${DID}/post/${RKEY}/?$`);
 const AT_URI = new RegExp(`^at://${DID}/app\\.bsky\\.feed\\.post/${RKEY}$`);
 const CID = /^[a-z2-7]{20,100}$/;
 const COLOR_MODES = new Set(['light', 'dark', 'system']);
 const SCRIPT = /^(?:https?:)?\/\/embed\.bsky\.app\/static\/embed\.js$/;
 
-const FALLBACK: Whitelist = new Map([
-  ['p', ['lang']],
-  ['a', ['href']],
-  ['br', []],
-]);
-
-function post(did: string, rkey: string): Omit<ParsedEmbed, 'options'> {
-  return {
-    platform: 'bluesky',
-    kind: 'post',
-    url: `https://bsky.app/profile/${did}/post/${rkey}`,
-    id: `${did}/app.bsky.feed.post/${rkey}`,
-    variant: 'iframe',
-  };
-}
-
-function fromUrl(url: ParsedUrl | null): Omit<ParsedEmbed, 'options'> | null {
-  if (!url || !HOSTS.has(url.host)) return null;
-  const [, did, rkey] = POST_PATH.exec(url.path) ?? [];
-  return did === undefined || rkey === undefined ? null : post(did, rkey);
-}
-
 export const bluesky: PlatformParser = {
-  platform: 'bluesky',
-  name: 'Bluesky',
-  shapes: ['post iframe'],
-  needsLookup: blueskyNeedsLookup,
-  trustsFallback: (html) => rebuildsAs(html, FALLBACK),
+  ...blueskyMatcher,
   parse(root) {
     if (root.tag !== 'blockquote' || !hasClass(root, 'bluesky-embed'))
       return null;
@@ -81,8 +48,4 @@ export const bluesky: PlatformParser = {
     };
   },
   isOwnScript: (src) => SCRIPT.test(src),
-  match(url) {
-    const found = fromUrl(url);
-    return found && { ...found, options: {} };
-  },
 };

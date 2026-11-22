@@ -1,5 +1,5 @@
 import { kickPlan, type KickOptions } from '../core/plans/kick';
-import { kick } from '../parser/platforms/kick';
+import { kickMatcher as kick } from '../parser/matchers/kick';
 import type { EmbedSource, FrameProps } from './shared';
 import { usePlan } from './use-plan';
 import { frameOf } from './iframe-embed';

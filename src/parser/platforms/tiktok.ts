@@ -1,37 +1,20 @@
 import { hasClass } from '../html';
 import {
   type Options,
-  type PlatformParser,
   sizeOf,
   withSize,
+  type PlatformParser,
 } from '../platform';
-import type { ParsedEmbed } from '../types';
 import { coerce, parseUrl } from '../url';
-import { TIKTOK_HOSTS as HOSTS, tiktokFrame } from '../frames';
+import { TIKTOK_HOSTS as HOSTS } from '../frames';
+import { video, VIDEO_PATH, tiktokMatcher } from '../matchers/tiktok';
 
-// Every TikTok input renders the Embed Player iframe (docs/decisions.md D11).
-
-// The user part may be empty: TikTok serves /@/video/{id} (docs/decisions.md D11).
-const VIDEO_PATH = /^\/@([A-Za-z0-9._]{0,64})\/video\/(\d{1,25})\/?$/;
 const PLAYER_PATH = /^\/player\/v1\/(\d{1,25})\/?$/;
 const VIDEO_ID = /^\d{1,25}$/;
 const SCRIPT = /^(?:https?:)?\/\/www\.tiktok\.com\/embed\.js$/;
 
-function video(id: string, user = '', options: Options = {}): ParsedEmbed {
-  return {
-    platform: 'tiktok',
-    kind: 'video',
-    url: `https://www.tiktok.com/@${user}/video/${id}`,
-    id,
-    variant: 'iframe',
-    options,
-  };
-}
-
 export const tiktok: PlatformParser = {
-  platform: 'tiktok',
-  name: 'TikTok',
-  shapes: ['video iframe'],
+  ...tiktokMatcher,
   parse(root) {
     if (root.tag === 'blockquote' && hasClass(root, 'tiktok-embed')) {
       const cite = parseUrl(root.attrs.get('cite') ?? '');
@@ -56,10 +39,4 @@ export const tiktok: PlatformParser = {
     return withSize(video(id, '', options), sizeOf(root));
   },
   isOwnScript: (src) => SCRIPT.test(src),
-  match(url) {
-    if (!HOSTS.has(url.host)) return null;
-    const [, user, id] = VIDEO_PATH.exec(url.path) ?? [];
-    return user === undefined || id === undefined ? null : video(id, user);
-  },
-  ownsFrame: tiktokFrame,
 };

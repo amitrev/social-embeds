@@ -1,4 +1,4 @@
-import { dailymotion } from '../parser/platforms/dailymotion';
+import { dailymotionMatcher as dailymotion } from '../parser/matchers/dailymotion';
 import {
   dailymotionPlan,
   type DailymotionOptions,

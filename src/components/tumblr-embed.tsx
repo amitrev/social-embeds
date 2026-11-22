@@ -1,5 +1,5 @@
 import { tumblrPlan } from '../core/plans/tumblr';
-import { tumblr } from '../parser/platforms/tumblr';
+import { tumblrMatcher as tumblr } from '../parser/matchers/tumblr';
 import type { EmbedSource, SharedProps } from './shared';
 import { usePlan } from './use-plan';
 import { frameOf } from './iframe-embed';

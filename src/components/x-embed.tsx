@@ -1,5 +1,5 @@
 import { xPlan, type XOptions } from '../core/plans/x';
-import { x } from '../parser/platforms/x';
+import { xMatcher as x } from '../parser/matchers/x';
 import type { EmbedSource, SharedProps } from './shared';
 import { usePlan } from './use-plan';
 import { scriptOf } from './script-embed';

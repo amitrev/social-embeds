@@ -1,5 +1,5 @@
 import { tiktokPlan, type TikTokOptions } from '../core/plans/tiktok';
-import { tiktok } from '../parser/platforms/tiktok';
+import { tiktokMatcher as tiktok } from '../parser/matchers/tiktok';
 import type { EmbedSource, FrameProps } from './shared';
 import { usePlan } from './use-plan';
 import { frameOf } from './iframe-embed';

@@ -1,5 +1,5 @@
 import { stravaPlan, type StravaOptions } from '../core/plans/strava';
-import { strava } from '../parser/platforms/strava';
+import { stravaMatcher as strava } from '../parser/matchers/strava';
 import type { EmbedSource, SharedProps } from './shared';
 import { usePlan } from './use-plan';
 import { frameOf } from './iframe-embed';

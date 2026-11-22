@@ -1,5 +1,5 @@
 import { youtubePlan, type YouTubeOptions } from '../core/plans/youtube';
-import { youtube } from '../parser/platforms/youtube';
+import { youtubeMatcher as youtube } from '../parser/matchers/youtube';
 import type { EmbedSource, FrameProps } from './shared';
 import { usePlan } from './use-plan';
 import { frameOf } from './iframe-embed';

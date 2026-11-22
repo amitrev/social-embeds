@@ -1,37 +1,18 @@
 import { hasClass } from '../html';
 import type { Options, PlatformParser } from '../platform';
-import type { ParsedEmbed } from '../types';
-import type { ParsedUrl } from '../url';
+import { item, type Type, stravaMatcher } from '../matchers/strava';
 
-// `data-embed-type` and `data-embed-id` are content, never options (docs/decisions.md D68, D97).
-
-const HOSTS = new Set(['strava.com', 'www.strava.com']);
 const NUMBER = /^\d{1,20}$/;
-const PAGE_PATH = /^\/(activities|routes)\/(\d{1,20})\/?$/;
 const SCRIPT = /^(?:https?:)?\/\/strava-embeds\.com\/embed\.js$/;
 const STYLES = new Set(['standard', 'minimal']);
 const MAP_HASH = /^[A-Za-z0-9_-]{1,100}$/;
-const PAGES = { activity: 'activities', route: 'routes' } as const;
-type Type = keyof typeof PAGES;
-
-function item(type: Type, number: string): Omit<ParsedEmbed, 'options'> {
-  return {
-    platform: 'strava',
-    kind: 'post',
-    url: `https://www.strava.com/${PAGES[type]}/${number}`,
-    id: `${type}/${number}`,
-    variant: 'iframe',
-  };
-}
 
 function isType(value: string | undefined): value is Type {
   return value === 'activity' || value === 'route';
 }
 
 export const strava: PlatformParser = {
-  platform: 'strava',
-  name: 'Strava',
-  shapes: ['post iframe'],
+  ...stravaMatcher,
   parse(root) {
     if (root.tag !== 'div' || !hasClass(root, 'strava-embed-placeholder'))
       return null;
@@ -56,13 +37,4 @@ export const strava: PlatformParser = {
     return { ...item(type, number), options };
   },
   isOwnScript: (src) => SCRIPT.test(src),
-  match(url: ParsedUrl) {
-    if (!HOSTS.has(url.host)) return null;
-    const [, page, number] = PAGE_PATH.exec(url.path) ?? [];
-    if (page === undefined || number === undefined) return null;
-    return {
-      ...item(page === 'routes' ? 'route' : 'activity', number),
-      options: {},
-    };
-  },
 };

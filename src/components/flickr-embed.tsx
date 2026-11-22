@@ -1,5 +1,5 @@
 import { flickrPlan, type FlickrOptions } from '../core/plans/flickr';
-import { flickr } from '../parser/platforms/flickr';
+import { flickrMatcher as flickr } from '../parser/matchers/flickr';
 import type { EmbedSource, FrameProps } from './shared';
 import { usePlan } from './use-plan';
 import { fallbackPlaceholder, frameOf } from './iframe-embed';

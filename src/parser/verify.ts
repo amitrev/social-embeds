@@ -1,5 +1,5 @@
 import { matchWith } from './match-url';
-import type { PlatformParser } from './platform';
+import type { PlatformMatcher } from './platform';
 import { parserFor } from './platforms';
 import type { ParsedEmbed } from './types';
 
@@ -17,7 +17,7 @@ export function verifyEmbed(embed: ParsedEmbed): ParsedEmbed | null {
  * bundle the other platforms' (docs/decisions.md D103).
  */
 export function verifyWith(
-  parser: PlatformParser,
+  parser: PlatformMatcher,
   embed: ParsedEmbed,
 ): ParsedEmbed | null {
   if (embed.platform !== parser.platform) return null;

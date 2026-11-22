@@ -1,42 +1,14 @@
-import {
-  rebuild,
-  type HtmlElement,
-  hasClass,
-  type Whitelist,
-  rebuildsAs,
-} from '../html';
-import { type PlatformParser, sizeOf, withSize } from '../platform';
+import { rebuild, type HtmlElement, hasClass } from '../html';
+import { sizeOf, withSize, type PlatformParser } from '../platform';
 import type { ParsedEmbed } from '../types';
-import { parseUrl, type ParsedUrl } from '../url';
-import { tenorFrame } from '../frames';
+import { parseUrl } from '../url';
+import { gif, ID, FALLBACK, tenorMatcher } from '../matchers/tenor';
 
-// The default ratio, 1.33, is embed.js's own (docs/decisions.md D95); a URL carries no size here.
-
-const HOSTS = new Set(['tenor.com', 'www.tenor.com']);
-const ID = '(\\d{1,20})';
-const PAGE_PATH = new RegExp(
-  `^/(?:[a-z]{2}(?:-[A-Za-z]{2,4})?/)?view/(?:[A-Za-z0-9%_.~-]{1,300}-gif-)?${ID}/?$`,
-);
 const FRAME_PATH = new RegExp(`^/embed/${ID}$`);
 const SCRIPT = /^(?:https?:)?\/\/tenor\.com\/embed\.js$/;
 // Tenor writes some ratios unrounded: `2.3380281690140845`.
 const RATIO = /^\d{1,3}(?:\.\d{1,20})?$/;
 const DEFAULT_RATIO = 1.33;
-const FALLBACK: Whitelist = new Map([['a', ['href']]]);
-
-function gif(id: string): Omit<ParsedEmbed, 'options'> {
-  return {
-    platform: 'tenor',
-    kind: 'video',
-    url: `https://tenor.com/view/${id}`,
-    id,
-    variant: 'iframe',
-  };
-}
-
-function idOf(url: ParsedUrl | null): string | undefined {
-  return url && HOSTS.has(url.host) ? PAGE_PATH.exec(url.path)?.[1] : undefined;
-}
 
 /** To four decimals, from 1:100 to 100:1. */
 function ratioSize(ratio: number): ParsedEmbed['size'] {
@@ -78,18 +50,10 @@ function fromIframe(root: HtmlElement): ParsedEmbed | null {
 }
 
 export const tenor: PlatformParser = {
-  platform: 'tenor',
-  name: 'Tenor',
-  shapes: ['video iframe'],
-  trustsFallback: (html) => rebuildsAs(html, FALLBACK),
+  ...tenorMatcher,
   parse(root) {
     if (root.tag === 'div') return fromDiv(root);
     return root.tag === 'iframe' ? fromIframe(root) : null;
   },
   isOwnScript: (src) => SCRIPT.test(src),
-  match(url) {
-    const id = idOf(url);
-    return id === undefined ? null : { ...gif(id), options: {} };
-  },
-  ownsFrame: tenorFrame,
 };
