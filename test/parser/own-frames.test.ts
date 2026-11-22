@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { parseEmbed, parseIframe } from '../../src/parser';
+import { ownedFrame } from '../../src/parser/frames';
 import { checkIframe } from '../../src/parser/iframe';
 import { descendants, parseHtml } from '../../src/parser/html';
 import { platforms } from '../../src/parser/platforms';
@@ -36,6 +37,21 @@ describe('frames of named platforms', () => {
     expect(
       checkIframe({ src, allow: '', allowFullscreen: false, size: {} }),
     ).toBeNull();
+  });
+
+  it('the generic check asks exactly the parsers that own frames', () => {
+    const owners = platforms.flatMap((p) => (p.ownsFrame ? [p.ownsFrame] : []));
+    const samples = [
+      ...frames.map(({ src }) => src),
+      'https://example.com/embed/1',
+      'https://www.youtube.com/watch?v=jNQXAC9IVRw',
+    ].flatMap((src) => {
+      const url = parseUrl(src);
+      return url ? [url] : [];
+    });
+    for (const url of samples)
+      expect(ownedFrame(url)).toBe(owners.some((owns) => owns(url)));
+    expect(new Set(owners).size).toBe(18);
   });
 
   it('covers every platform that owns frames', () => {

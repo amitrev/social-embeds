@@ -14,6 +14,8 @@ const HOSTS = new Set([
 const POST_PATH =
   /^\/r\/([A-Za-z0-9_]{2,21})\/comments\/([a-z0-9]{1,12})(?:\/([^/]{1,300}))?(?:\/([a-z0-9]{1,16}))?\/?$/;
 const SCRIPT = /^(?:https?:)?\/\/embed\.reddit\.com\/widgets\.js$/;
+const CARD_SCRIPT =
+  /^(?:https?:)?\/\/embed\.redditmedia\.com\/widgets\/platform\.js$/;
 
 // The `data-embed-*` attributes that widgets.js copies into the iframe query.
 const OPTION_ATTRIBUTES = [
@@ -52,7 +54,11 @@ function post(url: ParsedUrl | null): Omit<ParsedEmbed, 'options'> | null {
 export const reddit: PlatformParser = {
   platform: 'reddit',
   parse(root) {
-    if (root.tag !== 'blockquote' || !hasClass(root, 'reddit-embed-bq'))
+    // `reddit-card` is older code; it renders as the post.
+    if (
+      root.tag !== 'blockquote' ||
+      !(hasClass(root, 'reddit-embed-bq') || hasClass(root, 'reddit-card'))
+    )
       return null;
     // widgets.js embeds the first post or comment link it finds.
     const found = descendants(root.children)
@@ -69,7 +75,7 @@ export const reddit: PlatformParser = {
       height === undefined ? undefined : { height },
     );
   },
-  isOwnScript: (src) => SCRIPT.test(src),
+  isOwnScript: (src) => SCRIPT.test(src) || CARD_SCRIPT.test(src),
   match(url) {
     const found = post(url);
     return found && { ...found, options: {} };

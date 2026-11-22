@@ -16,6 +16,20 @@ describe('parseUrl', () => {
     ]);
   });
 
+  it('reads `&amp;` as `&`, as in a URL copied from HTML source', () => {
+    const url = parseUrl('https://a.test/?x=1&amp;y=2&amp;x=3');
+    expect([...(url?.query ?? [])]).toEqual([
+      ['x', '1'],
+      ['y', '2'],
+    ]);
+  });
+
+  it('keeps an escaped `&amp;` inside a value', () => {
+    expect(parseUrl('https://a.test/?q=a%26amp%3Bb')?.query.get('q')).toBe(
+      'a&amp;b',
+    );
+  });
+
   it('accepts http and protocol-relative URLs', () => {
     expect(parseUrl('http://a.test/')?.host).toBe('a.test');
     expect(parseUrl('//a.test/x')?.path).toBe('/x');

@@ -1,13 +1,16 @@
 import { type PlatformParser, sizeOf, withSize } from '../platform';
 import type { ParsedEmbed } from '../types';
 import { parseUrl, type ParsedUrl } from '../url';
+import {
+  APPLE_MUSIC_FRAME_HOST as FRAME_HOST,
+  appleMusicFrame,
+} from '../frames';
 
 // Albums, songs and playlists; the slug is dropped, since the player does not need it (docs/decisions.md D72).
 
 const PATH =
   /^\/([a-z]{2})\/(album|song|playlist)\/(?:[^/]{1,200}\/)?(\d{1,15}|pl\.[A-Za-z0-9-]{1,64})\/?$/;
 const SONG = /^\d{1,15}$/;
-const FRAME_HOST = 'embed.music.apple.com';
 
 function appleContent(
   url: ParsedUrl | null,
@@ -48,5 +51,5 @@ export const applemusic: PlatformParser = {
     const found = appleContent(url, 'music.apple.com');
     return found && { platform: 'applemusic', ...found, options: {} };
   },
-  ownsFrame: (src) => src.host === FRAME_HOST,
+  ownsFrame: appleMusicFrame,
 };

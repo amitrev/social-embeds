@@ -1,6 +1,6 @@
 import { descendants, type HtmlElement, parseHtml } from './html';
 import { sizeOf, unwrapRatio } from './platform';
-import { platforms } from './platforms';
+import { ownedFrame } from './frames';
 import { parseUrl, pixels } from './url';
 
 // Security: only the checked fields of `ParsedIframe` may reach the DOM; `srcdoc`, `on*` handlers
@@ -149,7 +149,7 @@ function checkSrc(value: unknown): string | null {
     host: url.host.replace(/:\d+$/, ''),
     path: (url.path.toLowerCase().split(';')[0] ?? '').replaceAll('%2f', '/'),
   };
-  if (platforms.some((platform) => platform.ownsFrame?.(frame))) return null;
+  if (ownedFrame(frame)) return null;
   return src.startsWith('//') ? `https:${src}` : src;
 }
 

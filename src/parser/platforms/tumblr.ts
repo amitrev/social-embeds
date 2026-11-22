@@ -14,6 +14,10 @@ const BLOG_PATH = new RegExp(`^/post/${POST}(?:/[^/]{1,200})?/?$`);
 const FRAME_PATH = new RegExp(
   `^/embed/post/(?:t:[A-Za-z0-9_-]{1,64}|${BLOG})/${POST}/v2$`,
 );
+// Older code: no `/v2`, and a token without `t:`.
+const OLD_FRAME_PATH = new RegExp(
+  `^/embed/post/(?:t:)?[A-Za-z0-9_-]{1,64}/${POST}$`,
+);
 // tumblr.com pages and blog subdomains that are not a blog.
 const NOT_BLOGS = new Set([
   'dashboard',
@@ -28,7 +32,8 @@ const NOT_BLOGS = new Set([
   'api',
   'help',
 ]);
-const SCRIPT = /^(?:https?:)?\/\/assets\.tumblr\.com\/post\.js(?:\?[^#]*)?$/;
+const SCRIPT =
+  /^(?:https?:)?\/\/(?:secure\.)?assets\.tumblr\.com\/post\.js(?:\?[^#]*)?$/;
 
 function fromUrl(url: ParsedUrl | null): Omit<ParsedEmbed, 'options'> | null {
   if (!url) return null;
@@ -56,7 +61,8 @@ export const tumblr: PlatformParser = {
     if (root.tag !== 'div' || !hasClass(root, 'tumblr-post')) return null;
     const frame = parseUrl(root.attrs.get('data-href') ?? '');
     if (frame?.host !== 'embed.tumblr.com') return null;
-    const [, frameBlog, framePost] = FRAME_PATH.exec(frame.path) ?? [];
+    const [, frameBlog, v2Post] = FRAME_PATH.exec(frame.path) ?? [];
+    const framePost = v2Post ?? OLD_FRAME_PATH.exec(frame.path)?.[1];
     if (framePost === undefined) return null;
     const [link, ...rest] = root.children.filter(
       (node) => node.type !== 'text' || node.raw.trim() !== '',

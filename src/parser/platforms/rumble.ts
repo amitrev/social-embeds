@@ -2,11 +2,11 @@ import {
   type Options,
   type PlatformParser,
   sizeOf,
-  underPath,
   withSize,
 } from '../platform';
 import type { ParsedEmbed } from '../types';
 import { coerce, parseUrl, type ParsedUrl } from '../url';
+import { rumbleFrame } from '../frames';
 
 // Iframe code only: the embedJS player has no iframe, and a page URL holds another id (docs/decisions.md D99).
 
@@ -44,6 +44,5 @@ export const rumble: PlatformParser = {
     const id = idOf(url, HOSTS);
     return id === undefined ? null : { ...video(id), options: {} };
   },
-  ownsFrame: (src) =>
-    src.host === 'rumble.com' && underPath(src.path, '/embed'),
+  ownsFrame: rumbleFrame,
 };

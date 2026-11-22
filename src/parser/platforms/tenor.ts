@@ -1,7 +1,8 @@
 import { rebuild, type HtmlElement, hasClass, type Whitelist } from '../html';
-import { type PlatformParser, sizeOf, underPath, withSize } from '../platform';
+import { type PlatformParser, sizeOf, withSize } from '../platform';
 import type { ParsedEmbed } from '../types';
 import { parseUrl, type ParsedUrl } from '../url';
+import { tenorFrame } from '../frames';
 
 // The default ratio, 1.33, is embed.js's own (docs/decisions.md D95); a URL carries no size here.
 
@@ -82,5 +83,5 @@ export const tenor: PlatformParser = {
     const id = idOf(url);
     return id === undefined ? null : { ...gif(id), options: {} };
   },
-  ownsFrame: (src) => src.host === 'tenor.com' && underPath(src.path, '/embed'),
+  ownsFrame: tenorFrame,
 };

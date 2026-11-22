@@ -3,15 +3,14 @@ import {
   type Options,
   type PlatformParser,
   sizeOf,
-  underPath,
   withSize,
 } from '../platform';
 import type { ParsedEmbed } from '../types';
 import { coerce, parseUrl } from '../url';
+import { TIKTOK_HOSTS as HOSTS, tiktokFrame } from '../frames';
 
 // Every TikTok input renders the Embed Player iframe (docs/decisions.md D11).
 
-const HOSTS = new Set(['tiktok.com', 'www.tiktok.com']);
 // The user part may be empty: TikTok serves /@/video/{id} (docs/decisions.md D11).
 const VIDEO_PATH = /^\/@([A-Za-z0-9._]{0,64})\/video\/(\d{1,25})\/?$/;
 const PLAYER_PATH = /^\/player\/v1\/(\d{1,25})\/?$/;
@@ -60,5 +59,5 @@ export const tiktok: PlatformParser = {
     const [, user, id] = VIDEO_PATH.exec(url.path) ?? [];
     return user === undefined || id === undefined ? null : video(id, user);
   },
-  ownsFrame: (src) => HOSTS.has(src.host) && underPath(src.path, '/player'),
+  ownsFrame: tiktokFrame,
 };

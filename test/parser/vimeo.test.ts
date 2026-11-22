@@ -47,6 +47,42 @@ describe('Vimeo embed code', () => {
     });
   });
 
+  // The credit paragraph older embed code ends with.
+  const credit =
+    '<p><a href="https://vimeo.com/76979871">The New Vimeo Player (You Know, For Videos)</a> from <a href="https://vimeo.com/staff">Vimeo Staff</a> on <a href="https://vimeo.com">Vimeo</a>.</p>';
+
+  it.each([
+    ['the oEmbed iframe', `${oembed}\n${credit}`],
+    ['the responsive snippet', responsive.replace('</div>', `</div>${credit}`)],
+    ['an http credit', `${oembed} ${credit.replaceAll('https:', 'http:')}`],
+  ])("accepts and drops Vimeo's credit after %s", (_, html) => {
+    expect(parseEmbed(html)).toMatchObject({ ...video, options: {} });
+  });
+
+  it.each([
+    ['another video', credit.replace('vimeo.com/76979871', 'vimeo.com/1')],
+    [
+      'a link elsewhere',
+      credit.replace('https://vimeo.com/staff', 'https://example.com/staff'),
+    ],
+    ['an attribute', credit.replace('<p>', '<p class="credit">')],
+    [
+      'a link attribute',
+      credit.replace(
+        '<a href="https://vimeo.com">',
+        '<a href="https://vimeo.com" onclick="x()">',
+      ),
+    ],
+    ['other text', credit.replace(' on ', ' at ')],
+    ['more content', credit.replace('.</p>', '. <b>!</b></p>')],
+    [
+      'a home link to a page',
+      credit.replace('"https://vimeo.com"', '"https://vimeo.com/76979871"'),
+    ],
+  ])('rejects a credit with %s', (_, extra) => {
+    expect(parseEmbed(`${oembed}${extra}`)).toBeNull();
+  });
+
   it.each([
     [
       'another wrapper style',

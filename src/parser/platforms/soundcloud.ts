@@ -7,6 +7,10 @@ import {
 } from '../platform';
 import type { ParsedEmbed } from '../types';
 import { coerce, parseUrl, type ParsedUrl } from '../url';
+import {
+  SOUNDCLOUD_WIDGET_HOST as WIDGET_HOST,
+  soundcloudFrame,
+} from '../frames';
 
 // Embed code names the sound by API id, a URL by permalink; both are canonical (docs/decisions.md D71).
 
@@ -57,7 +61,6 @@ const NOT_SOUNDS = new Set([
   'toptracks',
 ]);
 const SECRET_TOKEN = new RegExp(`^${SECRET}$`);
-const WIDGET_HOST = 'w.soundcloud.com';
 
 function sound(url: string, id: string): Omit<ParsedEmbed, 'options'> {
   return { platform: 'soundcloud', kind: 'post', url, id, variant: 'iframe' };
@@ -149,5 +152,5 @@ export const soundcloud: PlatformParser = {
     const found = fromApi(url) ?? fromPage(url);
     return found && { ...found, options: {} };
   },
-  ownsFrame: (src) => src.host === WIDGET_HOST,
+  ownsFrame: soundcloudFrame,
 };

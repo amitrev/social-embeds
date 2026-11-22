@@ -17,7 +17,8 @@ export function parseUrl(input: string): ParsedUrl | null {
   const [, host = '', path = '', search = '', fragment] = match;
 
   const query = new Map<string, string>();
-  for (const pair of search.split('&')) {
+  // A URL copied from HTML source keeps its `&amp;`.
+  for (const pair of search.replaceAll('&amp;', '&').split('&')) {
     if (pair === '') continue;
     const eq = pair.indexOf('=');
     const key = decodeComponent(eq === -1 ? pair : pair.slice(0, eq));

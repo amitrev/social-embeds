@@ -1,3 +1,4 @@
+import type { HtmlElement, HtmlNode } from '../html';
 import {
   type Options,
   type PlatformParser,
@@ -7,6 +8,7 @@ import {
 } from '../platform';
 import type { ParsedEmbed } from '../types';
 import { coerce, parseUrl, type ParsedUrl } from '../url';
+import { VIMEO_PLAYER_HOST as PLAYER_HOST, vimeoFrame } from '../frames';
 
 // Vimeo's responsive snippet keeps the ratio only in its wrapper (docs/decisions.md D61).
 
@@ -26,7 +28,6 @@ const SCRIPT = /^(?:https?:)?\/\/player\.vimeo\.com\/api\/player\.js$/;
 // Vimeo adds these to its own code; they choose nothing about the video.
 const DROPPED = new Set(['h', 'app_id', 'player_id']);
 const START = /^t=(\d+(?:\.\d+)?|(?:\d+h)?(?:\d+m)?(?:\d+s)?)$/;
-const PLAYER_HOST = 'player.vimeo.com';
 
 function video(
   id: string,
@@ -44,6 +45,49 @@ function video(
 function start(url: ParsedUrl): Options {
   const [, time] = START.exec(url.fragment ?? '') ?? [];
   return time ? { t: time } : {};
+}
+
+function fromPage(url: ParsedUrl | null): Omit<ParsedEmbed, 'options'> | null {
+  if (!url || !HOSTS.has(url.host)) return null;
+  for (const path of PAGE_PATHS) {
+    const [, id, hash] = path.exec(url.path) ?? [];
+    if (id !== undefined) return video(id, hash);
+  }
+  return null;
+}
+
+function isLink(
+  node: HtmlNode | undefined,
+  test: (url: ParsedUrl) => boolean,
+): boolean {
+  if (node?.type !== 'element' || node.tag !== 'a' || node.attrs.size !== 1)
+    return false;
+  const href = parseUrl(node.attrs.get('href') ?? '');
+  return (
+    href !== null &&
+    HOSTS.has(href.host) &&
+    test(href) &&
+    node.children.every((child) => child.type === 'text')
+  );
+}
+
+function isText(node: HtmlNode | undefined, text: string): boolean {
+  return node?.type === 'text' && node.raw.trim() === text;
+}
+
+/** Older embed code's credit: the video, its author and Vimeo, linked; it is dropped. */
+function isCredit(element: HtmlElement, embed: ParsedEmbed): boolean {
+  if (element.tag !== 'p' || element.attrs.size !== 0) return false;
+  const [title, from, author, on, home, stop, ...rest] = element.children;
+  return (
+    rest.length === 0 &&
+    isLink(title, (url) => fromPage(url)?.id === embed.id) &&
+    isText(from, 'from') &&
+    isLink(author, () => true) &&
+    isText(on, 'on') &&
+    isLink(home, (url) => url.path === '' || url.path === '/') &&
+    isText(stop, '.')
+  );
 }
 
 function fromPlayer(url: ParsedUrl | null): ParsedEmbed | null {
@@ -70,15 +114,12 @@ export const vimeo: PlatformParser = {
     return embed && withSize(embed, wrapped?.size ?? sizeOf(iframe));
   },
   isOwnScript: (src) => SCRIPT.test(src),
+  isOwnExtra: isCredit,
   match(url) {
     const player = fromPlayer(url);
     if (player) return player;
-    if (!HOSTS.has(url.host)) return null;
-    for (const path of PAGE_PATHS) {
-      const [, id, hash] = path.exec(url.path) ?? [];
-      if (id !== undefined) return { ...video(id, hash), options: start(url) };
-    }
-    return null;
+    const page = fromPage(url);
+    return page && { ...page, options: start(url) };
   },
-  ownsFrame: (src) => src.host === PLAYER_HOST,
+  ownsFrame: vimeoFrame,
 };

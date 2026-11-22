@@ -2,13 +2,13 @@ import {
   type Options,
   type PlatformParser,
   sizeOf,
-  underPath,
   unwrapRatio,
   withSize,
 } from '../platform';
 import type { HtmlElement } from '../html';
 import type { ParsedEmbed } from '../types';
 import { coerce, parseUrl, type ParsedUrl } from '../url';
+import { streamableFrame } from '../frames';
 
 // Two wrapper styles and one stray `</div>` are accepted (docs/decisions.md D96).
 
@@ -101,7 +101,5 @@ export const streamable: PlatformParser = {
     const id = idOf(url);
     return id === undefined ? null : { ...video(id), options: {} };
   },
-  ownsFrame: (src) =>
-    src.host === 'streamable.com' &&
-    (underPath(src.path, '/e') || underPath(src.path, '/o')),
+  ownsFrame: streamableFrame,
 };

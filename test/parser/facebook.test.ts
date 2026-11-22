@@ -259,6 +259,20 @@ describe('Facebook URLs (shapes verified in docs/decisions.md D21)', () => {
         'https://www.facebook.com/facebook/photos/a.1000000000001/1000000000000001/',
       ),
     ],
+    [
+      'https://www.facebook.com/facebook/photos/pb.100064860875397.-2207520000/1000000000000001',
+      post(
+        '1000000000000001',
+        'https://www.facebook.com/facebook/photos/pb.100064860875397.-2207520000/1000000000000001/',
+      ),
+    ],
+    [
+      'https://www.facebook.com/facebook/photos/a.1000000000000001.1000000001.1000000000001/1000000000000001/',
+      post(
+        '1000000000000001',
+        'https://www.facebook.com/facebook/photos/a.1000000000000001.1000000001.1000000000001/1000000000000001/',
+      ),
+    ],
     [docsVideo, video('10153231379946729', docsVideo)],
     [
       'https://www.facebook.com/facebook/videos/how-to-share-with-just-friends/10153231379946729',
