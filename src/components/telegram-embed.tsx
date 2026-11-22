@@ -1,4 +1,5 @@
 import { telegramPlan, type TelegramOptions } from '../core/plans/telegram';
+import { telegram } from '../parser/platforms/telegram';
 import { useReportError } from './hooks';
 import { IframeEmbed, planProps } from './iframe-embed';
 import { type EmbedSource, resolveEmbed, type SharedProps } from './shared';
@@ -22,7 +23,7 @@ export function TelegramEmbed(props: TelegramEmbedProps) {
     darkColor,
     ...shared
   } = props;
-  const { embed, error } = resolveEmbed(url, given, 'telegram');
+  const { embed, error } = resolveEmbed(url, given, telegram);
   const plan = embed
     ? telegramPlan(embed, { userpic, color, dark, darkColor })
     : undefined;

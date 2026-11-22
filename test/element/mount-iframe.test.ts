@@ -43,15 +43,16 @@ let onLoad: ReturnType<typeof vi.fn>;
 let onError: ReturnType<typeof vi.fn>;
 
 function mount(plan: IframePlan, eager = false, placeholder: Node[] = []) {
-  const cleanup = mountIframe(host, plan, {
+  const { wrapper, cleanup } = mountIframe(host, plan, {
     eager,
     placeholder,
     onLoad: onLoad as () => void,
     onError: onError as (error: Error) => void,
   });
+  expect(host.lastElementChild).toBe(wrapper);
   return {
     cleanup,
-    wrapper: host.firstElementChild as HTMLElement,
+    wrapper,
     iframe: () => host.querySelector('iframe'),
   };
 }

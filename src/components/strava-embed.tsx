@@ -1,4 +1,5 @@
 import { stravaPlan, type StravaOptions } from '../core/plans/strava';
+import { strava } from '../parser/platforms/strava';
 import { useReportError } from './hooks';
 import { IframeEmbed, planProps } from './iframe-embed';
 import { type EmbedSource, resolveEmbed, type SharedProps } from './shared';
@@ -21,7 +22,7 @@ export function StravaEmbed(props: StravaEmbedProps) {
     mapHash,
     ...shared
   } = props;
-  const { embed, error } = resolveEmbed(url, given, 'strava');
+  const { embed, error } = resolveEmbed(url, given, strava);
   const plan = embed
     ? stravaPlan(embed, { embedStyle, fullWidth, mapHash })
     : undefined;

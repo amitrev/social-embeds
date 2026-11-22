@@ -12,6 +12,7 @@ import { pinterestPlan } from '../../src/core/plans/pinterest';
 import { threadsPlan } from '../../src/core/plans/threads';
 import { xPlan } from '../../src/core/plans/x';
 import { resolveEmbed } from '../../src/core/resolve';
+import { parserFor } from '../../src/parser/platforms';
 import { parseEmbed, type ParsedEmbed, type Platform } from '../../src/parser';
 import postIframe from '../fixtures/facebook/post-iframe.html?raw';
 import videoIframe from '../fixtures/facebook/video-iframe-reel.html?raw';
@@ -21,8 +22,13 @@ import pinterestIframe from '../fixtures/pinterest/oembed-iframe.html?raw';
 import threadsCode from '../fixtures/threads/embed-dialog.html?raw';
 import xOptions from '../fixtures/x/oembed-options.html?raw';
 
+function parser(platform: Platform) {
+  const found = parserFor(platform);
+  if (!found) throw new Error(`no parser for ${platform}`);
+  return found;
+}
 function fromUrl(url: string, platform: Platform): ParsedEmbed {
-  const { embed } = resolveEmbed(url, undefined, platform);
+  const { embed } = resolveEmbed(url, undefined, parser(platform));
   if (!embed) throw new Error('url did not resolve');
   return embed;
 }
@@ -30,7 +36,7 @@ function fromUrl(url: string, platform: Platform): ParsedEmbed {
 function fromCode(html: string, platform: Platform): ParsedEmbed {
   const parsed = parseEmbed(html);
   if (!parsed) throw new Error('fixture did not parse');
-  const { embed } = resolveEmbed(undefined, parsed, platform);
+  const { embed } = resolveEmbed(undefined, parsed, parser(platform));
   if (!embed) throw new Error('fixture did not verify');
   return embed;
 }

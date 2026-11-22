@@ -1,4 +1,5 @@
 import type { PlatformParser } from '../platform';
+import type { Platform } from '../types';
 import { applemusic } from './applemusic';
 import { applepodcasts } from './applepodcasts';
 import { bluesky } from './bluesky';
@@ -60,3 +61,7 @@ export const platforms: readonly PlatformParser[] = [
   bluesky,
   tumblr,
 ];
+
+export function parserFor(platform: Platform): PlatformParser | undefined {
+  return platforms.find((parser) => parser.platform === platform);
+}

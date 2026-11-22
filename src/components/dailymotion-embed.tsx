@@ -1,3 +1,4 @@
+import { dailymotion } from '../parser/platforms/dailymotion';
 import {
   dailymotionPlan,
   type DailymotionOptions,
@@ -28,7 +29,7 @@ export function DailymotionEmbed(props: DailymotionEmbedProps) {
     loop,
     ...frame
   } = props;
-  const { embed, error } = resolveEmbed(url, given, 'dailymotion');
+  const { embed, error } = resolveEmbed(url, given, dailymotion);
   const plan = embed
     ? dailymotionPlan(embed, { playerId, mute, startTime, loop })
     : undefined;
@@ -42,6 +43,7 @@ export function DailymotionEmbed(props: DailymotionEmbedProps) {
     <IframeEmbed
       {...frame}
       {...planProps(plan)}
+      onError={onError}
       maxWidth={maxWidth ?? plan.maxWidth}
     />
   );

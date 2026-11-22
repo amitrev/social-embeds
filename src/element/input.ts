@@ -25,9 +25,10 @@ function template(element: Element): HTMLTemplateElement | undefined {
   return undefined;
 }
 
-/** The `html` property, else the first `<template>` child, else the `url` attribute. */
+/** The `html` property, else the `html` attribute, else the first `<template>` child, else the `url` attribute. */
 export function readInput(element: Element, html: string | null): Input {
-  const content = html ?? template(element)?.innerHTML;
+  const content =
+    html ?? element.getAttribute('html') ?? template(element)?.innerHTML;
   const url = element.getAttribute('url');
   const width = element.getAttribute('width');
   return {

@@ -1,4 +1,5 @@
 import { redditPlan, type RedditOptions } from '../core/plans/reddit';
+import { reddit } from '../parser/platforms/reddit';
 import { useReportError } from './hooks';
 import { IframeEmbed, planProps } from './iframe-embed';
 import { type EmbedSource, resolveEmbed, type SharedProps } from './shared';
@@ -24,7 +25,7 @@ export function RedditEmbed(props: RedditEmbedProps) {
     depth,
     ...shared
   } = props;
-  const { embed, error } = resolveEmbed(url, given, 'reddit');
+  const { embed, error } = resolveEmbed(url, given, reddit);
   const plan = embed
     ? redditPlan(embed, {
         theme,

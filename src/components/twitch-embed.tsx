@@ -1,4 +1,5 @@
 import { twitchPlan, type TwitchOptions } from '../core/plans/twitch';
+import { twitch } from '../parser/platforms/twitch';
 import { useReportError } from './hooks';
 import { IframeEmbed, planProps } from './iframe-embed';
 import { type EmbedSource, type FrameProps, resolveEmbed } from './shared';
@@ -21,7 +22,7 @@ export function TwitchEmbed(props: TwitchEmbedProps) {
     time,
     ...frame
   } = props;
-  const { embed, error } = resolveEmbed(url, given, 'twitch');
+  const { embed, error } = resolveEmbed(url, given, twitch);
   const plan = embed ? twitchPlan(embed, { autoplay, muted, time }) : undefined;
   useReportError(
     error ?? (plan?.kind === 'error' ? plan.message : undefined),
@@ -33,6 +34,7 @@ export function TwitchEmbed(props: TwitchEmbedProps) {
     <IframeEmbed
       {...frame}
       {...planProps(plan)}
+      onError={onError}
       maxWidth={maxWidth ?? plan.maxWidth}
     />
   );

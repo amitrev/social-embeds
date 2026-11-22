@@ -6,6 +6,6 @@ import type { FrameProps } from './shared';
 export function FacebookVideoIframe({
   embed,
   ...frame
-}: Omit<FrameProps, 'onError'> & { embed: ParsedEmbed }) {
+}: FrameProps & { embed: ParsedEmbed }) {
   return <IframeEmbed {...frame} {...planProps(facebookVideoPlan(embed))} />;
 }

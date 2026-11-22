@@ -1,5 +1,6 @@
 import { type CSSProperties, useEffect, useRef, useState } from 'react';
 import type { Driver } from '../core/drivers';
+import { postLinkText, postUrl } from '../core/post-link';
 import {
   RENDER_ATTEMPTS,
   RENDER_TIMEOUT_MS,
@@ -46,6 +47,7 @@ export function ScriptEmbed({
   const container = useRef<HTMLDivElement>(null);
   const near = useNearViewport(container, lazy);
   const [rendered, setRendered] = useState(false);
+  const [failure, setFailure] = useState<{ href: string | undefined }>();
   const callbacks = useRef({ onLoad, onError });
   useEffect(() => {
     callbacks.current = { onLoad, onError };
@@ -58,6 +60,7 @@ export function ScriptEmbed({
     let done = false;
     let timer: ReturnType<typeof setTimeout> | undefined;
     let stop = () => {};
+    const href = postUrl(element);
 
     // Any attempt's render signal counts, even one that arrives after a retry began.
     const finish = () => {
@@ -68,12 +71,16 @@ export function ScriptEmbed({
       setRendered(true);
       callbacks.current.onLoad?.();
     };
+    const fail = (error: Error) => {
+      setFailure({ href });
+      callbacks.current.onError?.(error);
+    };
     const retryOrFail = (number: number, error: Error) => {
       if (cancelled || done) return;
       stop();
       stop = () => {};
       if (number >= RENDER_ATTEMPTS) {
-        callbacks.current.onError?.(error);
+        fail(error);
         return;
       }
       timer = setTimeout(
@@ -105,7 +112,7 @@ export function ScriptEmbed({
         attempt(1);
       },
       (error: unknown) => {
-        if (!cancelled) callbacks.current.onError?.(toError(error));
+        if (!cancelled) fail(toError(error));
       },
     );
     // Platforms offer no API to tear an embed down; removing the container is the cleanup.
@@ -130,7 +137,11 @@ export function ScriptEmbed({
         />
         {!hasFallback &&
           !rendered &&
-          (placeholder ?? <Skeleton minHeight={minHeight} />)}
+          (failure
+            ? failure.href !== undefined && (
+                <a href={failure.href}>{postLinkText(label)}</a>
+              )
+            : (placeholder ?? <Skeleton minHeight={minHeight} />))}
       </div>
     </div>
   );

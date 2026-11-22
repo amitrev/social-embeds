@@ -1,4 +1,5 @@
 import { xPlan, type XOptions } from '../core/plans/x';
+import { x } from '../parser/platforms/x';
 import { useReportError } from './hooks';
 import { ScriptEmbed } from './script-embed';
 import { type EmbedSource, resolveEmbed, type SharedProps } from './shared';
@@ -23,7 +24,7 @@ export function XEmbed(props: XEmbedProps) {
     dnt,
     ...shared
   } = props;
-  const { embed, error } = resolveEmbed(url, given, 'x');
+  const { embed, error } = resolveEmbed(url, given, x);
   const plan = embed
     ? xPlan(embed, { theme, conversation, cards, align, lang, dnt })
     : undefined;

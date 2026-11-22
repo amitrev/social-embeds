@@ -1,4 +1,5 @@
 import { kickPlan, type KickOptions } from '../core/plans/kick';
+import { kick } from '../parser/platforms/kick';
 import { useReportError } from './hooks';
 import { IframeEmbed, planProps } from './iframe-embed';
 import { type EmbedSource, type FrameProps, resolveEmbed } from './shared';
@@ -20,7 +21,7 @@ export function KickEmbed(props: KickEmbedProps) {
     muted,
     ...frame
   } = props;
-  const { embed, error } = resolveEmbed(url, given, 'kick');
+  const { embed, error } = resolveEmbed(url, given, kick);
   const plan = embed ? kickPlan(embed, { autoplay, muted }) : undefined;
   useReportError(
     error ?? (plan?.kind === 'error' ? plan.message : undefined),

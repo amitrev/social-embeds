@@ -1,4 +1,5 @@
-import { act, cleanup, render } from '@testing-library/react';
+import { act, cleanup, render, within } from '@testing-library/react';
+import type { ReactElement } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   FacebookEmbed,
@@ -134,7 +135,7 @@ describe('XEmbed', () => {
     vi.useFakeTimers();
     const twttr = fakeTwttr();
     const onError = vi.fn();
-    render(
+    const { container } = render(
       <XEmbed
         url="https://x.com/jack/status/20"
         onError={onError}
@@ -157,9 +158,16 @@ describe('XEmbed', () => {
     await act(async () => {
       await vi.advanceTimersByTimeAsync(15_000);
     });
+    expect(onError).toHaveBeenCalledOnce();
     expect(onError).toHaveBeenCalledWith(
       new Error('social-embeds: the X embed did not render'),
     );
+    expect(container.querySelector('[aria-hidden="true"]')).toBeNull();
+    expect(
+      within(container)
+        .getByRole('link', { name: 'View this post on X' })
+        .getAttribute('href'),
+    ).toBe('https://x.com/jack/status/20');
   });
 
   it('reports a script that fails to load', async () => {
@@ -168,6 +176,18 @@ describe('XEmbed', () => {
     render(<XEmbed url="https://x.com/jack/status/20" onError={onError} />);
     await enter();
     expect(onError).toHaveBeenCalledWith(new Error('no network'));
+  });
+
+  it('keeps the fallback content of embed code when the script fails', async () => {
+    load.mockImplementation(() => Promise.reject(new Error('blocked')));
+    const onError = vi.fn();
+    const { container } = render(
+      <XEmbed embed={parsed(xOptions)} onError={onError} />,
+    );
+    await enter();
+    expect(onError).toHaveBeenCalledOnce();
+    expect(container.textContent).toContain('just setting up my twttr');
+    expect(container.textContent).not.toContain('View this post');
   });
 
   it('stops watching on unmount', async () => {
@@ -496,4 +516,84 @@ describe('PinterestEmbed', () => {
       '600px',
     );
   });
+});
+
+describe('a platform script that fails', () => {
+  const cases: [
+    string,
+    string,
+    (onError: (error: Error) => void) => ReactElement,
+  ][] = [
+    [
+      'X',
+      'https://x.com/jack/status/20',
+      (onError) => (
+        <XEmbed
+          url="https://x.com/jack/status/20"
+          placeholder={<span>loading</span>}
+          onError={onError}
+        />
+      ),
+    ],
+    [
+      'Instagram',
+      'https://www.instagram.com/reel/DfkYarGBOtk/',
+      (onError) => (
+        <InstagramEmbed
+          url="https://www.instagram.com/reels/DfkYarGBOtk/"
+          onError={onError}
+        />
+      ),
+    ],
+    [
+      'Threads',
+      'https://www.threads.com/t/Df5MmLBm0O7',
+      (onError) => (
+        <ThreadsEmbed
+          url="https://www.threads.com/@instagram/post/Df5MmLBm0O7"
+          onError={onError}
+        />
+      ),
+    ],
+    [
+      'Facebook',
+      'https://www.facebook.com/facebook/posts/1710463914458955',
+      (onError) => (
+        <FacebookEmbed
+          url="https://m.facebook.com/facebook/posts/1710463914458955"
+          onError={onError}
+        />
+      ),
+    ],
+    [
+      'Pinterest',
+      'https://www.pinterest.com/pin/424605071145752542/',
+      (onError) => (
+        <PinterestEmbed
+          url="https://www.pinterest.com/pin/424605071145752542/"
+          onError={onError}
+        />
+      ),
+    ],
+  ];
+
+  it.each(cases)(
+    'replaces the %s placeholder with a link to the post',
+    async (label, href, view) => {
+      load.mockImplementation(() => Promise.reject(new Error('blocked')));
+      const onError = vi.fn();
+      const { container } = render(view(onError));
+      expect(container.querySelector('[aria-hidden="true"], span')).not.toBe(
+        null,
+      );
+      await enter();
+      expect(onError).toHaveBeenCalledOnce();
+      expect(container.querySelector('[aria-hidden="true"]')).toBeNull();
+      expect(container.textContent).not.toContain('loading');
+      const link = within(container).getByRole('link', {
+        name: `View this post on ${label}`,
+      });
+      expect(link.getAttribute('href')).toBe(href);
+    },
+  );
 });

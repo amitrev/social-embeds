@@ -1,4 +1,5 @@
 import { facebookPlan, type FacebookOptions } from '../core/plans/facebook';
+import { facebook } from '../parser/platforms/facebook';
 import { useReportError } from './hooks';
 import { IframeEmbed, planProps } from './iframe-embed';
 import { ScriptEmbed } from './script-embed';
@@ -26,7 +27,7 @@ export function FacebookEmbed(props: FacebookEmbedProps) {
     maxHeight,
     ...shared
   } = props;
-  const { embed, error } = resolveEmbed(url, given, 'facebook');
+  const { embed, error } = resolveEmbed(url, given, facebook);
   const plan = embed
     ? facebookPlan(embed, {
         locale,
@@ -45,6 +46,7 @@ export function FacebookEmbed(props: FacebookEmbedProps) {
       <IframeEmbed
         {...shared}
         {...planProps(plan)}
+        onError={onError}
         maxWidth={maxWidth ?? plan.maxWidth}
         height={height}
         maxHeight={maxHeight}

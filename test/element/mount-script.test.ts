@@ -27,13 +27,14 @@ function plan(driver: Driver, extra: Partial<ScriptPlan> = {}): ScriptPlan {
 }
 
 function mount(p: ScriptPlan, placeholder: Node[] = []) {
-  const cleanup = mountScript(host, p, {
+  const { wrapper, cleanup } = mountScript(host, p, {
     eager: false,
     placeholder,
     onLoad: onLoad as () => void,
     onError: onError as (error: Error) => void,
   });
-  return { cleanup, wrapper: host.firstElementChild as HTMLElement };
+  expect(host.lastElementChild).toBe(wrapper);
+  return { cleanup, wrapper };
 }
 
 const skeletonOf = () => host.querySelector('[aria-hidden="true"]');
@@ -147,6 +148,73 @@ describe('mountScript', () => {
     expect(onError).toHaveBeenCalledWith(
       new Error('social-embeds: the X embed did not render'),
     );
+    expect(skeletonOf()).toBeNull();
+  });
+
+  it('replaces the placeholder with a link to the post after the final failure', async () => {
+    const marker = document.createElement('span');
+    const { wrapper } = mount(
+      plan(
+        { load: () => Promise.reject(new Error('blocked')), render: vi.fn() },
+        {
+          markup:
+            '<blockquote><a href="https://x.com/jack/status/20"></a></blockquote>',
+        },
+      ),
+      [marker],
+    );
+    lastObserver().enter();
+    await flush();
+    expect(onError).toHaveBeenCalledTimes(1);
+    expect(host.contains(marker)).toBe(false);
+    const box = wrapper.firstElementChild;
+    expect(box?.children).toHaveLength(2);
+    const link = box?.lastElementChild;
+    expect(link?.outerHTML).toBe(
+      '<a href="https://x.com/jack/status/20">View this post on X</a>',
+    );
+  });
+
+  it('keeps fallback content and adds no link after the final failure', async () => {
+    const { wrapper } = mount(
+      plan(
+        { load: () => Promise.reject(new Error('blocked')), render: vi.fn() },
+        {
+          markup:
+            '<blockquote><p>post</p><a href="https://x.com/jack/status/20">date</a></blockquote>',
+          hasFallback: true,
+        },
+      ),
+    );
+    lastObserver().enter();
+    await flush();
+    expect(onError).toHaveBeenCalledTimes(1);
+    expect(wrapper.firstElementChild?.children).toHaveLength(1);
+    expect(wrapper.textContent).toBe('postdate');
+  });
+
+  it('drops the link when a render signal arrives after the final failure', async () => {
+    let late: (() => void) | undefined;
+    const render = vi.fn((_: HTMLElement, done: () => void) => {
+      late ??= done;
+      return () => {};
+    });
+    mount(
+      plan(
+        { load: () => Promise.resolve(), render },
+        { markup: '<a href="https://www.pinterest.com/pin/1/"></a>' },
+      ),
+    );
+    lastObserver().enter();
+    await flush();
+    await vi.advanceTimersByTimeAsync(
+      RENDER_TIMEOUT_MS * RENDER_ATTEMPTS + RETRY_DELAY_MS * 3,
+    );
+    expect(onError).toHaveBeenCalledTimes(1);
+    expect(host.textContent).toBe('View this post on X');
+    late?.();
+    expect(host.textContent).toBe('');
+    expect(onLoad).toHaveBeenCalledTimes(1);
   });
 
   it('counts a late signal from an earlier attempt', async () => {

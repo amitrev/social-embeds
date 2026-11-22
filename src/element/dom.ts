@@ -7,6 +7,8 @@ export type MountOptions = FrameLayout & {
   onError: (error: Error) => void;
 };
 
+export type Mounted = { wrapper: HTMLElement; cleanup: () => void };
+
 const LENGTHS = new Set([
   'width',
   'maxWidth',

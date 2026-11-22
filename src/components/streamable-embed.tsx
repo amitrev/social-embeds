@@ -1,3 +1,4 @@
+import { streamable } from '../parser/platforms/streamable';
 import {
   streamablePlan,
   type StreamableOptions,
@@ -26,7 +27,7 @@ export function StreamableEmbed(props: StreamableEmbedProps) {
     nocontrols,
     ...frame
   } = props;
-  const { embed, error } = resolveEmbed(url, given, 'streamable');
+  const { embed, error } = resolveEmbed(url, given, streamable);
   const plan = embed
     ? streamablePlan(embed, { autoplay, hd, loop, muted, nocontrols })
     : undefined;

@@ -1,4 +1,5 @@
 import { youtubePlan, type YouTubeOptions } from '../core/plans/youtube';
+import { youtube } from '../parser/platforms/youtube';
 import { useReportError } from './hooks';
 import { IframeEmbed, planProps } from './iframe-embed';
 import { type EmbedSource, type FrameProps, resolveEmbed } from './shared';
@@ -38,7 +39,7 @@ export function YouTubeEmbed(props: YouTubeEmbedProps) {
     nocookie,
     ...frame
   } = props;
-  const { embed, error } = resolveEmbed(url, given, 'youtube');
+  const { embed, error } = resolveEmbed(url, given, youtube);
   const plan = embed
     ? youtubePlan(embed, {
         autoplay,
@@ -74,6 +75,7 @@ export function YouTubeEmbed(props: YouTubeEmbedProps) {
     <IframeEmbed
       {...frame}
       {...planProps(plan)}
+      onError={onError}
       maxWidth={maxWidth ?? plan.maxWidth}
     />
   );

@@ -1,4 +1,5 @@
 import { flickrPlan, type FlickrOptions } from '../core/plans/flickr';
+import { flickr } from '../parser/platforms/flickr';
 import { useReportError } from './hooks';
 import { fallbackPlaceholder, IframeEmbed, planProps } from './iframe-embed';
 import { type EmbedSource, type FrameProps, resolveEmbed } from './shared';
@@ -22,7 +23,7 @@ export function FlickrEmbed(props: FlickrEmbedProps) {
     placeholder,
     ...frame
   } = props;
-  const { embed, error } = resolveEmbed(url, given, 'flickr');
+  const { embed, error } = resolveEmbed(url, given, flickr);
   const plan = embed
     ? flickrPlan(embed, { header, footer, context })
     : undefined;

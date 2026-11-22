@@ -1,8 +1,11 @@
+import { cleanup, render } from '@testing-library/react';
+import { createElement } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { dailymotionPlan } from '../../src/core/plans/dailymotion';
 import { youtubePlan } from '../../src/core/plans/youtube';
 import { lookupMessage } from '../../src/core/resolve';
 import { SocialEmbedElement } from '../../src/element';
+import { loadPlatformScript } from '../../src/loader/platform-scripts';
 import { matchUrl, type ParsedEmbed, parseIframe } from '../../src/parser';
 import datawrapperCode from '../fixtures/generic/datawrapper-oembed.html?raw';
 import mapsCode from '../fixtures/generic/google-maps-embed.html?raw';
@@ -57,11 +60,18 @@ const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
 
 const iframes = (element: Element) => element.querySelectorAll('iframe');
 
+const outputs = (element: Element) =>
+  element.querySelectorAll(':scope > [slot="embed"]');
+
+const slotted = (element: Element) =>
+  element.shadowRoot?.querySelector('slot')?.assignedNodes() ?? [];
+
 beforeEach(() => {
   installObserver();
 });
 
 afterEach(() => {
+  cleanup();
   document.body.innerHTML = '';
   vi.unstubAllGlobals();
   vi.restoreAllMocks();
@@ -101,23 +111,54 @@ describe('<social-embed>', () => {
     const tweet = element.querySelector('.twitter-tweet');
     expect(tweet?.textContent).toContain('just setting up my twttr');
     expect(element.querySelector('script')).toBeNull();
+    expect(document.querySelector('.twitter-tweet')).toBe(tweet);
+    expect(slotted(element)).toEqual([...outputs(element)]);
   });
 
-  it('prefers the html property over a template, and a template over url', () => {
+  it('prefers the html property, then the html attribute, then a template, then url', async () => {
     const element = create(
       { url: TELEGRAM, eager: '' },
       `<template>${youtubeCode}</template>`,
     );
     document.body.append(element);
+    const src = () => element.querySelector('iframe')?.getAttribute('src');
+    expect(src()).toContain('youtube');
+    element.setAttribute('html', vimeoCode);
+    expect(src()).toContain('player.vimeo.com');
+    element.html = mapsCode;
+    expect(iframes(element)).toHaveLength(1);
+    expect(src()).toContain('google.com/maps');
+    expect(element.html).toBe(mapsCode);
+    element.html = null;
+    expect(src()).toContain('player.vimeo.com');
+    element.removeAttribute('html');
+    expect(src()).toContain('youtube');
+    element.querySelector('template')?.remove();
+    await flush();
+    expect(src()).toContain('t.me');
+  });
+
+  it('renders embed code from an html attribute', () => {
+    const element = create({ html: youtubeCode, eager: '' });
+    document.body.append(element);
+    expect(element.html).toBeNull();
     expect(element.querySelector('iframe')?.getAttribute('src')).toContain(
       'youtube',
     );
-    element.html = vimeoCode;
-    expect(iframes(element)).toHaveLength(1);
-    expect(element.querySelector('iframe')?.getAttribute('src')).toContain(
+  });
+
+  it('renders html that React set as an attribute before define', () => {
+    const { container } = render(
+      createElement('social-embed-react', { html: vimeoCode, eager: '' }),
+    );
+    const element = container.firstElementChild;
+    expect(element?.getAttribute('html')).toBe(vimeoCode);
+    class Late extends SocialEmbedElement {}
+    customElements.define('social-embed-react', Late);
+    expect(element).toBeInstanceOf(Late);
+    expect(element?.querySelector('iframe')?.getAttribute('src')).toContain(
       'player.vimeo.com',
     );
-    expect(element.html).toBe(vimeoCode);
   });
 
   it('re-renders when the template is replaced', async () => {
@@ -497,21 +538,158 @@ describe('<social-embed>', () => {
     );
   });
 
-  it('shows a child as the placeholder until load', async () => {
+  it('shows a copy of its children as the placeholder until load', async () => {
     const element = create({ url: YOUTUBE, eager: '' }, '<p>wait</p>');
     const original = element.querySelector('p');
     document.body.append(element);
     const { loads } = listen(element);
-    expect(original?.isConnected).toBe(false);
-    expect(element.querySelectorAll('p')).toHaveLength(1);
-    expect(element.querySelector('p')?.textContent).toBe('wait');
+    const [wrapper] = outputs(element);
+    expect(original?.parentNode).toBe(element);
+    expect(wrapper?.querySelector('p')?.textContent).toBe('wait');
     expect(element.querySelector('[aria-hidden="true"]')).toBeNull();
     element.querySelector('iframe')?.dispatchEvent(new Event('load'));
     await flush();
-    expect(element.querySelector('p')).toBeNull();
+    expect(wrapper?.querySelector('p')).toBeNull();
+    expect(original?.parentNode).toBe(element);
     expect(loads).toHaveBeenCalledOnce();
+    if (original) original.textContent = 'later';
     element.setAttribute('url', YOUTUBE_SHORT);
-    expect(element.querySelector('p')?.textContent).toBe('wait');
+    expect(outputs(element)[0]?.querySelector('p')?.textContent).toBe('later');
+  });
+
+  it('renders only its output, never its own children', () => {
+    const element = create(
+      { url: YOUTUBE, eager: '' },
+      'text<p>wait</p><!--?lit$1$-->',
+    );
+    const children = [...element.childNodes];
+    document.body.append(element);
+    expect([...element.childNodes].slice(0, -1)).toEqual(children);
+    const slots = element.shadowRoot?.querySelectorAll('slot');
+    expect(slots).toHaveLength(1);
+    expect(slots?.[0]?.name).toBe('embed');
+    expect(outputs(element)).toHaveLength(1);
+    expect(slotted(element)).toEqual([...outputs(element)]);
+  });
+
+  it('leaves children added after render in place, without rendering again', async () => {
+    const element = create({ url: YOUTUBE, eager: '' });
+    document.body.append(element);
+    const iframe = element.querySelector('iframe');
+    const late = document.createElement('p');
+    element.append(late);
+    await flush();
+    expect(late.parentNode).toBe(element);
+    expect(element.querySelector('iframe')).toBe(iframe);
+    expect(slotted(element)).toEqual([...outputs(element)]);
+  });
+
+  it('keeps a conditional React child and the embed when the condition flips', async () => {
+    const view = (loading: boolean) =>
+      createElement(
+        'social-embed',
+        { url: YOUTUBE, eager: true },
+        loading ? createElement('p', null, 'Loading') : null,
+        createElement('span', null, 'after'),
+      );
+    const { container, rerender } = render(view(true));
+    const element = container.firstElementChild as SocialEmbedElement;
+    const iframe = element.querySelector('iframe');
+    expect(iframe).not.toBeNull();
+    expect(() => {
+      rerender(view(false));
+    }).not.toThrow();
+    await flush();
+    expect(element.querySelector(':scope > p')).toBeNull();
+    expect(element.querySelector('iframe')).toBe(iframe);
+    rerender(view(true));
+    await flush();
+    expect(element.querySelector(':scope > p')?.textContent).toBe('Loading');
+    expect(element.querySelector('iframe')).toBe(iframe);
+  });
+
+  it('renders again when React replaces its text child', async () => {
+    const view = (count: number) =>
+      createElement(
+        'social-embed',
+        { url: YOUTUBE, eager: true },
+        `Loading ${String(count)}`,
+      );
+    const { container, rerender } = render(view(1));
+    const element = container.firstElementChild as SocialEmbedElement;
+    expect(iframes(element)).toHaveLength(1);
+    rerender(view(2));
+    await flush();
+    expect(element.firstChild?.textContent).toBe('Loading 2');
+    expect(iframes(element)).toHaveLength(1);
+    expect(outputs(element)[0]?.textContent).toBe('Loading 2');
+  });
+
+  it('renders again when outside code replaces its children', async () => {
+    const element = create({ url: YOUTUBE, eager: '' }, '<p>wait</p>');
+    document.body.append(element);
+    const { errors } = listen(element);
+    const iframe = element.querySelector('iframe');
+    const fresh = document.createElement('p');
+    fresh.textContent = 'morphed';
+    element.replaceChildren(fresh);
+    await flush();
+    expect(iframe?.isConnected).toBe(false);
+    expect(iframes(element)).toHaveLength(1);
+    expect(outputs(element)).toHaveLength(1);
+    expect(outputs(element)[0]?.querySelector('p')?.textContent).toBe(
+      'morphed',
+    );
+    expect(errors).not.toHaveBeenCalled();
+  });
+
+  it('drops an output copied from another element and renders its own', () => {
+    const element = create({ url: YOUTUBE, eager: '' }, '<p>wait</p>');
+    document.body.append(element);
+    const copy = element.cloneNode(true) as SocialEmbedElement;
+    const stale = copy.querySelector('[slot="embed"]');
+    expect(stale).not.toBeNull();
+    document.body.append(copy);
+    expect(stale?.isConnected).toBe(false);
+    expect(outputs(copy)).toHaveLength(1);
+    expect(iframes(copy)).toHaveLength(1);
+    document.body.insertAdjacentHTML('beforeend', element.outerHTML);
+    const saved = document.body.lastElementChild as SocialEmbedElement;
+    expect(saved).toBeInstanceOf(SocialEmbedElement);
+    expect(outputs(saved)).toHaveLength(1);
+    expect(iframes(saved)).toHaveLength(1);
+    expect(saved.querySelector('p')?.parentNode).toBe(saved);
+  });
+
+  it('replaces the skeleton with a link to the post when the platform script fails', async () => {
+    vi.mocked(loadPlatformScript).mockRejectedValueOnce(new Error('blocked'));
+    const url = 'https://x.com/jack/status/20';
+    const element = create({ url, eager: '' });
+    document.body.append(element);
+    const { errors } = listen(element);
+    expect(element.querySelector('[aria-hidden="true"]')).not.toBeNull();
+    await flush();
+    expect(errors).toHaveBeenCalledOnce();
+    expect(errors.mock.calls[0]?.[0].message).toBe('blocked');
+    expect(element.querySelector('[aria-hidden="true"]')).toBeNull();
+    const link = [...element.querySelectorAll('a')].find(
+      (anchor) => anchor.textContent !== '',
+    );
+    expect(link?.getAttribute('href')).toBe(url);
+    expect(link?.textContent).toBe('View this post on X');
+  });
+
+  it('keeps the fallback content of embed code when the platform script fails', async () => {
+    vi.mocked(loadPlatformScript).mockRejectedValueOnce(new Error('blocked'));
+    const element = create({ eager: '' }, `<template>${xCode}</template>`);
+    document.body.append(element);
+    const { errors } = listen(element);
+    await flush();
+    expect(errors).toHaveBeenCalledOnce();
+    expect(outputs(element)[0]?.textContent).toContain(
+      'just setting up my twttr',
+    );
+    expect(element.textContent).not.toContain('View this post');
   });
 
   it('dispatches nothing once removed in the same task', async () => {
@@ -534,7 +712,7 @@ describe('<social-embed>', () => {
     expect(errors).toHaveBeenCalledOnce();
   });
 
-  it('waits for parsing to capture its children', async () => {
+  it('waits for parsing before it reads its children', async () => {
     const state = vi
       .spyOn(document, 'readyState', 'get')
       .mockReturnValue('loading');
@@ -554,7 +732,7 @@ describe('<social-embed>', () => {
     expect(element.querySelector('iframe')?.getAttribute('src')).toContain(
       'youtube',
     );
-    expect(element.querySelectorAll('p')).toHaveLength(1);
-    expect(element.querySelector('p')?.parentElement).not.toBe(element);
+    expect(element.querySelector(':scope > p')).not.toBeNull();
+    expect(outputs(element)[0]?.querySelector('p')?.textContent).toBe('wait');
   });
 });

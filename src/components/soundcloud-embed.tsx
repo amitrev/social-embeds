@@ -1,3 +1,4 @@
+import { soundcloud } from '../parser/platforms/soundcloud';
 import {
   soundcloudPlan,
   type SoundCloudOptions,
@@ -31,7 +32,7 @@ export function SoundCloudEmbed(props: SoundCloudEmbedProps) {
     showArtwork,
     ...frame
   } = props;
-  const { embed, error } = resolveEmbed(url, given, 'soundcloud');
+  const { embed, error } = resolveEmbed(url, given, soundcloud);
   const plan = embed
     ? soundcloudPlan(embed, {
         visual,

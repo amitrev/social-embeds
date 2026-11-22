@@ -124,7 +124,9 @@ describe('TelegramEmbed', () => {
       />,
     );
     expect(onError).toHaveBeenCalledWith(
-      new Error('social-embeds: expected a Telegram embed, got Reddit'),
+      new Error(
+        'social-embeds: not a Telegram post URL: https://www.reddit.com/r/reddit/comments/11zso11/',
+      ),
     );
   });
 });
