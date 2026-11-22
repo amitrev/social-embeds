@@ -81,6 +81,42 @@ An unsupported URL never reaches `fallback`: nothing is rendered and `onError` n
 
 Before 0.7.0, iframe code that no platform claimed reached `fallback`. It now renders as a generic iframe. Non-iframe code, and iframes that are rejected, still reach `fallback`.
 
+#### Only the platforms you use
+
+`<SocialEmbed>` recognises every platform, so it adds about 28 KB gzipped to an app. `createSocialEmbed` makes one that recognises only the platforms you list, and a bundler leaves the others out:
+
+```tsx
+// app/social-embed.tsx
+'use client';
+
+import {
+  createSocialEmbed,
+  genericIframe,
+  instagram,
+  x,
+  youtube,
+} from 'social-embeds';
+
+export const SocialEmbed = createSocialEmbed([
+  youtube,
+  x,
+  instagram,
+  genericIframe,
+]);
+```
+
+| Platforms                                         | Gzipped |
+| ------------------------------------------------- | ------- |
+| `youtube`                                         | 7 KB    |
+| `youtube`, `x`                                    | 10 KB   |
+| `youtube`, `x`, `instagram`, `facebook`, `tiktok` | 13 KB   |
+| the same five and `genericIframe`                 | 15 KB   |
+| every platform (`<SocialEmbed>`)                  | 28 KB   |
+
+- **Names:** each platform is exported under its id, as in `embed.platform`: `x`, `instagram`, `threads`, `facebook`, `tiktok`, `youtube`, `telegram`, `snapchat`, `linkedin`, `reddit`, `pinterest`, `spotify`, `vimeo`, `twitch`, `dailymotion`, `bluesky`, `soundcloud`, `applemusic`, `applepodcasts`, `tumblr`, `kick`, `giphy`, `truthsocial`, `imgur`, `tenor`, `streamable`, `strava`, `flickr` and `rumble`. `genericIframe` adds [generic iframe embeds](#generic-iframe-embeds). The order of the list does not matter.
+- **The same component:** it takes the same props and renders exactly what `<SocialEmbed>` renders for the platforms it knows. Embed code of another platform goes to `fallback`, or to `onError` as `social-embeds: unrecognised embed code`; a URL of another platform is reported as `social-embeds: not a supported post URL: …`. A frame that a named platform serves never renders as a generic iframe, even when that platform is not in the list.
+- **A client module:** call `createSocialEmbed` once, at the top of a module with `'use client'`, and import the component from there. In the Next.js App Router a Server Component cannot call it, because it comes from a client module; it can render the component it returns.
+
 ### Platform components
 
 Each platform component takes a `url`, or an `embed` already parsed by [`social-embeds/parser`](#parser), plus the shared props and its own option props. Option props override options from the embed code.

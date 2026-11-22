@@ -1329,6 +1329,31 @@ The other rows grew by the fixes in D109, D111 and D112: YouTube by its playlist
 - **Shadow roots:** Instagram's and Threads' `process()` scans only the document, so inside another component's shadow root (Lit, Stencil) their embeds never rendered, and the element fired `error` only after about 48 s of retries. The driver now fails at once with `social-embeds: the {label} embed cannot render inside a shadow root`. X's `widgets.load(el)`, Facebook's `XFBML.parse(el)` and Pinterest's `build(el)` take the container and still work.
 - **ids:** placeholder copies no longer duplicate the children's `id`s.
 
+## `createSocialEmbed` (2026-11-22, after 0.8.1)
+
+### D113. An opt-in platform list for `<SocialEmbed>`
+
+`<SocialEmbed>` was 28.0 KB gzipped in 0.8.1, and 71% of that was per-platform code: parsers 42%, plans 17%, components 12%. Trimming the shared code (strings, regexes) could save about 5% at most; every error message together is 405 bytes. The other way, a host lookup that lazy-loads each platform's parser, plan and component, would need `Suspense`, an extra request and a placeholder flash, and `renderToString` would lose the server-side fallback content (D29). The maintainer chose an opt-in list.
+
+- **API:** `createSocialEmbed(list)` returns a component with `<SocialEmbed>`'s props that recognises only the listed platforms. Each platform is exported from the main entry under its id (`youtube`, `x`, `applemusic`, …), and `genericIframe` adds generic iframes. `<SocialEmbed>` is the same router over every platform, built on first render, so a page that imports only `createSocialEmbed` bundles none of the platforms it does not list.
+- **Pure exports:** the platform values are object literals and the list a plain array, never calls, so bundlers can drop them; `parseEmbedWith` and `matchUrlWith` take the parsers, and `genericIframe` carries `parseIframe`, so without it the iframe check is left out too. Only frame ownership (`ownedFrame`, D110) stays global: code that a named platform serves never renders as a generic iframe, even when that platform is not in the list.
+- **Order does not matter:** no fixture's element is embed code of two platforms, and no URL belongs to two (D103), so the first parser that matches is the only one. `test/parser/one-parser.test.ts` checks both, and `test/components/create-social-embed.test.tsx` renders every fixture and every playground URL through `<SocialEmbed>` and through `createSocialEmbed` with every platform, forwards and reversed, and compares the markup.
+- **A client module:** in the Next.js App Router a Server Component cannot call a function from a client module, so the README has the call at the top of a `'use client'` module. Checked in Chrome on a Next.js 16 production build: a Server Component rendered the component from such a module with YouTube, X and a generic iframe; the server HTML held the embeds' wrappers, all three rendered, and Vimeo code, not in the list, rendered nothing.
+
+Measured with esbuild from `dist`, minified, gzipped, React external:
+
+| Import                                                         | Gzipped |
+| -------------------------------------------------------------- | ------- |
+| `createSocialEmbed([youtube])`                                 | 6.9 KB  |
+| `createSocialEmbed([youtube, x])`                              | 10.1 KB |
+| `createSocialEmbed([youtube, x, instagram, facebook, tiktok])` | 13.1 KB |
+| the same five and `genericIframe`                              | 14.9 KB |
+| `<SocialEmbed>`                                                | 28.3 KB |
+
+`<SocialEmbed>` grew by 0.2 KB, for the platform table.
+
+- **Not done:** a script platform still bundles the script descriptors and drivers of all five script platforms (X, Instagram, Threads, Facebook, Pinterest), because `loadPlatformScript` picks one by name. That is about 1 KB, also in `XEmbed` alone.
+
 ## Open VERIFY items
 
 | ID  | Item                                            | Milestone | Status                                          |
