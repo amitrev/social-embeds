@@ -1,5 +1,19 @@
 # social-embeds
 
+## 0.8.0
+
+### Minor Changes
+
+- 8c20313: `<social-embed>` no longer moves or removes its own children. A framework that renders children into it, such as React's `{loading && <p />}`, no longer crashes with `NotFoundError`. The children stay in place, unrendered; the embed shows through a shadow root holding only `<slot name="embed">`, and still renders into the light DOM. If other code removes the embed, for example a framework text update or a DOM morph, it renders again. The element now also reads embed code from an `html` attribute, which React 19, Vue and Svelte write before the tag is defined.
+- 8c20313: A platform component now bundles only its own platform's parser. Importing `YouTubeEmbed` alone adds about 5.7 KB gzipped to an app instead of 16.6 KB; `XEmbed`, `InstagramEmbed` and the others are similar. `<SocialEmbed>` still recognises every platform and is about 27 KB. The package now ships one file per module, so bundlers can drop what an app does not import. A URL of another platform given to a platform component is now reported as `social-embeds: not a {Platform} post URL: …` instead of naming the other platform.
+
+### Patch Changes
+
+- 8c20313: TikTok, YouTube, Vimeo, Spotify, Twitch, Dailymotion, LinkedIn, Snapchat and Facebook video embeds now call `onError` when their frame does not load within 15 s, as the other iframe embeds do. Changing an iframe embed's `url` or `embed` now starts a fresh frame, with its placeholder, `onLoad`, timeout and starting height, instead of reusing the old one.
+- 8c20313: A platform `<script>` tag that never runs no longer stops X, Instagram, Threads, Facebook or Pinterest embeds. Tags written through `innerHTML` or `dangerouslySetInnerHTML`, as in CMS article HTML after a client-side navigation, made every embed of that platform fail with `… did not initialise` until a full reload. The package now adds its own tag at most 3 s after the page has loaded.
+- 8c20313: When an X, Instagram, Threads, Facebook or Pinterest embed fails, for example because a content blocker stops the platform's script, the grey placeholder no longer stays for good. A URL now leaves a "View this post on {Platform}" link to the post, and embed code keeps its fallback content.
+- 8c20313: More real-world input is recognised: Tenor embed code with ratios such as `data-aspect-ratio="1.77778"` (most Tenor code was rejected), X links copied from the media viewer (`/status/{id}/photo/1`) and `x.com/i/web/status/{id}`, `web.facebook.com` links, Giphy sticker pages and "Copy GIF link" URLs (`media.giphy.com/media/v1.…/{id}/giphy.gif`, `i.giphy.com/{id}.gif`), and Streamable URLs with a trailing slash.
+
 ## 0.7.1
 
 ### Patch Changes
