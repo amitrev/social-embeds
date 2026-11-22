@@ -15,6 +15,9 @@ import imgurAlbum from '../fixtures/imgur/embed-dialog-album.html?raw';
 import stravaRoute from '../fixtures/strava/route-derived.html?raw';
 import truthText from '../fixtures/truthsocial/oembed-text.html?raw';
 import truthVideo from '../fixtures/truthsocial/embed-dialog-video.html?raw';
+import { srcWithSize, watchWidth } from '../../src/core/size-in-src';
+import { listenForHeight } from '../../src/core/message-height';
+import { withParent } from '../../src/core/plans/twitch';
 
 const ORIGIN = 'https://t.me';
 const base: IframePlan = {
@@ -34,6 +37,7 @@ const sized: IframePlan = {
       const parsed = JSON.parse(data) as { event?: string; height?: number };
       return parsed.event === 'resize' ? parsed.height : undefined;
     },
+    listen: listenForHeight,
   },
   startHeight: 300,
 };
@@ -186,14 +190,14 @@ describe('mountIframe', () => {
 
   it('appends the host param', () => {
     const a = mount(
-      { ...base, src: 'https://a.test/e', hostParam: 'parent' },
+      { ...base, src: 'https://a.test/e', clientSrc: withParent },
       true,
     );
     expect(a.iframe()?.getAttribute('src')).toBe(
       'https://a.test/e?parent=localhost',
     );
     host.replaceChildren();
-    const b = mount({ ...base, hostParam: 'parent' }, true);
+    const b = mount({ ...base, clientSrc: withParent }, true);
     expect(b.iframe()?.getAttribute('src')).toBe(
       `${base.src}&parent=localhost`,
     );
@@ -341,7 +345,17 @@ describe('mountIframe', () => {
       src: 'https://embedr.flickr.com/photos/1?header=true',
       title: 'Flickr photo',
       ratio: { width: 4, height: 3 },
-      sizeInSrc: true,
+      sizeInSrc: {
+        watch: watchWidth,
+        src: (width) =>
+          srcWithSize(
+            {
+              src: 'https://embedr.flickr.com/photos/1?header=true',
+              ratio: { width: 4, height: 3 },
+            },
+            width,
+          ),
+      },
     };
 
     beforeEach(() => {
@@ -358,8 +372,16 @@ describe('mountIframe', () => {
     });
 
     it('uses the input size for the ratio', () => {
+      const size = { width: 4096, height: 2301 };
       const { iframe } = mount(
-        { ...flickr, size: { width: 4096, height: 2301 } },
+        {
+          ...flickr,
+          size,
+          sizeInSrc: {
+            watch: watchWidth,
+            src: (width) => srcWithSize({ ...flickr, size }, width),
+          },
+        },
         true,
       );
       lastResizeObserver().resize(375);

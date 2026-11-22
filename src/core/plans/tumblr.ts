@@ -1,5 +1,6 @@
 import type { ParsedEmbed } from '../../parser';
 import type { MessageHeight, Plan, PlanError } from '../plan';
+import { listenForHeight } from '../message-height';
 
 /** The frame posts a JSON string once it has painted (docs/decisions.md D74). */
 const TUMBLR_HEIGHT: MessageHeight = {
@@ -15,6 +16,7 @@ const TUMBLR_HEIGHT: MessageHeight = {
       ? height
       : undefined;
   },
+  listen: listenForHeight,
 };
 
 /** At most 540px wide by default, Tumblr's oEmbed width. Renders the frame `post.js` would create (docs/decisions.md D77). */

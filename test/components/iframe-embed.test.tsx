@@ -11,6 +11,14 @@ import {
   lastObserver,
   lastResizeObserver,
 } from './helpers';
+import { srcWithSize, watchWidth } from '../../src/core/size-in-src';
+import { listenForHeight } from '../../src/core/message-height';
+import { withParent } from '../../src/core/plans/twitch';
+const sizing = (src: string, size?: { width?: number; height?: number }) => ({
+  watch: watchWidth,
+  src: (width: number) =>
+    srcWithSize({ src, ratio: { width: 4, height: 3 }, size }, width),
+});
 
 const ORIGIN = 'https://t.me';
 const telegramHeight: MessageHeight = {
@@ -20,6 +28,7 @@ const telegramHeight: MessageHeight = {
     const parsed = JSON.parse(data) as { event?: string; height?: number };
     return parsed.event === 'resize' ? parsed.height : undefined;
   },
+  listen: listenForHeight,
 };
 
 function sizedFrame(props: Partial<Parameters<typeof IframeEmbed>[0]> = {}) {
@@ -253,7 +262,7 @@ describe('IframeEmbed with the page host in its src', () => {
         title="Twitch"
         allow=""
         ratio={{ width: 16, height: 9 }}
-        hostParam="parent"
+        clientSrc={withParent}
         lazy={false}
       />,
     );
@@ -269,7 +278,7 @@ describe('IframeEmbed with the page host in its src', () => {
         title="Twitch"
         allow=""
         ratio={{ width: 16, height: 9 }}
-        hostParam="parent"
+        clientSrc={withParent}
         lazy={false}
       />,
     );
@@ -286,7 +295,7 @@ describe('IframeEmbed with the page host in its src', () => {
         title="Twitch"
         allow=""
         ratio={{ width: 16, height: 9 }}
-        hostParam="parent"
+        clientSrc={withParent}
       />,
     );
     expect(html).not.toContain('<iframe');
@@ -305,7 +314,7 @@ describe('IframeEmbed with its size in the src', () => {
         title="Flickr photo"
         allow=""
         ratio={{ width: 4, height: 3 }}
-        sizeInSrc
+        sizeInSrc={sizing(props.src ?? SRC, props.size)}
         lazy={false}
         {...props}
       />,
@@ -609,7 +618,7 @@ describe('IframeEmbed with a new src', () => {
         title="Flickr photo"
         allow=""
         ratio={{ width: 4, height: 3 }}
-        sizeInSrc
+        sizeInSrc={sizing(src)}
         lazy={false}
         onLoad={onLoad}
         placeholder={<p data-testid="placeholder" />}

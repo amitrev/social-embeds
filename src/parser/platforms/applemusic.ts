@@ -33,6 +33,8 @@ function appleContent(
 
 export const applemusic: PlatformParser = {
   platform: 'applemusic',
+  name: 'Apple Music',
+  shapes: ['post iframe'],
   parse(root) {
     if (root.tag !== 'iframe') return null;
     const found = appleContent(

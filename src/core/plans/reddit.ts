@@ -1,6 +1,7 @@
 import type { ParsedEmbed } from '../../parser';
 import { query } from '../params';
 import type { MessageHeight, Plan, PlanError } from '../plan';
+import { listenForHeight } from '../message-height';
 
 /** The `data-embed-*` options of Reddit's embed code that hosts set most. */
 export type RedditOptions = {
@@ -38,6 +39,7 @@ const REDDIT_HEIGHT: MessageHeight = {
       ? message.data
       : undefined;
   },
+  listen: listenForHeight,
 };
 
 /** At most 640px wide by default, the width widgets.js gives the frame (docs/decisions.md D52). */

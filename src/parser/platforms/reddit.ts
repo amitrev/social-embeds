@@ -53,6 +53,8 @@ function post(url: ParsedUrl | null): Omit<ParsedEmbed, 'options'> | null {
 
 export const reddit: PlatformParser = {
   platform: 'reddit',
+  name: 'Reddit',
+  shapes: ['post iframe'],
   parse(root) {
     // `reddit-card` is older code; it renders as the post.
     if (

@@ -1,3 +1,4 @@
+import { rumbleNeedsLookup } from '../lookup';
 import {
   type Options,
   type PlatformParser,
@@ -29,6 +30,9 @@ function idOf(url: ParsedUrl | null, hosts: ReadonlySet<string>) {
 
 export const rumble: PlatformParser = {
   platform: 'rumble',
+  name: 'Rumble',
+  shapes: ['video iframe'],
+  needsLookup: rumbleNeedsLookup,
   parse(root) {
     if (root.tag !== 'iframe') return null;
     const src = parseUrl(root.attrs.get('src') ?? '');

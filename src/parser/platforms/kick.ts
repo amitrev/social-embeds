@@ -51,6 +51,8 @@ function channel(
 
 export const kick: PlatformParser = {
   platform: 'kick',
+  name: 'Kick',
+  shapes: ['video iframe'],
   parse(root) {
     if (root.tag !== 'iframe') return null;
     const src = parseUrl(root.attrs.get('src') ?? '');

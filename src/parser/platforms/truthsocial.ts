@@ -36,6 +36,8 @@ function fromUrl(url: ParsedUrl | null): Omit<ParsedEmbed, 'options'> | null {
 
 export const truthsocial: PlatformParser = {
   platform: 'truthsocial',
+  name: 'Truth Social',
+  shapes: ['post iframe'],
   parse(root) {
     if (root.tag !== 'iframe') return null;
     const src = parseUrl(root.attrs.get('src') ?? '');

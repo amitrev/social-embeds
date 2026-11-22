@@ -6,9 +6,9 @@ import {
   useRef,
   useState,
 } from 'react';
-import { FRAME_TIMEOUT_MS, MAX_REPORTED_HEIGHT } from '../core/timing';
-import { frameStyle, srcWithSize, watchWidth } from '../core/layout';
-import type { IframePlan, MessageHeight } from '../core/plan';
+import { FRAME_TIMEOUT_MS } from '../core/timing';
+import { frameStyle } from '../core/layout';
+import type { IframePlan, MessageHeight, SizeInSrc } from '../core/plan';
 import { useNearViewport } from './hooks';
 import type { FrameProps } from './shared';
 
@@ -29,11 +29,11 @@ type IframeEmbedProps = FrameProps & {
   messageHeight?: MessageHeight;
   /** With `messageHeight`: the height until the first message. */
   startHeight?: number;
-  /** Query parameter that gets the page's host when the iframe is created (Twitch's `parent`). */
-  hostParam?: string;
+  /** Rewrites `src` when the iframe is created (Twitch's `parent`). */
+  clientSrc?: (src: string) => string;
   borderRadius?: number;
   /** `src` gets the box's pixel size, rebuilt when the box's width changes (Flickr). */
-  sizeInSrc?: boolean;
+  sizeInSrc?: SizeInSrc;
 };
 
 /** The plan's fields as `IframeEmbed` props. */
@@ -81,7 +81,7 @@ function Frame({
   size,
   messageHeight,
   startHeight,
-  hostParam,
+  clientSrc,
   borderRadius,
   sizeInSrc,
   width,
@@ -118,37 +118,26 @@ function Frame({
 
   useEffect(() => {
     if (!near || !messageHeight) return;
-    const { origin, read } = messageHeight;
-    const listen = (event: MessageEvent) => {
-      // Security: only the frame itself, from the platform's own origin.
-      if (event.origin !== origin) return;
-      if (!iframe.current || event.source !== iframe.current.contentWindow)
-        return;
-      let value: number | undefined;
-      try {
-        value = read(event.data);
-      } catch {
-        return;
-      }
-      if (
-        typeof value !== 'number' ||
-        !(value > 0 && value <= MAX_REPORTED_HEIGHT)
-      )
-        return;
-      setReportedHeight(Math.ceil(value));
-      report();
-    };
-    window.addEventListener('message', listen);
-    return () => {
-      window.removeEventListener('message', listen);
-    };
+    return messageHeight.listen(
+      () => iframe.current,
+      (value) => {
+        setReportedHeight(value);
+        report();
+      },
+    );
   }, [near, messageHeight, report]);
 
+  // The plan, and so `sizeInSrc`, is rebuilt on every render: watch once per frame.
+  const sizing = useRef(sizeInSrc);
+  useEffect(() => {
+    sizing.current = sizeInSrc;
+  });
+  const sized = sizeInSrc !== undefined;
   useEffect(() => {
     const element = frame.current;
-    if (!near || !sizeInSrc || !element) return;
-    return watchWidth(element, setBoxWidth);
-  }, [near, sizeInSrc]);
+    if (!near || !sized || !element) return;
+    return sizing.current?.watch(element, setBoxWidth);
+  }, [near, sized]);
 
   useEffect(() => {
     if (!near || !inView) return;
@@ -189,7 +178,7 @@ function Frame({
     ? src
     : boxWidth === undefined
       ? undefined
-      : srcWithSize({ src, ratio, size }, boxWidth);
+      : sizeInSrc.src(boxWidth);
 
   return (
     <div {...rest} style={wrapper}>
@@ -199,7 +188,7 @@ function Frame({
             // A new src on a loaded frame would add a history entry; a new frame adds none.
             key={sizeInSrc ? frameSrc : undefined}
             ref={iframe}
-            src={hostParam ? withHost(frameSrc, hostParam) : frameSrc}
+            src={clientSrc ? clientSrc(frameSrc) : frameSrc}
             title={title}
             allow={allow}
             allowFullScreen={allowFullscreen}
@@ -223,12 +212,6 @@ function Frame({
       </div>
     </div>
   );
-}
-
-// Runs only once the iframe is created, which is never on the server (docs/decisions.md D28).
-function withHost(src: string, name: string): string {
-  const separator = src.includes('?') ? '&' : '?';
-  return `${src}${separator}${encodeURIComponent(name)}=${encodeURIComponent(window.location.hostname)}`;
 }
 
 export function Skeleton({ minHeight }: { minHeight?: number }) {

@@ -1,4 +1,11 @@
-import { descendants, hasClass, rebuild, type Whitelist } from '../html';
+import { blueskyNeedsLookup } from '../lookup';
+import {
+  descendants,
+  hasClass,
+  rebuild,
+  type Whitelist,
+  rebuildsAs,
+} from '../html';
 import type { Options, PlatformParser } from '../platform';
 import type { ParsedEmbed } from '../types';
 import { parseUrl, type ParsedUrl } from '../url';
@@ -39,7 +46,10 @@ function fromUrl(url: ParsedUrl | null): Omit<ParsedEmbed, 'options'> | null {
 
 export const bluesky: PlatformParser = {
   platform: 'bluesky',
-  fallback: FALLBACK,
+  name: 'Bluesky',
+  shapes: ['post iframe'],
+  needsLookup: blueskyNeedsLookup,
+  trustsFallback: (html) => rebuildsAs(html, FALLBACK),
   parse(root) {
     if (root.tag !== 'blockquote' || !hasClass(root, 'bluesky-embed'))
       return null;

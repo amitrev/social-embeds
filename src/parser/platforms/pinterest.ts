@@ -37,6 +37,8 @@ function pinOf(url: ParsedUrl | null): Omit<ParsedEmbed, 'options'> | null {
 
 export const pinterest: PlatformParser = {
   platform: 'pinterest',
+  name: 'Pinterest',
+  shapes: ['post sdk'],
   parse(root) {
     if (root.tag === 'a') {
       if (root.attrs.get('data-pin-do') !== 'embedPin') return null;

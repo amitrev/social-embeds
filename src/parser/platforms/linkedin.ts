@@ -34,6 +34,8 @@ const decodeColons = (path: string) => path.replace(/%3A/gi, ':');
 
 export const linkedin: PlatformParser = {
   platform: 'linkedin',
+  name: 'LinkedIn',
+  shapes: ['post iframe'],
   parse(root) {
     if (root.tag !== 'iframe') return null;
     const src = parseUrl(root.attrs.get('src') ?? '');

@@ -62,6 +62,8 @@ function fromPage(url: ParsedUrl): ParsedEmbed | null {
 
 export const dailymotion: PlatformParser = {
   platform: 'dailymotion',
+  name: 'Dailymotion',
+  shapes: ['video iframe'],
   parse(root) {
     const wrapped = unwrapRatio(root, WRAPPER);
     const iframe = wrapped?.iframe ?? root;

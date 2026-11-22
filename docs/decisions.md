@@ -1354,6 +1354,49 @@ Measured with esbuild from `dist`, minified, gzipped, React external:
 
 - **Not done:** a script platform still bundles the script descriptors and drivers of all five script platforms (X, Instagram, Threads, Facebook, Pinterest), because `loadPlatformScript` picks one by name. That is about 1 KB, also in `XEmbed` alone.
 
+## Bundle size pass (2026-11-22, after 0.9.0)
+
+### D114. Per-platform data in the parsers, one loader per script, Flickr's sizing in its plan
+
+Profiling `YouTubeEmbed` and `XEmbed` by module (esbuild from `dist`, minified) after 0.9.0 showed shared code that carried every platform:
+
+- **The HTML parser in every component:** `verifyWith` imported `parseHtml` and `rebuild` to check `fallbackHtml`, so `parser/html.js` (2.5 KB) sat in YouTube's and TikTok's bundles, which never have fallback content. Each parser that writes fallback content now has `trustsFallback` (X's also checks that the blockquote's last status link names the post, which `verify.ts` did before), and `verify.ts` imports no HTML code. `fallback?: Whitelist` on the parser is gone.
+- **Tables of all 29 platforms:** `verify.ts` had every platform's shapes, `resolve.ts` every display name, and `lookup.ts` (Bluesky and Rumble) was in every component. Each parser now carries its `name` and `shapes`, and Bluesky's and Rumble's carry `needsLookup`. `lookup.ts` remains for `<SocialEmbed>`'s message about an unknown URL. An `embed` of another platform is reported as `expected a {Platform} embed, got {id}`, with the other platform's id rather than its name, so a component needs no other platform's name.
+- **One loader for five scripts:** `loadPlatformScript(name)` switched over X, Instagram, Threads, Facebook and Pinterest, so `XEmbed` bundled all five descriptors and the Facebook SDK workarounds of D38 and D46. Each platform now has its own loader (`loadX` … `loadFacebook(locale)`) and each driver imports only its own; the descriptors make no calls at module level, so bundlers drop the unused ones. In `XEmbed`'s bundle `platform-scripts.js` went from 1908 to 328 bytes.
+- **Flickr's sizing in every iframe component:** `srcWithSize` and `watchWidth` sat in `core/layout.ts`, which every iframe embed imports. They moved to `core/size-in-src.ts`, and Flickr's plan carries `sizeInSrc: { watch, src(width) }`; `IframeEmbed` and the element call those. The React frame watches once per frame even though the plan, and so `sizeInSrc`, is rebuilt on every render.
+
+Measured with esbuild from `dist`, minified, gzipped, React external:
+
+| Import                                                         | 0.9.0   | Now     |
+| -------------------------------------------------------------- | ------- | ------- |
+| `YouTubeEmbed`                                                 | 6.1 KB  | 4.2 KB  |
+| `TikTokEmbed`                                                  | 5.5 KB  | 3.6 KB  |
+| `XEmbed`                                                       | 6.5 KB  | 5.3 KB  |
+| `InstagramEmbed`                                               | 6.3 KB  | 5.2 KB  |
+| `FacebookEmbed`                                                | 8.8 KB  | 7.5 KB  |
+| `GenericIframeEmbed`                                           | 5.3 KB  | 5.1 KB  |
+| `createSocialEmbed([youtube])`                                 | 6.9 KB  | 6.1 KB  |
+| `createSocialEmbed([youtube, x, instagram, facebook, tiktok])` | 13.1 KB | 12.4 KB |
+| `<SocialEmbed>`                                                | 28.3 KB | 28.3 KB |
+| `social-embeds/parser` (`parseEmbed`, `matchUrl`)              | 14.1 KB | 14.6 KB |
+| `social-embeds/element`                                        | 26.7 KB | 26.6 KB |
+
+- **The parser entry grew by 0.4 KB:** names, shapes and the fallback checks now ride on every parser object, which `parseEmbed` keeps whole. The parser entry runs mostly on servers; keeping them apart would need a second object per platform.
+- **Not done:** splitting each parser's embed-code half from its URL half. YouTube's `parse` is about 20 lines; across the platforms it would save roughly 100 to 300 bytes per component for a change to every parser. `<SocialEmbed>` and the element hold every platform by design, so only rewriting parsers would shrink them.
+
+Checked in Chrome on a Next.js 16 production build: X, Instagram, Threads, Facebook, Pinterest, Flickr, YouTube and TikTok on one page all rendered, with Instagram and Threads beside the Facebook SDK, Flickr's frame at `width=560&height=420` in its 560 px box, and no console error.
+
+### D115. Height messages and Twitch's `parent` in the plans
+
+A second profile after D114 found two pieces of `IframeEmbed` and `mountIframe` that only some platforms use:
+
+- **Height messages:** the `message` listener, with its origin, source and range checks (D55), served only the 7 frames that post their height (Telegram, Reddit, Bluesky, Tumblr, Truth Social, Imgur, Strava). It moved to `core/message-height.ts` as `listenForHeight`, and those plans' `MessageHeight` objects carry it as `listen`; the checks are unchanged. The element registers it once per embed instead of once per created iframe.
+- **Twitch's `parent`:** `hostParam` and `withHost` were in every iframe embed. Twitch's plan now carries `clientSrc: withParent`, which adds the page's host when the iframe is created, still never on the server (D28).
+
+Measured from `dist` as in D114, gzipped: `YouTubeEmbed` 4.2 to 4.1 KB, `TikTokEmbed` 3.6 to 3.4 KB, `FacebookEmbed` 7.5 to 7.4 KB, `GenericIframeEmbed` 5.1 to 4.9 KB, `createSocialEmbed` with five platforms 12.4 to 12.3 KB; `<SocialEmbed>` and the element are unchanged within 30 bytes. Checked in Chrome on the Next.js 16 build: Telegram, Reddit, Bluesky, Truth Social and Imgur frames took the heights they posted (384, 316, 896, 204 and 433 px), and Twitch's frame had `parent=localhost`, with no console error.
+
+- **Not done:** the 29 React wrappers repeat the same steps (resolve, plan, report, render) and list each option twice. One shared helper would save an estimated 0.5 to 1 KB gzipped in `<SocialEmbed>` and about 100 bytes in a single component, for a change to every component.
+
 ## Open VERIFY items
 
 | ID  | Item                                            | Milestone | Status                                          |

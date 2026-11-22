@@ -48,6 +48,12 @@ export function twitchPlan(
     allow: '',
     ratio: { width: 16, height: 9 },
     size: embed.size,
-    hostParam: 'parent',
+    clientSrc: withParent,
   };
+}
+
+// Twitch's player needs the embedding page's host in `parent`; never runs on the server (D28).
+export function withParent(src: string): string {
+  const separator = src.includes('?') ? '&' : '?';
+  return `${src}${separator}parent=${encodeURIComponent(window.location.hostname)}`;
 }

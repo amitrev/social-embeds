@@ -30,6 +30,8 @@ function video(id: string, user = '', options: Options = {}): ParsedEmbed {
 
 export const tiktok: PlatformParser = {
   platform: 'tiktok',
+  name: 'TikTok',
+  shapes: ['video iframe'],
   parse(root) {
     if (root.tag === 'blockquote' && hasClass(root, 'tiktok-embed')) {
       const cite = parseUrl(root.attrs.get('cite') ?? '');

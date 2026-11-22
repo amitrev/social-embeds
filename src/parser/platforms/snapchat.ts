@@ -66,6 +66,8 @@ function content(url: ParsedUrl | null): Content | null {
 
 export const snapchat: PlatformParser = {
   platform: 'snapchat',
+  name: 'Snapchat',
+  shapes: ['post iframe', 'video iframe'],
   parse(root) {
     if (root.tag !== 'blockquote' || !hasClass(root, 'snapchat-embed'))
       return null;

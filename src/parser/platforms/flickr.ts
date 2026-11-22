@@ -1,4 +1,4 @@
-import { type HtmlElement, rebuild, type Whitelist } from '../html';
+import { type HtmlElement, rebuild, type Whitelist, rebuildsAs } from '../html';
 import type { Options, PlatformParser } from '../platform';
 import { sizeOf, withSize } from '../platform';
 import type { ParsedEmbed } from '../types';
@@ -113,7 +113,9 @@ function onlyImage(root: HtmlElement): HtmlElement | null {
 
 export const flickr: PlatformParser = {
   platform: 'flickr',
-  fallback: FALLBACK,
+  name: 'Flickr',
+  shapes: ['post iframe'],
+  trustsFallback: (html) => rebuildsAs(html, FALLBACK),
   parse(root) {
     if (root.tag !== 'a' || root.attrs.get('data-flickr-embed') !== 'true')
       return null;

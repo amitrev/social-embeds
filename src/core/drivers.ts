@@ -1,6 +1,10 @@
 import {
   FACEBOOK_SDK_VERSION,
-  loadPlatformScript,
+  loadFacebook,
+  loadInstagram,
+  loadPinterest,
+  loadThreads,
+  loadX,
 } from '../loader/platform-scripts';
 
 // How each platform renders an embed and signals that it has: docs/decisions.md D32.
@@ -77,7 +81,7 @@ function hasSizedIframe(container: HTMLElement): boolean {
 }
 
 export const xDriver: Driver = {
-  load: () => loadPlatformScript('x'),
+  load: () => loadX(),
   render(container, done) {
     const twttr = globals().twttr;
     // widgets.js fires "rendered" per widget; a sized iframe is the fallback signal.
@@ -113,7 +117,7 @@ function processEmbeds() {
 }
 
 export const instagramDriver: Driver = {
-  load: () => loadPlatformScript('instagram'),
+  load: () => loadInstagram(),
   render(container, done) {
     inDocument(container, 'Instagram');
     // embed.js marks the iframe "instagram-media-rendered" when the post has mounted.
@@ -130,7 +134,7 @@ export const instagramDriver: Driver = {
 };
 
 export const threadsDriver: Driver = {
-  load: () => loadPlatformScript('threads'),
+  load: () => loadThreads(),
   render(container, done) {
     inDocument(container, 'Threads');
     // embed.js removes the blockquote when the post has mounted.
@@ -153,7 +157,7 @@ export function facebookDriver(locale: string): Driver {
   let driver = facebookDrivers.get(locale);
   if (!driver) {
     driver = {
-      load: () => loadPlatformScript('facebook', { locale }),
+      load: () => loadFacebook(locale),
       render(container, done) {
         const fb = globals().FB;
         const parse = fb?.XFBML?.parse;
@@ -183,7 +187,7 @@ export function facebookDriver(locale: string): Driver {
 }
 
 export const pinterestDriver: Driver = {
-  load: () => loadPlatformScript('pinterest'),
+  load: () => loadPinterest(),
   render(container, done) {
     const build = globals().PinUtils?.build;
     if (!build) throw new Error('social-embeds: PinUtils.build is missing');

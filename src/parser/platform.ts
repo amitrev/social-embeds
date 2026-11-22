@@ -1,4 +1,4 @@
-import type { HtmlElement, Whitelist } from './html';
+import type { HtmlElement } from './html';
 import type { ParsedEmbed, Platform } from './types';
 import { pixels, type ParsedUrl } from './url';
 
@@ -6,8 +6,14 @@ export type Options = ParsedEmbed['options'];
 
 export type PlatformParser = {
   platform: Platform;
-  /** Elements and attributes allowed in `fallbackHtml`. */
-  fallback?: Whitelist;
+  /** For messages: `YouTube`, `Apple Music`. */
+  name: string;
+  /** The `kind variant` pairs this platform's embeds may have, such as `post sdk`. */
+  shapes: readonly string[];
+  /** True when `fallbackHtml` is exactly what this parser writes for the embed (docs/decisions.md D35). */
+  trustsFallback?: (html: string, embed: ParsedEmbed) => boolean;
+  /** A post URL that only a network lookup could turn into an embed (docs/decisions.md D70). */
+  needsLookup?: (url: ParsedUrl) => boolean;
   /** The embed element (blockquote, div or iframe) of the platform's own embed code. */
   parse: (root: HtmlElement) => ParsedEmbed | null;
   /** Embed code that is a single `<script>` tag, as Telegram's is. */

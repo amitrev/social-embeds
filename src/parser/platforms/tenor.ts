@@ -1,4 +1,10 @@
-import { rebuild, type HtmlElement, hasClass, type Whitelist } from '../html';
+import {
+  rebuild,
+  type HtmlElement,
+  hasClass,
+  type Whitelist,
+  rebuildsAs,
+} from '../html';
 import { type PlatformParser, sizeOf, withSize } from '../platform';
 import type { ParsedEmbed } from '../types';
 import { parseUrl, type ParsedUrl } from '../url';
@@ -73,7 +79,9 @@ function fromIframe(root: HtmlElement): ParsedEmbed | null {
 
 export const tenor: PlatformParser = {
   platform: 'tenor',
-  fallback: FALLBACK,
+  name: 'Tenor',
+  shapes: ['video iframe'],
+  trustsFallback: (html) => rebuildsAs(html, FALLBACK),
   parse(root) {
     if (root.tag === 'div') return fromDiv(root);
     return root.tag === 'iframe' ? fromIframe(root) : null;

@@ -1,6 +1,7 @@
 import type { ParsedEmbed } from '../../parser';
 import { query } from '../params';
 import type { MessageHeight, Plan, PlanError } from '../plan';
+import { listenForHeight } from '../message-height';
 
 /** The options of Telegram's post widget configurator (core.telegram.org/widgets/post). */
 export type TelegramOptions = {
@@ -46,6 +47,7 @@ const TELEGRAM_HEIGHT: MessageHeight = {
       ? message.height
       : undefined;
   },
+  listen: listenForHeight,
 };
 
 /** At most 500px wide by default, the widest the post renders (docs/decisions.md D49). */

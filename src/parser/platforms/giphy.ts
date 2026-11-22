@@ -78,6 +78,8 @@ function isCredit(element: HtmlElement, embed: ParsedEmbed): boolean {
 
 export const giphy: PlatformParser = {
   platform: 'giphy',
+  name: 'Giphy',
+  shapes: ['video iframe'],
   parse(root) {
     const wrapped = unwrapRatio(root, WRAPPER);
     const iframe = wrapped?.iframe ?? root;

@@ -122,6 +122,8 @@ function isCredit(element: HtmlElement): boolean {
 
 export const soundcloud: PlatformParser = {
   platform: 'soundcloud',
+  name: 'SoundCloud',
+  shapes: ['post iframe'],
   parse(root) {
     if (root.tag !== 'iframe') return null;
     const src = parseUrl(root.attrs.get('src') ?? '');

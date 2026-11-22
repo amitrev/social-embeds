@@ -30,6 +30,8 @@ function isType(value: string | undefined): value is Type {
 
 export const strava: PlatformParser = {
   platform: 'strava',
+  name: 'Strava',
+  shapes: ['post iframe'],
   parse(root) {
     if (root.tag !== 'div' || !hasClass(root, 'strava-embed-placeholder'))
       return null;

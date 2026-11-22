@@ -1,4 +1,11 @@
-import { descendants, hasClass, rebuild, type Whitelist } from '../html';
+import {
+  descendants,
+  hasClass,
+  parseHtml,
+  rebuild,
+  rebuildsAs,
+  type Whitelist,
+} from '../html';
 import { attributeOptions, type PlatformParser } from '../platform';
 import type { ParsedEmbed } from '../types';
 import { coerce, parseUrl, type ParsedUrl } from '../url';
@@ -52,9 +59,19 @@ function post(
   };
 }
 
+// widgets.js renders the post that the blockquote's last status link names.
+function fallbackNamesPost(html: string, id: string): boolean {
+  const [root] =
+    parseHtml(`<blockquote class="twitter-tweet">${html}</blockquote>`) ?? [];
+  return root?.type === 'element' && x.parse(root)?.id === id;
+}
+
 export const x: PlatformParser = {
   platform: 'x',
-  fallback: FALLBACK,
+  name: 'X',
+  shapes: ['post sdk'],
+  trustsFallback: (html, embed) =>
+    rebuildsAs(html, FALLBACK) && fallbackNamesPost(html, embed.id),
   parse(root) {
     // `twitter-video` is older code for a post with a video.
     if (

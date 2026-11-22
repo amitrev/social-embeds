@@ -250,3 +250,9 @@ export function escapeAttribute(value: string): string {
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;');
 }
+
+/** True when `html` parses and rebuilds through the whitelist unchanged. */
+export function rebuildsAs(html: string, whitelist: Whitelist): boolean {
+  const nodes = parseHtml(html);
+  return nodes !== null && rebuild(nodes, whitelist) === html;
+}
