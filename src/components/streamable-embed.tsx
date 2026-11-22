@@ -3,9 +3,9 @@ import {
   streamablePlan,
   type StreamableOptions,
 } from '../core/plans/streamable';
-import { useReportError } from './hooks';
-import { IframeEmbed, planProps } from './iframe-embed';
-import { type EmbedSource, type FrameProps, resolveEmbed } from './shared';
+import type { EmbedSource, FrameProps } from './shared';
+import { usePlan } from './use-plan';
+import { frameOf } from './iframe-embed';
 
 export type { StreamableOptions };
 
@@ -13,36 +13,21 @@ export type StreamableEmbedProps = EmbedSource &
   Omit<FrameProps, keyof StreamableOptions> &
   StreamableOptions;
 
+const STREAMABLE_OPTIONS = [
+  'autoplay',
+  'hd',
+  'loop',
+  'muted',
+  'nocontrols',
+] as const;
+
 /** The embed code's aspect ratio, else 16:9. */
 export function StreamableEmbed(props: StreamableEmbedProps) {
-  const {
-    url,
-    embed: given,
-    onError,
-    maxWidth,
-    autoplay,
-    hd,
-    loop,
-    muted,
-    nocontrols,
-    ...frame
-  } = props;
-  const { embed, error } = resolveEmbed(url, given, streamable);
-  const plan = embed
-    ? streamablePlan(embed, { autoplay, hd, loop, muted, nocontrols })
-    : undefined;
-  useReportError(
-    error ?? (plan?.kind === 'error' ? plan.message : undefined),
-    onError,
+  const [plan, frame] = usePlan(
+    props,
+    streamable,
+    STREAMABLE_OPTIONS,
+    streamablePlan,
   );
-  if (plan?.kind !== 'iframe') return null;
-
-  return (
-    <IframeEmbed
-      {...frame}
-      {...planProps(plan)}
-      onError={onError}
-      maxWidth={maxWidth ?? plan.maxWidth}
-    />
-  );
+  return plan?.kind === 'iframe' ? frameOf(plan, frame) : null;
 }

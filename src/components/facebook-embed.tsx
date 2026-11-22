@@ -1,9 +1,9 @@
 import { facebookPlan, type FacebookOptions } from '../core/plans/facebook';
 import { facebook } from '../parser/platforms/facebook';
-import { useReportError } from './hooks';
-import { IframeEmbed, planProps } from './iframe-embed';
-import { ScriptEmbed } from './script-embed';
-import { type EmbedSource, type FrameProps, resolveEmbed } from './shared';
+import { frameOf } from './iframe-embed';
+import { scriptOf } from './script-embed';
+import type { EmbedSource, FrameProps } from './shared';
+import { usePlan } from './use-plan';
 
 export type { FacebookOptions };
 
@@ -12,60 +12,21 @@ export type FacebookEmbedProps = EmbedSource &
   Omit<FrameProps, keyof FacebookOptions> &
   FacebookOptions;
 
-export function FacebookEmbed(props: FacebookEmbedProps) {
-  const {
-    url,
-    embed: given,
-    onError,
-    maxWidth,
-    locale,
-    showText,
-    allowfullscreen,
-    autoplay,
-    showCaptions,
-    height,
-    maxHeight,
-    ...shared
-  } = props;
-  const { embed, error } = resolveEmbed(url, given, facebook);
-  const plan = embed
-    ? facebookPlan(embed, {
-        locale,
-        showText,
-        allowfullscreen,
-        autoplay,
-        showCaptions,
-      })
-    : undefined;
-  useReportError(
-    error ?? (plan?.kind === 'error' ? plan.message : undefined),
-    onError,
-  );
-  if (plan?.kind === 'iframe') {
-    return (
-      <IframeEmbed
-        {...shared}
-        {...planProps(plan)}
-        onError={onError}
-        maxWidth={maxWidth ?? plan.maxWidth}
-        height={height}
-        maxHeight={maxHeight}
-      />
-    );
-  }
-  if (plan?.kind !== 'script') return null;
+const FACEBOOK_OPTIONS = [
+  'locale',
+  'showText',
+  'allowfullscreen',
+  'autoplay',
+  'showCaptions',
+] as const;
 
-  return (
-    <ScriptEmbed
-      key={plan.key}
-      {...shared}
-      onError={onError}
-      maxWidth={maxWidth ?? plan.maxWidth}
-      driver={plan.driver}
-      markup={plan.markup}
-      hasFallback={plan.hasFallback}
-      minHeight={plan.minHeight}
-      label={plan.label}
-    />
+export function FacebookEmbed(props: FacebookEmbedProps) {
+  const [plan, frame] = usePlan(
+    props,
+    facebook,
+    FACEBOOK_OPTIONS,
+    facebookPlan,
   );
+  if (plan?.kind === 'iframe') return frameOf(plan, frame);
+  return plan?.kind === 'script' ? scriptOf(plan, frame) : null;
 }

@@ -1,5 +1,12 @@
-import { type CSSProperties, useEffect, useRef, useState } from 'react';
+import {
+  type CSSProperties,
+  type ReactNode,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import { type Driver, FinalError } from '../core/drivers';
+import type { ScriptPlan } from '../core/plan';
 import { postLinkText, postUrl } from '../core/post-link';
 import {
   RENDER_ATTEMPTS,
@@ -8,7 +15,7 @@ import {
 } from '../core/timing';
 import { useNearViewport } from './hooks';
 import { Skeleton } from './iframe-embed';
-import type { SharedProps } from './shared';
+import type { FrameProps, SharedProps } from './shared';
 
 type ScriptEmbedProps = SharedProps & {
   driver: Driver;
@@ -22,6 +29,24 @@ type ScriptEmbedProps = SharedProps & {
 };
 
 const LAYER: CSSProperties = { width: '100%' };
+
+/** A platform component's script embed: it sizes itself, so `height` and `maxHeight` are dropped. */
+export function scriptOf(plan: ScriptPlan, props: FrameProps): ReactNode {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { maxWidth, height, maxHeight, ...rest } = props;
+  return (
+    <ScriptEmbed
+      key={plan.key}
+      {...rest}
+      maxWidth={maxWidth ?? plan.maxWidth}
+      driver={plan.driver}
+      markup={plan.markup}
+      hasFallback={plan.hasFallback}
+      minHeight={plan.minHeight}
+      label={plan.label}
+    />
+  );
+}
 
 function toError(error: unknown): Error {
   return error instanceof Error ? error : new Error(String(error));
