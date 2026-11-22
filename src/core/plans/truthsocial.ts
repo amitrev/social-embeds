@@ -50,7 +50,8 @@ export function truthSocialPlan(embed: ParsedEmbed): Plan | PlanError {
       embed.options.video === true
         ? TRUTH_SOCIAL_VIDEO_HEIGHT
         : TRUTH_SOCIAL_HEIGHT,
-    startHeight: 300,
+    // The frame reports its document height, which never drops below the frame's own (docs/decisions.md D102).
+    startHeight: 150,
     maxWidth: embed.size?.width ?? 600,
   };
 }

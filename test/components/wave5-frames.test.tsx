@@ -79,28 +79,28 @@ afterEach(() => {
 });
 
 describe('TruthSocialEmbed', () => {
-  it('renders the post frame at 300px, at most 600px wide', () => {
+  it('renders the post frame at 150px until it reports its height, at most 600px wide', () => {
     const { container } = render(
       <TruthSocialEmbed embed={parsed(truthText)} lazy={false} />,
     );
     const { wrapper, iframe } = parts(container);
     expect(iframe.getAttribute('src')).toBe(
-      'https://truthsocial.com/@truthsocial/116862065232992052/embed',
+      'https://truthsocial.com/@truthsocial/108318911610590772/embed',
     );
     expect(iframe.getAttribute('scrolling')).toBe('no');
-    expect(wrapper.style.height).toBe('300px');
+    expect(wrapper.style.height).toBe('150px');
     expect(wrapper.style.maxWidth).toBe('600px');
   });
 
   it('renders a URL as the same frame', () => {
     const { container } = render(
       <TruthSocialEmbed
-        url="https://truthsocial.com/@truthsocial/posts/116862065232992052"
+        url="https://truthsocial.com/@truthsocial/posts/108318911610590772"
         lazy={false}
       />,
     );
     expect(parts(container).iframe.getAttribute('src')).toBe(
-      'https://truthsocial.com/@truthsocial/116862065232992052/embed',
+      'https://truthsocial.com/@truthsocial/108318911610590772/embed',
     );
   });
 
@@ -124,7 +124,7 @@ describe('TruthSocialEmbed', () => {
       <TruthSocialEmbed embed={parsed(truthVideo)} lazy={false} />,
     );
     const { wrapper, iframe } = parts(container);
-    expect(wrapper.style.height).toBe('300px');
+    expect(wrapper.style.height).toBe('150px');
     post(iframe.contentWindow, TRUTH, setHeight(530));
     expect(wrapper.style.height).toBe('695px');
     post(iframe.contentWindow, TRUTH, setHeight(586));
@@ -138,7 +138,7 @@ describe('TruthSocialEmbed', () => {
     const { wrapper, iframe } = parts(container);
     post(iframe.contentWindow, 'https://evil.example', setHeight(900));
     post(window, TRUTH, setHeight(900));
-    expect(wrapper.style.height).toBe('300px');
+    expect(wrapper.style.height).toBe('150px');
   });
 });
 
@@ -378,7 +378,7 @@ describe('SocialEmbed with Truth Social, Imgur, Strava and Flickr code', () => {
   it.each([
     [
       truthText,
-      'https://truthsocial.com/@truthsocial/116862065232992052/embed',
+      'https://truthsocial.com/@truthsocial/108318911610590772/embed',
     ],
     [imgurAlbum, 'https://imgur.com/a/04b1CmA/embed?pub=true'],
     [

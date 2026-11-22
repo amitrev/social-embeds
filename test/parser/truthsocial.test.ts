@@ -16,8 +16,8 @@ describe('Truth Social embed code', () => {
   it('parses a text post with the code’s width', () => {
     expect(parseEmbed(text)).toEqual({
       ...base,
-      url: 'https://truthsocial.com/@truthsocial/posts/116862065232992052',
-      id: '116862065232992052',
+      url: 'https://truthsocial.com/@truthsocial/posts/108318911610590772',
+      id: '108318911610590772',
       options: {},
       size: { width: 600 },
     });
@@ -34,7 +34,7 @@ describe('Truth Social embed code', () => {
   });
 
   it('keeps 18-digit ids as strings', () => {
-    expect(parseEmbed(text)?.id).toBe('116862065232992052');
+    expect(parseEmbed(text)?.id).toBe('108318911610590772');
   });
 
   it('drops the code’s style and class', () => {
@@ -50,7 +50,7 @@ describe('Truth Social embed code', () => {
 
   it.each([
     ['another host', text.replace('truthsocial.com/@', 'example.com/@')],
-    ['a non-numeric id', text.replace('/116862065232992052/', '/abc/')],
+    ['a non-numeric id', text.replace('/108318911610590772/', '/abc/')],
     ['no embed path', text.replace('/embed"', '/"')],
     [
       'a foreign script',

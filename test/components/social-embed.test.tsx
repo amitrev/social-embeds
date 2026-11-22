@@ -171,7 +171,7 @@ describe('SocialEmbed with embed code', () => {
     [
       'Truth Social oEmbed',
       fixture('truthsocial/oembed-text.html'),
-      'iframe https://truthsocial.com/@truthsocial/116862065232992052/embed',
+      'iframe https://truthsocial.com/@truthsocial/108318911610590772/embed',
     ],
     [
       'Imgur Embed dialog',
@@ -673,7 +673,7 @@ describe('SocialEmbed props', () => {
     for (const [url, start] of [
       [
         'https://truthsocial.com/@truthsocial/posts/117529982042129746',
-        '300px',
+        '150px',
       ],
       ['https://imgur.com/a/04b1CmA', '500px'],
       ['https://www.strava.com/routes/3247927232574435836', '650px'],
