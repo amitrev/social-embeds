@@ -1,5 +1,11 @@
 # social-embeds
 
+## 0.9.2
+
+### Patch Changes
+
+- 3de9477: `<SocialEmbed>` is about 0.85 KB smaller gzipped (27.4 KB), because the platform components now share one body instead of repeating it. A single platform component grows by under 0.1 KB.
+
 ## 0.9.1
 
 ### Patch Changes
