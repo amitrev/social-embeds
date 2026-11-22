@@ -1,5 +1,5 @@
 import { act, cleanup, render, within } from '@testing-library/react';
-import type { ReactElement } from 'react';
+import { Activity, type ReactElement, StrictMode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   FacebookEmbed,
@@ -44,6 +44,10 @@ function markupOf(container: HTMLElement): string {
 
 async function enter() {
   lastObserver().enter();
+  await flush();
+}
+
+async function flush() {
   await act(async () => {
     await Promise.resolve();
   });
@@ -270,6 +274,34 @@ describe('InstagramEmbed', () => {
     });
   });
 
+  it('fails at once inside a shadow root', async () => {
+    const process = vi.fn();
+    page.instgrm = { Embeds: { process } };
+    const host = document.createElement('div');
+    document.body.append(host);
+    const root = document.createElement('div');
+    host.attachShadow({ mode: 'open' }).append(root);
+    const onError = vi.fn();
+    render(
+      <InstagramEmbed
+        url="https://www.instagram.com/p/Df75lxnmIrF/"
+        onError={onError}
+      />,
+      { container: root },
+    );
+    await enter();
+    await vi.waitFor(() => {
+      expect(onError).toHaveBeenCalledWith(
+        new Error(
+          'social-embeds: the Instagram embed cannot render inside a shadow root',
+        ),
+      );
+    });
+    expect(onError).toHaveBeenCalledOnce();
+    expect(process).not.toHaveBeenCalled();
+    host.remove();
+  });
+
   it('keeps version and caption from embed code unless props turn them off', () => {
     const embed = parsed(instagramCode);
     const { container, rerender } = render(<InstagramEmbed embed={embed} />);
@@ -345,6 +377,90 @@ describe('FacebookEmbed', () => {
       expect.any(Function),
     );
     expect(onLoad).toHaveBeenCalled();
+  });
+
+  describe('that React hides and shows again', () => {
+    const post = 'https://www.facebook.com/facebook/posts/1710463914458955';
+    const video = 'https://www.facebook.com/facebook/videos/10153231379946729/';
+    const view = (
+      mode: 'hidden' | 'visible',
+      onLoad: () => void,
+      url = post,
+    ) => (
+      <Activity mode={mode}>
+        <FacebookEmbed url={url} onLoad={onLoad} />
+      </Activity>
+    );
+
+    it('renders the post and reports onLoad only once', async () => {
+      const parse = fakeFB();
+      const onLoad = vi.fn();
+      const { rerender } = render(view('visible', onLoad));
+      await enter();
+      expect(parse).toHaveBeenCalledOnce();
+      expect(onLoad).toHaveBeenCalledOnce();
+
+      rerender(view('hidden', onLoad));
+      rerender(view('visible', onLoad));
+      await flush();
+      expect(parse).toHaveBeenCalledOnce();
+      expect(onLoad).toHaveBeenCalledOnce();
+    });
+
+    it('renders a post hidden while the SDK loads once it is shown', async () => {
+      const parse = fakeFB();
+      let loaded = () => {};
+      const sdk = new Promise<void>((resolve) => {
+        loaded = resolve;
+      });
+      load.mockImplementation(() => sdk);
+      const onLoad = vi.fn();
+      const { rerender } = render(view('visible', onLoad));
+      await enter();
+      rerender(view('hidden', onLoad));
+      await act(async () => {
+        loaded();
+        await sdk;
+      });
+      expect(parse).not.toHaveBeenCalled();
+
+      rerender(view('visible', onLoad));
+      await flush();
+      expect(parse).toHaveBeenCalledOnce();
+      expect(onLoad).toHaveBeenCalledOnce();
+    });
+
+    it('renders a new post in a new container', async () => {
+      const parse = fakeFB();
+      const onLoad = vi.fn();
+      const { container, rerender } = render(view('visible', onLoad));
+      await enter();
+      rerender(view('visible', onLoad, video));
+      await enter();
+      expect(parse).toHaveBeenCalledTimes(2);
+      expect(parse).toHaveBeenLastCalledWith(
+        platformBox(container),
+        expect.any(Function),
+      );
+      expect(markupOf(container)).toContain('fb-video');
+      expect(onLoad).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  it('renders the post and reports onLoad once under StrictMode', async () => {
+    const parse = fakeFB();
+    const onLoad = vi.fn();
+    render(
+      <StrictMode>
+        <FacebookEmbed
+          url="https://www.facebook.com/facebook/posts/1710463914458955"
+          onLoad={onLoad}
+        />
+      </StrictMode>,
+    );
+    await enter();
+    expect(parse).toHaveBeenCalledOnce();
+    expect(onLoad).toHaveBeenCalledOnce();
   });
 
   it('renders post iframe embed code through the SDK with its width and show_text', () => {
@@ -596,4 +712,38 @@ describe('a platform script that fails', () => {
       expect(link.getAttribute('href')).toBe(href);
     },
   );
+});
+
+describe('invalid input', () => {
+  const messages = (onError: ReturnType<typeof vi.fn>) =>
+    onError.mock.calls.map(([error]) => (error as Error).message);
+
+  it('is reported once under StrictMode, and a new error after a prop change', () => {
+    const onError = vi.fn();
+    const view = (url: string) => (
+      <StrictMode>
+        <XEmbed url={url} onError={onError} />
+      </StrictMode>
+    );
+    const { rerender } = render(view('https://example.com/a'));
+    rerender(view('https://example.com/a'));
+    rerender(view('https://example.com/b'));
+    expect(messages(onError)).toEqual([
+      'social-embeds: not a X post URL: https://example.com/a',
+      'social-embeds: not a X post URL: https://example.com/b',
+    ]);
+  });
+
+  it('is not reported again when React hides and shows the embed', () => {
+    const onError = vi.fn();
+    const view = (mode: 'hidden' | 'visible') => (
+      <Activity mode={mode}>
+        <XEmbed url="https://example.com/a" onError={onError} />
+      </Activity>
+    );
+    const { rerender } = render(view('visible'));
+    rerender(view('hidden'));
+    rerender(view('visible'));
+    expect(onError).toHaveBeenCalledOnce();
+  });
 });

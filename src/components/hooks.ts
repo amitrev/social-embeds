@@ -37,10 +37,14 @@ export function useReportError(
   onError: ((error: Error) => void) | undefined,
 ): void {
   const latest = useRef(onError);
+  const reported = useRef<string>(undefined);
   useEffect(() => {
     latest.current = onError;
   });
   useEffect(() => {
-    if (message !== undefined) latest.current?.(new Error(message));
+    // StrictMode and <Activity> run this again for a message already reported.
+    if (message !== undefined && message !== reported.current)
+      latest.current?.(new Error(message));
+    reported.current = message;
   }, [message]);
 }

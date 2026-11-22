@@ -117,6 +117,10 @@ async function insert(script: PlatformScript): Promise<HTMLScriptElement> {
     element.src = script.url;
     element.async = true;
     if (script.crossOrigin) element.crossOrigin = script.crossOrigin;
+    // Browsers empty a loaded script's nonce attribute: only the property keeps the value.
+    const nonce =
+      document.querySelector<HTMLScriptElement>('script[nonce]')?.nonce;
+    if (nonce) element.setAttribute('nonce', nonce);
     element.addEventListener('load', () => {
       resolve();
     });
