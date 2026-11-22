@@ -4,7 +4,7 @@ import {
   type HtmlNode,
   parseHtml,
 } from './html';
-import type { Options } from './platform';
+import type { Options, PlatformParser } from './platform';
 import { platforms } from './platforms';
 import type { ParsedEmbed } from './types';
 
@@ -14,24 +14,38 @@ import type { ParsedEmbed } from './types';
  * comments (docs/decisions.md D14).
  */
 export function parseEmbed(html: string): ParsedEmbed | null {
+  return parseEmbedWith(platforms, html);
+}
+
+/** `parseEmbed` for these platforms only. */
+export function parseEmbedWith(
+  parsers: readonly PlatformParser[],
+  html: string,
+): ParsedEmbed | null {
   // Callers without type checking may pass anything.
   if (typeof html !== 'string') return null;
   const nodes = parseHtml(html);
-  return nodes ? parseNodes(nodes) : parseRepaired(html);
+  return nodes ? parseNodes(parsers, nodes) : parseRepaired(parsers, html);
 }
 
-function parseRepaired(html: string): ParsedEmbed | null {
-  for (const platform of platforms) {
+function parseRepaired(
+  parsers: readonly PlatformParser[],
+  html: string,
+): ParsedEmbed | null {
+  for (const platform of parsers) {
     const repaired = platform.repair?.(html);
     const nodes =
       repaired === undefined || repaired === null ? null : parseHtml(repaired);
-    const embed = nodes && parseNodes(nodes);
+    const embed = nodes && parseNodes(parsers, nodes);
     if (embed?.platform === platform.platform) return embed;
   }
   return null;
 }
 
-function parseNodes(nodes: readonly HtmlNode[]): ParsedEmbed | null {
+function parseNodes(
+  parsers: readonly PlatformParser[],
+  nodes: readonly HtmlNode[],
+): ParsedEmbed | null {
   let root: HtmlElement | undefined;
   let extra: HtmlElement | undefined;
   const scripts: HtmlElement[] = [];
@@ -58,14 +72,14 @@ function parseNodes(nodes: readonly HtmlNode[]): ParsedEmbed | null {
     const [script] = scripts;
     if (fbRoot || scripts.length !== 1 || !script) return null;
     if (script.children.length !== 0) return null;
-    for (const platform of platforms) {
+    for (const platform of parsers) {
       const embed = platform.parseScript?.(script);
       if (embed) return embed;
     }
     return null;
   }
 
-  for (const platform of platforms) {
+  for (const platform of parsers) {
     const embed = platform.parse(root);
     if (!embed) continue;
     if (fbRoot && !platform.allowsFbRoot) return null;

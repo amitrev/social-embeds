@@ -2,11 +2,13 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { parseEmbed } from '../../src/parser';
+import { descendants, parseHtml } from '../../src/parser/html';
 import { matchWith } from '../../src/parser/match-url';
 import { platforms } from '../../src/parser/platforms';
 
 // Per-platform components verify with their own parser alone (docs/decisions.md D103), which
-// equals verifying with all of them only while no URL belongs to two platforms.
+// equals verifying with all of them only while no URL belongs to two platforms. For the same
+// reason, `createSocialEmbed`'s list order does not matter (D113).
 
 const fixtures = import.meta.glob<string>('../fixtures/**/*.html', {
   query: '?raw',
@@ -60,5 +62,23 @@ describe('one parser per URL', () => {
       (embed) => owners(embed.url).join() !== embed.platform,
     );
     expect(wrong.map((embed) => embed.url)).toEqual([]);
+  });
+
+  it('no element of a fixture is embed code of two platforms', () => {
+    const shared = Object.entries(fixtures).flatMap(([path, html]) =>
+      descendants(parseHtml(html) ?? []).flatMap((element) => {
+        const owners = platforms.filter(
+          (parser) =>
+            parser.parse(element) !== null ||
+            parser.parseScript?.(element) != null,
+        );
+        return owners.length > 1
+          ? [
+              `${path} <${element.tag}>: ${owners.map((p) => p.platform).join()}`,
+            ]
+          : [];
+      }),
+    );
+    expect(shared).toEqual([]);
   });
 });
