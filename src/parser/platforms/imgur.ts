@@ -4,6 +4,7 @@ import {
   hasClass,
   rebuild,
   type Whitelist,
+  rebuildsAs,
 } from '../html';
 import type { Options, PlatformParser } from '../platform';
 import type { ParsedEmbed } from '../types';
@@ -95,7 +96,9 @@ function falseOption(root: HtmlElement, attribute: string): boolean {
 
 export const imgur: PlatformParser = {
   platform: 'imgur',
-  fallback: FALLBACK,
+  name: 'Imgur',
+  shapes: ['post iframe'],
+  trustsFallback: (html) => rebuildsAs(html, FALLBACK),
   parse(root) {
     if (root.tag !== 'blockquote' || !hasClass(root, 'imgur-embed-pub'))
       return null;

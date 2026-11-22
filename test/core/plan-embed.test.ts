@@ -59,6 +59,7 @@ import twitch from '../fixtures/twitch/docs-channel.html?raw';
 import vimeo from '../fixtures/vimeo/responsive-docs.html?raw';
 import x from '../fixtures/x/oembed-basic.html?raw';
 import youtube from '../fixtures/youtube/share.html?raw';
+import { comparable } from './comparable';
 
 type Case = [string, (embed: ParsedEmbed) => Plan | PlanError];
 
@@ -101,7 +102,7 @@ describe('planEmbed', () => {
       const embed = parseEmbed(fixture);
       if (!embed) throw new Error('fixture did not parse');
       expect(embed.platform).toBe(platform);
-      expect(planEmbed(embed)).toEqual(plan(embed));
+      expect(comparable(planEmbed(embed))).toEqual(comparable(plan(embed)));
     },
   );
 });

@@ -28,10 +28,11 @@ import tumblr from '../fixtures/tumblr/oembed.html?raw';
 import mapsFixture from '../fixtures/generic/google-maps-embed.html?raw';
 import { installObserver, installResizeObserver } from './helpers';
 
-vi.mock('../../src/loader/platform-scripts', () => ({
-  FACEBOOK_SDK_VERSION: 'v26.0',
-  loadPlatformScript: vi.fn(() => new Promise(() => {})),
-}));
+vi.mock('../../src/loader/platform-scripts', async () =>
+  (await import('../loader/helpers')).mockPlatformScripts(
+    () => new Promise(() => {}),
+  ),
+);
 
 const fixtures = import.meta.glob<string>('../fixtures/*/*.html', {
   query: '?raw',

@@ -6,7 +6,7 @@ const page = window as unknown as Page;
 
 async function freshLoader() {
   vi.resetModules();
-  return (await import('../../src/loader/platform-scripts')).loadPlatformScript;
+  return import('../../src/loader/platform-scripts');
 }
 
 beforeEach(() => {
@@ -20,9 +20,9 @@ afterEach(() => {
 
 describe('X', () => {
   it('loads widgets.js from platform.twitter.com and waits for twttr.ready', async () => {
-    const load = await freshLoader();
+    const { loadX } = await freshLoader();
     const added = captureScripts();
-    const promise = load('x');
+    const promise = loadX();
     expect(added.map((element) => element.src)).toEqual([
       'https://platform.twitter.com/widgets.js',
     ]);
@@ -41,11 +41,11 @@ describe('X', () => {
   });
 
   it('reuses widgets.js that the host loaded from platform.x.com', async () => {
-    const load = await freshLoader();
+    const { loadX } = await freshLoader();
     addHostScript('https://platform.x.com/widgets.js');
     const added = captureScripts();
     page.twttr = { widgets: { load: () => undefined } };
-    await expect(load('x')).resolves.toBeUndefined();
+    await expect(loadX()).resolves.toBeUndefined();
     expect(added).toHaveLength(0);
   });
 });
@@ -61,10 +61,10 @@ describe('Instagram and Threads', () => {
   });
 
   it('loads each script and waits for its own registration on instgrm.Embeds', async () => {
-    const load = await freshLoader();
+    const { loadInstagram, loadThreads } = await freshLoader();
     const added = captureScripts();
-    const instagram = load('instagram');
-    const threads = load('threads');
+    const instagram = loadInstagram();
+    const threads = loadThreads();
     expect(added.map((element) => element.src)).toEqual([
       'https://www.instagram.com/embed.js',
       'https://www.threads.com/embed.js',
@@ -80,11 +80,11 @@ describe('Instagram and Threads', () => {
   });
 
   it('marks a loaded Facebook SDK as buffering while embed.js runs (D38)', async () => {
-    const load = await freshLoader();
+    const { loadInstagram } = await freshLoader();
     const fb: Page = { XFBML: { parse: () => undefined } };
     page.FB = fb;
     const added = captureScripts();
-    const promise = load('instagram');
+    const promise = loadInstagram();
     expect(fb.__buffer).toBe(true);
 
     page.instgrm = embeds('instagram');
@@ -94,12 +94,12 @@ describe('Instagram and Threads', () => {
   });
 
   it('leaves the buffer of an SDK that is still loading alone', async () => {
-    const load = await freshLoader();
+    const { loadThreads } = await freshLoader();
     const buffer = { calls: [] };
     const fb: Page = { __buffer: buffer };
     page.FB = fb;
     const added = captureScripts();
-    const promise = load('threads');
+    const promise = loadThreads();
     page.instgrm = embeds('threads');
     fire(added[0], 'load');
     await expect(promise).resolves.toBeUndefined();
@@ -107,9 +107,9 @@ describe('Instagram and Threads', () => {
   });
 
   it('adds embed.js again when a Facebook SDK finished loading before it ran', async () => {
-    const load = await freshLoader();
+    const { loadInstagram } = await freshLoader();
     const added = captureScripts();
-    const promise = load('instagram');
+    const promise = loadInstagram();
     expect(added).toHaveLength(1);
     const first = added[0];
     if (!first) throw new Error('no script was added');
@@ -134,9 +134,9 @@ describe('Instagram and Threads', () => {
   });
 
   it('does not add a script again that has only not registered yet', async () => {
-    const load = await freshLoader();
+    const { loadThreads } = await freshLoader();
     const added = captureScripts();
-    const promise = load('threads');
+    const promise = loadThreads();
     // Loaded, no registration yet, and no Facebook SDK that could have stopped it.
     fire(added[0], 'load');
     await new Promise((resolve) => setTimeout(resolve, 100));
@@ -147,9 +147,9 @@ describe('Instagram and Threads', () => {
   });
 
   it('adds a script that keeps doing nothing three times at most', async () => {
-    const load = await freshLoader();
+    const { loadInstagram } = await freshLoader();
     const added = captureScripts();
-    const promise = load('instagram');
+    const promise = loadInstagram();
     promise.catch(() => undefined);
     page.FB = { XFBML: { parse: () => undefined } };
 
@@ -164,22 +164,22 @@ describe('Instagram and Threads', () => {
   });
 
   it('reuses the protocol-relative Instagram script of an embed code', async () => {
-    const load = await freshLoader();
+    const { loadInstagram } = await freshLoader();
     addHostScript('//www.instagram.com/embed.js');
     const added = captureScripts();
     page.instgrm = embeds('instagram');
-    await expect(load('instagram')).resolves.toBeUndefined();
+    await expect(loadInstagram()).resolves.toBeUndefined();
     expect(added).toHaveLength(0);
   });
 
   it("adds embed.js itself when the host's own tag ran beside a loaded Facebook SDK", async () => {
     vi.useFakeTimers();
-    const load = await freshLoader();
+    const { loadInstagram } = await freshLoader();
     addHostScript('https://www.instagram.com/embed.js');
     const fb: Page = { XFBML: { parse: () => undefined } };
     page.FB = fb;
     const added = captureScripts();
-    const promise = load('instagram');
+    const promise = loadInstagram();
 
     await vi.advanceTimersByTimeAsync(3_000);
     expect(added.map((element) => element.src)).toEqual([
@@ -198,9 +198,9 @@ describe('Facebook', () => {
   const fb = { XFBML: { parse: () => undefined } };
 
   it('loads the SDK without XFBML scanning, in the requested locale', async () => {
-    const load = await freshLoader();
+    const { loadFacebook } = await freshLoader();
     const added = captureScripts();
-    const promise = load('facebook', { locale: 'bg_BG' });
+    const promise = loadFacebook('bg_BG');
     expect(added[0]?.src).toBe(
       'https://connect.facebook.net/bg_BG/sdk.js#xfbml=0&version=v26.0',
     );
@@ -219,11 +219,11 @@ describe('Facebook', () => {
   });
 
   it("keeps the host's fbAsyncInit and calls it first", async () => {
-    const load = await freshLoader();
+    const { loadFacebook } = await freshLoader();
     const calls: string[] = [];
     page.fbAsyncInit = () => calls.push('host');
     const added = captureScripts();
-    const promise = load('facebook').then(() => calls.push('loader'));
+    const promise = loadFacebook('en_US').then(() => calls.push('loader'));
 
     page.FB = fb;
     fire(added[0], 'load');
@@ -233,31 +233,31 @@ describe('Facebook', () => {
   });
 
   it('serves the whole page with the first locale requested', async () => {
-    const load = await freshLoader();
+    const { loadFacebook } = await freshLoader();
     const added = captureScripts();
-    const first = load('facebook', { locale: 'en_US' });
-    const second = load('facebook', { locale: 'bg_BG' });
+    const first = loadFacebook('en_US');
+    const second = loadFacebook('bg_BG');
     expect(second).toBe(first);
     expect(added).toHaveLength(1);
   });
 
   it('reuses an SDK the host already set up', async () => {
-    const load = await freshLoader();
+    const { loadFacebook } = await freshLoader();
     addHostScript(
       'https://connect.facebook.net/en_US/sdk.js#xfbml=1&version=v3.2',
     );
     page.FB = fb;
     const added = captureScripts();
-    await expect(load('facebook')).resolves.toBeUndefined();
+    await expect(loadFacebook('en_US')).resolves.toBeUndefined();
     expect(added).toHaveLength(0);
   });
 
   it('adds its own SDK and waits for fbAsyncInit when the host tag never runs', async () => {
     vi.useFakeTimers();
-    const load = await freshLoader();
+    const { loadFacebook } = await freshLoader();
     addHostScript('https://connect.facebook.net/en_US/sdk.js');
     const added = captureScripts();
-    const promise = load('facebook');
+    const promise = loadFacebook('en_US');
 
     await vi.advanceTimersByTimeAsync(3_000);
     expect(added.map((element) => element.src)).toEqual([
@@ -271,9 +271,9 @@ describe('Facebook', () => {
   });
 
   it('rejects an invalid locale without loading anything', async () => {
-    const load = await freshLoader();
+    const { loadFacebook } = await freshLoader();
     const added = captureScripts();
-    await expect(load('facebook', { locale: 'en_US/../x' })).rejects.toThrow(
+    await expect(loadFacebook('en_US/../x')).rejects.toThrow(
       'social-embeds: invalid Facebook locale "en_US/../x"',
     );
     expect(added).toHaveLength(0);
@@ -282,9 +282,9 @@ describe('Facebook', () => {
 
 describe('Pinterest', () => {
   it('loads pinit_main.js directly and waits for PinUtils.build', async () => {
-    const load = await freshLoader();
+    const { loadPinterest } = await freshLoader();
     const added = captureScripts();
-    const promise = load('pinterest');
+    const promise = loadPinterest();
     expect(added.map((element) => element.src)).toEqual([
       'https://assets.pinterest.com/js/pinit_main.js',
     ]);
@@ -294,10 +294,10 @@ describe('Pinterest', () => {
   });
 
   it("waits for the host's own pinit.js instead of adding a second script", async () => {
-    const load = await freshLoader();
+    const { loadPinterest } = await freshLoader();
     addHostScript('//assets.pinterest.com/js/pinit.js');
     const added = captureScripts();
-    const promise = load('pinterest');
+    const promise = loadPinterest();
     page.PinUtils = { build: () => undefined };
     await expect(promise).resolves.toBeUndefined();
     expect(added).toHaveLength(0);

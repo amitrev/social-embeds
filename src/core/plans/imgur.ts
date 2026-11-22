@@ -1,5 +1,6 @@
 import type { ParsedEmbed } from '../../parser';
 import type { MessageHeight, Plan, PlanError } from '../plan';
+import { listenForHeight } from '../message-height';
 
 export type ImgurOptions = {
   /** `false` hides the post's title and description. */
@@ -17,6 +18,7 @@ const IMGUR_HEIGHT: MessageHeight = {
       ? message.height
       : undefined;
   },
+  listen: listenForHeight,
 };
 
 /** At most 540px wide by default, the widest `embed.js` makes the frame (docs/decisions.md D94). */

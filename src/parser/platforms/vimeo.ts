@@ -106,6 +106,8 @@ function fromPlayer(url: ParsedUrl | null): ParsedEmbed | null {
 
 export const vimeo: PlatformParser = {
   platform: 'vimeo',
+  name: 'Vimeo',
+  shapes: ['video iframe'],
   parse(root) {
     const wrapped = unwrapRatio(root, WRAPPER);
     const iframe = wrapped?.iframe ?? root;

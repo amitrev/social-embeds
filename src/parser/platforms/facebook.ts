@@ -1,4 +1,4 @@
-import { hasClass, rebuild, type Whitelist } from '../html';
+import { hasClass, rebuild, type Whitelist, rebuildsAs } from '../html';
 import {
   attributeOptions,
   type Options,
@@ -141,7 +141,9 @@ function embed(
 
 export const facebook: PlatformParser = {
   platform: 'facebook',
-  fallback: FALLBACK,
+  name: 'Facebook',
+  shapes: ['post sdk', 'video sdk', 'video iframe'],
+  trustsFallback: (html) => rebuildsAs(html, FALLBACK),
   parse(root) {
     if (root.tag === 'div') {
       const kind = hasClass(root, 'fb-post')

@@ -3,14 +3,16 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { URLS } from '../../playground/samples';
 import { SocialEmbed } from '../../src';
 import '../../src/element';
-import { loadPlatformScript } from '../../src/loader/platform-scripts';
 import { type Platform, parseEmbed, parseIframe } from '../../src/parser';
 import { installObserver, installResizeObserver } from '../components/helpers';
+import type { LoadPlatformScript } from '../loader/helpers';
 
-vi.mock('../../src/loader/platform-scripts', () => ({
-  FACEBOOK_SDK_VERSION: 'v26.0',
-  loadPlatformScript: vi.fn(() => new Promise(() => {})),
-}));
+const loadPlatformScript = vi.hoisted(() =>
+  vi.fn<LoadPlatformScript>(() => new Promise(() => {})),
+);
+vi.mock('../../src/loader/platform-scripts', async () =>
+  (await import('../loader/helpers')).mockPlatformScripts(loadPlatformScript),
+);
 
 const fixtures = import.meta.glob<string>('../fixtures/**/*.html', {
   query: '?raw',
@@ -266,15 +268,13 @@ describe('<social-embed> and <SocialEmbed>', () => {
       .filter((item) => scripts.has(item.platform))
       .map((item) => [item.label, item] as const),
   )('fails the same for %s', async (_label, { source }) => {
-    vi.mocked(loadPlatformScript).mockImplementation(() =>
+    loadPlatformScript.mockImplementation(() =>
       Promise.reject(new Error('blocked')),
     );
     const react = await viaReact(source);
     cleanup();
     const element = await viaElement(source);
-    vi.mocked(loadPlatformScript).mockImplementation(
-      () => new Promise(() => {}),
-    );
+    loadPlatformScript.mockImplementation(() => new Promise(() => {}));
     expect(element).toEqual(react);
     if (react.kind !== 'script') return;
     expect(react.error).toBe('blocked');

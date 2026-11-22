@@ -14,6 +14,7 @@ import snapchatLens from '../fixtures/snapchat/lens-share.html?raw';
 import telegramOptions from '../fixtures/telegram/widget-configurator-options.html?raw';
 import tiktokPlayer from '../fixtures/tiktok/oembed-player.html?raw';
 import youtubeNocookie from '../fixtures/youtube/share-nocookie-controls-start.html?raw';
+import { listenForHeight } from '../../src/core/message-height';
 
 function parser(platform: Platform) {
   const found = parserFor(platform);
@@ -192,6 +193,7 @@ describe('telegramPlan', () => {
       messageHeight: {
         origin: 'https://t.me',
         read: expect.any(Function) as unknown,
+        listen: listenForHeight,
       },
       startHeight: 300,
       maxWidth: 500,
@@ -311,6 +313,7 @@ describe('redditPlan', () => {
       messageHeight: {
         origin: 'https://embed.reddit.com',
         read: expect.any(Function) as unknown,
+        listen: listenForHeight,
       },
       startHeight: 552,
       maxWidth: 640,

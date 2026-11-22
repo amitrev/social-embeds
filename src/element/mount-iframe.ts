@@ -1,11 +1,6 @@
-import {
-  type FrameLayout,
-  frameStyle,
-  srcWithSize,
-  watchWidth,
-} from '../core/layout';
+import { type FrameLayout, frameStyle } from '../core/layout';
 import type { IframePlan } from '../core/plan';
-import { FRAME_TIMEOUT_MS, MAX_REPORTED_HEIGHT } from '../core/timing';
+import { FRAME_TIMEOUT_MS } from '../core/timing';
 import {
   applyStyle,
   type Mounted,
@@ -14,11 +9,6 @@ import {
   skeleton,
 } from './dom';
 import { whenNear } from './near';
-
-function withHost(src: string, name: string): string {
-  const separator = src.includes('?') ? '&' : '?';
-  return `${src}${separator}${encodeURIComponent(name)}=${encodeURIComponent(window.location.hostname)}`;
-}
 
 function fill(element: HTMLElement): HTMLElement {
   element.style.position = 'absolute';
@@ -67,25 +57,6 @@ export function mountIframe(
     onLoad();
   };
 
-  const listen = (event: MessageEvent) => {
-    if (!messageHeight || event.origin !== messageHeight.origin) return;
-    if (!iframe || event.source !== iframe.contentWindow) return;
-    let value: number | undefined;
-    try {
-      value = messageHeight.read(event.data);
-    } catch {
-      return;
-    }
-    if (
-      typeof value !== 'number' ||
-      !(value > 0 && value <= MAX_REPORTED_HEIGHT)
-    )
-      return;
-    height = Math.ceil(value);
-    applyStyle(wrapper, { height });
-    report();
-  };
-
   const failure = messageHeight ? 'did not report its height' : 'did not load';
   const startTimer = () => {
     timer = setTimeout(() => {
@@ -97,7 +68,7 @@ export function mountIframe(
 
   const create = (src: string) => {
     const element = document.createElement('iframe');
-    element.src = plan.hostParam ? withHost(src, plan.hostParam) : src;
+    element.src = plan.clientSrc ? plan.clientSrc(src) : src;
     element.title = plan.title;
     element.setAttribute('allow', plan.allow);
     if (plan.allowFullscreen !== false)
@@ -119,20 +90,31 @@ export function mountIframe(
     if (iframe) iframe.replaceWith(element);
     else frame.prepend(element);
     iframe = element;
-    if (messageHeight) window.addEventListener('message', listen);
   };
 
   let started = false;
   const start = () => {
     if (started) return;
     started = true;
-    if (!plan.sizeInSrc) {
+    if (messageHeight)
+      cancels.push(
+        messageHeight.listen(
+          () => iframe,
+          (value) => {
+            height = value;
+            applyStyle(wrapper, { height });
+            report();
+          },
+        ),
+      );
+    const { sizeInSrc } = plan;
+    if (!sizeInSrc) {
       create(plan.src);
       return;
     }
     cancels.push(
-      watchWidth(frame, (width) => {
-        create(srcWithSize(plan, width));
+      sizeInSrc.watch(frame, (width) => {
+        create(sizeInSrc.src(width));
       }),
     );
   };
@@ -148,7 +130,6 @@ export function mountIframe(
   const cleanup = () => {
     for (const cancel of cancels) cancel();
     clearTimeout(timer);
-    window.removeEventListener('message', listen);
     wrapper.remove();
   };
   return {

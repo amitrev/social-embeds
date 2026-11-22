@@ -8,7 +8,6 @@ import {
   ThreadsEmbed,
   XEmbed,
 } from '../../src';
-import { loadPlatformScript } from '../../src/loader/platform-scripts';
 import { parseEmbed, type ParsedEmbed } from '../../src/parser';
 import postIframe from '../fixtures/facebook/post-iframe.html?raw';
 import videoIframe from '../fixtures/facebook/video-iframe-reel.html?raw';
@@ -17,14 +16,16 @@ import instagramCode from '../fixtures/instagram/post-captioned.html?raw';
 import pinterestIframe from '../fixtures/pinterest/oembed-iframe.html?raw';
 import threadsCode from '../fixtures/threads/embed-dialog.html?raw';
 import xOptions from '../fixtures/x/oembed-options.html?raw';
+import type { LoadPlatformScript } from '../loader/helpers';
 import { installObserver, lastObserver } from './helpers';
 
-vi.mock('../../src/loader/platform-scripts', () => ({
-  FACEBOOK_SDK_VERSION: 'v26.0',
-  loadPlatformScript: vi.fn(() => Promise.resolve()),
-}));
+const load = vi.hoisted(() =>
+  vi.fn<LoadPlatformScript>(() => Promise.resolve()),
+);
+vi.mock('../../src/loader/platform-scripts', async () =>
+  (await import('../loader/helpers')).mockPlatformScripts(load),
+);
 
-const load = vi.mocked(loadPlatformScript);
 const reel = 'https://www.facebook.com/reel/1523911562856332';
 const page = window as unknown as Record<string, unknown>;
 

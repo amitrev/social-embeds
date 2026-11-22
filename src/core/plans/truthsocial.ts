@@ -1,5 +1,6 @@
 import type { ParsedEmbed } from '../../parser';
 import type { MessageHeight, Plan, PlanError } from '../plan';
+import { listenForHeight } from '../message-height';
 
 const VIDEO_EXTRA = 165; // what Truth Social's embed.js adds for a video post
 
@@ -14,6 +15,7 @@ function setHeight(data: unknown): number | undefined {
 const TRUTH_SOCIAL_HEIGHT: MessageHeight = {
   origin: 'https://truthsocial.com',
   read: setHeight,
+  listen: listenForHeight,
 };
 
 /** A video post reports its height before the video is sized (docs/decisions.md D100). */
@@ -26,6 +28,7 @@ const TRUTH_SOCIAL_VIDEO_HEIGHT: MessageHeight = {
       ? undefined
       : height + VIDEO_EXTRA;
   },
+  listen: listenForHeight,
 };
 
 const CANONICAL = /^https:\/\/truthsocial\.com\/(@[^/]+)\/posts\/\d+$/;

@@ -31,6 +31,8 @@ function content(
 
 export const applepodcasts: PlatformParser = {
   platform: 'applepodcasts',
+  name: 'Apple Podcasts',
+  shapes: ['post iframe'],
   parse(root) {
     if (root.tag !== 'iframe') return null;
     const found = content(parseUrl(root.attrs.get('src') ?? ''), FRAME_HOST);

@@ -1,4 +1,4 @@
-import { hasClass, rebuild, type Whitelist } from '../html';
+import { hasClass, rebuild, type Whitelist, rebuildsAs } from '../html';
 import { attributeOptions, type PlatformParser } from '../platform';
 import type { ParsedEmbed } from '../types';
 import { coerce, parseUrl, type ParsedUrl } from '../url';
@@ -39,7 +39,9 @@ function post(url: ParsedUrl | null): Omit<ParsedEmbed, 'options'> | null {
 
 export const threads: PlatformParser = {
   platform: 'threads',
-  fallback: FALLBACK,
+  name: 'Threads',
+  shapes: ['post sdk'],
+  trustsFallback: (html) => rebuildsAs(html, FALLBACK),
   parse(root) {
     if (root.tag !== 'blockquote' || !hasClass(root, 'text-post-media'))
       return null;

@@ -49,6 +49,10 @@ import flickrDialog from '../fixtures/flickr/embed-dialog.html?raw';
 import flickrHeaderFooter from '../fixtures/flickr/embed-dialog-header-footer.html?raw';
 import flickrSlideshow from '../fixtures/flickr/embed-dialog-slideshow.html?raw';
 import flickrAlbum from '../fixtures/flickr/embed-dialog-album.html?raw';
+import { watchWidth } from '../../src/core/size-in-src';
+import { comparable } from './comparable';
+import { listenForHeight } from '../../src/core/message-height';
+import { withParent } from '../../src/core/plans/twitch';
 
 function parser(platform: Platform) {
   const found = parserFor(platform);
@@ -229,7 +233,7 @@ describe('twitchPlan', () => {
       allow: '',
       ratio: { width: 16, height: 9 },
       size: undefined,
-      hostParam: 'parent',
+      clientSrc: withParent,
     });
   });
 
@@ -245,7 +249,7 @@ describe('twitchPlan', () => {
       allow: '',
       ratio: { width: 16, height: 9 },
       size: undefined,
-      hostParam: 'parent',
+      clientSrc: withParent,
     });
   });
 
@@ -257,7 +261,7 @@ describe('twitchPlan', () => {
       allow: '',
       ratio: { width: 16, height: 9 },
       size: { width: 1280, height: 720 },
-      hostParam: 'parent',
+      clientSrc: withParent,
     });
     expect(twitchPlan(fromCode(twitchVideo, 'twitch'), {})).toEqual({
       kind: 'iframe',
@@ -266,7 +270,7 @@ describe('twitchPlan', () => {
       allow: '',
       ratio: { width: 16, height: 9 },
       size: { width: 1280, height: 720 },
-      hostParam: 'parent',
+      clientSrc: withParent,
     });
   });
 
@@ -281,7 +285,7 @@ describe('twitchPlan', () => {
       allow: '',
       ratio: { width: 16, height: 9 },
       size: undefined,
-      hostParam: 'parent',
+      clientSrc: withParent,
     });
   });
 });
@@ -359,6 +363,7 @@ describe('blueskyPlan', () => {
       messageHeight: {
         origin: 'https://embed.bsky.app',
         read: expect.any(Function) as unknown,
+        listen: listenForHeight,
       },
       startHeight: 300,
       maxWidth: 600,
@@ -541,6 +546,7 @@ describe('tumblrPlan', () => {
     messageHeight: {
       origin: 'https://embed.tumblr.com',
       read: expect.any(Function) as unknown,
+      listen: listenForHeight,
     },
     startHeight: 400,
     maxWidth: 540,
@@ -764,6 +770,7 @@ describe('truthSocialPlan', () => {
     messageHeight: {
       origin: 'https://truthsocial.com',
       read: expect.any(Function) as unknown,
+      listen: listenForHeight,
     },
     startHeight: 150,
     maxWidth: 600,
@@ -844,6 +851,7 @@ describe('imgurPlan', () => {
     messageHeight: {
       origin: 'https://imgur.com',
       read: expect.any(Function) as unknown,
+      listen: listenForHeight,
     },
     startHeight: 500,
     maxWidth: 540,
@@ -939,6 +947,7 @@ describe('stravaPlan', () => {
       messageHeight: {
         origin: 'https://strava-embeds.com',
         read: expect.any(Function) as unknown,
+        listen: listenForHeight,
       },
       startHeight: 650,
       maxWidth: 554,
@@ -1049,11 +1058,21 @@ describe('flickrPlan', () => {
       scrolling: 'no',
       ratio: { width: 4, height: 3 },
       size: { width: 4096, height: 2301 },
-      sizeInSrc: true,
+      sizeInSrc: {
+        watch: watchWidth,
+        src: expect.any(Function) as unknown,
+      },
       maxWidth: 4096,
       fallbackHtml: `<a href="${PHOTO}"><img style="${IMAGE_STYLE}" src="https://live.staticflickr.com/65535/55618331478_aa284e58b6_4k.jpg" width="4096" height="2301" alt="Flickr for the Planet Feature - Rio Arrayanes, Patagonia Argentina"></a>`,
       fallbackImage: true,
     });
+  });
+
+  it('puts the box size in the frame URL, at the image ratio', () => {
+    const plan = flickrPlan(fromCode(flickrDialog, 'flickr'), {});
+    expect(plan.kind === 'iframe' && plan.sizeInSrc?.src(600)).toBe(
+      'https://embedr.flickr.com/photos/55618331478?width=600&height=337',
+    );
   });
 
   it('builds the album frame', () => {
@@ -1097,7 +1116,10 @@ describe('flickrPlan', () => {
       allow: '',
       scrolling: 'no',
       ratio: { width: 4, height: 3 },
-      sizeInSrc: true,
+      sizeInSrc: {
+        watch: watchWidth,
+        src: expect.any(Function) as unknown,
+      },
       fallbackImage: true,
     });
   });
@@ -1107,7 +1129,9 @@ describe('flickrPlan', () => {
       fromUrl('https://flic.kr/p/2sJNueC', 'flickr'),
       {},
     );
-    expect(short).toEqual(flickrPlan(fromUrl(PHOTO, 'flickr'), {}));
+    expect(comparable(short)).toEqual(
+      comparable(flickrPlan(fromUrl(PHOTO, 'flickr'), {})),
+    );
   });
 
   it('builds the album frame for an album URL', () => {

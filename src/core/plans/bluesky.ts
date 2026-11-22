@@ -1,6 +1,7 @@
 import type { ParsedEmbed } from '../../parser';
 import { query } from '../params';
 import type { MessageHeight, Plan, PlanError } from '../plan';
+import { listenForHeight } from '../message-height';
 
 export type BlueskyOptions = {
   colorMode?: 'light' | 'dark' | 'system';
@@ -13,6 +14,7 @@ const BLUESKY_HEIGHT: MessageHeight = {
     const height = (data as { height?: unknown } | null)?.height;
     return typeof height === 'number' ? height : undefined;
   },
+  listen: listenForHeight,
 };
 
 /**

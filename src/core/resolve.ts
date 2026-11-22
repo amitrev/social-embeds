@@ -1,44 +1,18 @@
 import { needsLookup } from '../parser/lookup';
 import { matchWith } from '../parser/match-url';
+import { parseUrl } from '../parser/url';
 import type { PlatformParser } from '../parser/platform';
 import type { ParsedEmbed, Platform } from '../parser/types';
 import { verifyWith } from '../parser/verify';
 
-export const NAMES: Record<Platform, string> = {
-  x: 'X',
-  instagram: 'Instagram',
-  facebook: 'Facebook',
-  threads: 'Threads',
-  tiktok: 'TikTok',
-  youtube: 'YouTube',
-  telegram: 'Telegram',
-  snapchat: 'Snapchat',
-  linkedin: 'LinkedIn',
-  reddit: 'Reddit',
-  pinterest: 'Pinterest',
-  spotify: 'Spotify',
-  vimeo: 'Vimeo',
-  twitch: 'Twitch',
-  dailymotion: 'Dailymotion',
+// Only these two platforms have URLs that need a lookup.
+const LOOKUP_NAMES: Partial<Record<Platform, string>> = {
   bluesky: 'Bluesky',
-  soundcloud: 'SoundCloud',
-  applemusic: 'Apple Music',
-  applepodcasts: 'Apple Podcasts',
-  tumblr: 'Tumblr',
-  kick: 'Kick',
-  giphy: 'Giphy',
-  truthsocial: 'Truth Social',
-  imgur: 'Imgur',
-  tenor: 'Tenor',
-  streamable: 'Streamable',
-  strava: 'Strava',
-  flickr: 'Flickr',
   rumble: 'Rumble',
 };
-
 /** For a post URL that only a network lookup could resolve (docs/decisions.md D70). */
-export function lookupMessage(platform: Platform): string {
-  return `social-embeds: a ${NAMES[platform]} URL needs a lookup: use the embed code`;
+export function lookupMessage(name: string): string {
+  return `social-embeds: a ${name} URL needs a lookup: use the embed code`;
 }
 
 /** Takes the platform's own parser, so a per-platform component bundles no other (docs/decisions.md D103). */
@@ -47,27 +21,27 @@ export function resolveEmbed(
   given: ParsedEmbed | undefined,
   parser: PlatformParser,
 ): { embed: ParsedEmbed; error?: never } | { embed?: never; error: string } {
-  const { platform } = parser;
+  const { platform, name } = parser;
   const embed = given ?? (url === undefined ? null : matchWith(parser, url));
-  if (!embed && url !== undefined && needsLookup(url) === platform) {
+  if (!embed && url !== undefined && lookupNeeded(parser, url)) {
     return {
-      error: lookupMessage(platform),
+      error: lookupMessage(name),
     };
   }
   if (!embed) {
     return {
-      error: `social-embeds: not a ${NAMES[platform]} post URL: ${String(url)}`,
+      error: `social-embeds: not a ${name} post URL: ${String(url)}`,
     };
   }
   if (embed.platform !== platform) {
     return {
-      error: `social-embeds: expected a ${NAMES[platform]} embed, got ${NAMES[embed.platform]}`,
+      error: `social-embeds: expected a ${name} embed, got ${embed.platform}`,
     };
   }
   const verified = verifyWith(parser, embed);
   if (!verified) {
     return {
-      error: `social-embeds: the ${NAMES[platform]} embed's url and id do not match`,
+      error: `social-embeds: the ${name} embed's url and id do not match`,
     };
   }
   return { embed: verified };
@@ -80,6 +54,11 @@ export function sourceError(
   if ('html' in source) return 'social-embeds: unrecognised embed code';
   const lookup = needsLookup(source.url);
   return lookup
-    ? lookupMessage(lookup)
+    ? lookupMessage(LOOKUP_NAMES[lookup] ?? lookup)
     : `social-embeds: not a supported post URL: ${source.url}`;
+}
+
+function lookupNeeded(parser: PlatformParser, url: string): boolean {
+  const parsed = typeof url === 'string' ? parseUrl(url) : null;
+  return parsed !== null && parser.needsLookup?.(parsed) === true;
 }

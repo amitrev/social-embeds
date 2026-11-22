@@ -1,4 +1,5 @@
 import { vi } from 'vitest';
+import type * as platformScripts from '../../src/loader/platform-scripts';
 
 /** The tags are captured, never attached: each test decides when a script loads or fails. */
 export function captureScripts(): HTMLScriptElement[] {
@@ -37,4 +38,23 @@ export function resetPage(): void {
     Reflect.deleteProperty(window, name);
   document.head.replaceChildren();
   document.body.replaceChildren();
+}
+
+export type LoadPlatformScript = (
+  platform: 'x' | 'instagram' | 'threads' | 'pinterest' | 'facebook',
+  options?: { locale: string },
+) => Promise<void>;
+
+/** A `vi.mock` factory result: every platform's loader reports to `load`. */
+export function mockPlatformScripts(
+  load: LoadPlatformScript,
+): typeof platformScripts {
+  return {
+    FACEBOOK_SDK_VERSION: 'v26.0',
+    loadX: () => load('x'),
+    loadInstagram: () => load('instagram'),
+    loadThreads: () => load('threads'),
+    loadPinterest: () => load('pinterest'),
+    loadFacebook: (locale) => load('facebook', { locale }),
+  };
 }

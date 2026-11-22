@@ -114,6 +114,8 @@ function fromPage(url: ParsedUrl): { found: Target; options: Options } | null {
 
 export const twitch: PlatformParser = {
   platform: 'twitch',
+  name: 'Twitch',
+  shapes: ['video iframe'],
   parse(root) {
     if (root.tag !== 'iframe') return null;
     const src = parseUrl(root.attrs.get('src') ?? '');

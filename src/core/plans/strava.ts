@@ -1,5 +1,6 @@
 import type { ParsedEmbed } from '../../parser';
 import type { MessageHeight, Plan, PlanError } from '../plan';
+import { listenForHeight } from '../message-height';
 
 /** The display options of Strava's embed code (docs/decisions.md D97). */
 export type StravaOptions = {
@@ -23,6 +24,7 @@ const STRAVA_HEIGHT: MessageHeight = {
       ? height
       : undefined;
   },
+  listen: listenForHeight,
 };
 
 function styleOf(value: unknown): 'standard' | 'minimal' {

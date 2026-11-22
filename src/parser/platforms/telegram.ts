@@ -46,6 +46,8 @@ function post(channel: string, id: string, options: Options): ParsedEmbed {
 
 export const telegram: PlatformParser = {
   platform: 'telegram',
+  name: 'Telegram',
+  shapes: ['post iframe'],
   parse: () => null,
   parseScript(script) {
     if (!SCRIPT.test(script.attrs.get('src') ?? '')) return null;

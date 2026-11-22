@@ -1,4 +1,10 @@
-import { descendants, hasClass, rebuild, type Whitelist } from '../html';
+import {
+  descendants,
+  hasClass,
+  rebuild,
+  type Whitelist,
+  rebuildsAs,
+} from '../html';
 import type { Options, PlatformParser } from '../platform';
 import type { ParsedEmbed } from '../types';
 import { coerce, parseUrl, type ParsedUrl } from '../url';
@@ -36,7 +42,9 @@ function post(url: ParsedUrl | null): Omit<ParsedEmbed, 'options'> | null {
 
 export const instagram: PlatformParser = {
   platform: 'instagram',
-  fallback: FALLBACK,
+  name: 'Instagram',
+  shapes: ['post sdk'],
+  trustsFallback: (html) => rebuildsAs(html, FALLBACK),
   parse(root) {
     if (root.tag !== 'blockquote' || !hasClass(root, 'instagram-media'))
       return null;

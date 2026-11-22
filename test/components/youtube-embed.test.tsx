@@ -212,7 +212,7 @@ describe('YouTubeEmbed', () => {
     );
     render(<YouTubeEmbed embed={embed} onError={onError} />);
     expect(onError).toHaveBeenCalledWith(
-      new Error('social-embeds: expected a YouTube embed, got TikTok'),
+      new Error('social-embeds: expected a YouTube embed, got tiktok'),
     );
   });
 });

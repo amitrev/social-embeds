@@ -5,7 +5,6 @@ import { dailymotionPlan } from '../../src/core/plans/dailymotion';
 import { youtubePlan } from '../../src/core/plans/youtube';
 import { lookupMessage } from '../../src/core/resolve';
 import { SocialEmbedElement } from '../../src/element';
-import { loadPlatformScript } from '../../src/loader/platform-scripts';
 import { matchUrl, type ParsedEmbed, parseIframe } from '../../src/parser';
 import datawrapperCode from '../fixtures/generic/datawrapper-oembed.html?raw';
 import mapsCode from '../fixtures/generic/google-maps-embed.html?raw';
@@ -13,11 +12,14 @@ import vimeoCode from '../fixtures/vimeo/oembed.html?raw';
 import xCode from '../fixtures/x/oembed-basic.html?raw';
 import youtubeCode from '../fixtures/youtube/share.html?raw';
 import { installObserver } from '../components/helpers';
+import type { LoadPlatformScript } from '../loader/helpers';
 
-vi.mock('../../src/loader/platform-scripts', () => ({
-  FACEBOOK_SDK_VERSION: 'v26.0',
-  loadPlatformScript: vi.fn(() => Promise.resolve()),
-}));
+const loadPlatformScript = vi.hoisted(() =>
+  vi.fn<LoadPlatformScript>(() => Promise.resolve()),
+);
+vi.mock('../../src/loader/platform-scripts', async () =>
+  (await import('../loader/helpers')).mockPlatformScripts(loadPlatformScript),
+);
 
 const YOUTUBE = 'https://www.youtube.com/watch?v=jNQXAC9IVRw';
 const YOUTUBE_SHORT = 'https://youtu.be/jNQXAC9IVRw?t=11';
@@ -408,7 +410,7 @@ describe('<social-embed>', () => {
     document.body.append(element);
     const { errors } = listen(element);
     await flush();
-    expect(errors.mock.calls[0]?.[0].message).toBe(lookupMessage('bluesky'));
+    expect(errors.mock.calls[0]?.[0].message).toBe(lookupMessage('Bluesky'));
   });
 
   it('reports a Rumble page URL that needs a lookup', async () => {
@@ -877,7 +879,7 @@ describe('<social-embed>', () => {
   });
 
   it('replaces the skeleton with a link to the post when the platform script fails', async () => {
-    vi.mocked(loadPlatformScript).mockRejectedValueOnce(new Error('blocked'));
+    loadPlatformScript.mockRejectedValueOnce(new Error('blocked'));
     const url = 'https://x.com/jack/status/20';
     const element = create({ url, eager: '' });
     document.body.append(element);
@@ -895,7 +897,7 @@ describe('<social-embed>', () => {
   });
 
   it('keeps the fallback content of embed code when the platform script fails', async () => {
-    vi.mocked(loadPlatformScript).mockRejectedValueOnce(new Error('blocked'));
+    loadPlatformScript.mockRejectedValueOnce(new Error('blocked'));
     const element = create({ eager: '' }, `<template>${xCode}</template>`);
     document.body.append(element);
     const { errors } = listen(element);

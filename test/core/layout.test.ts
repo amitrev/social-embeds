@@ -1,6 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { IframePlan } from '../../src/core/plan';
-import { frameStyle, srcWithSize, watchWidth } from '../../src/core/layout';
+import { frameStyle } from '../../src/core/layout';
+import { srcWithSize, watchWidth } from '../../src/core/size-in-src';
+import { listenForHeight } from '../../src/core/message-height';
 
 const plan = (extra: Partial<IframePlan> = {}): IframePlan => ({
   kind: 'iframe',
@@ -14,6 +16,7 @@ const plan = (extra: Partial<IframePlan> = {}): IframePlan => ({
 const message = {
   origin: 'https://example.com',
   read: () => undefined,
+  listen: listenForHeight,
 };
 
 describe('frameStyle', () => {

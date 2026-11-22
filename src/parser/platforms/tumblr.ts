@@ -57,6 +57,8 @@ function fromUrl(url: ParsedUrl | null): Omit<ParsedEmbed, 'options'> | null {
 
 export const tumblr: PlatformParser = {
   platform: 'tumblr',
+  name: 'Tumblr',
+  shapes: ['post iframe'],
   parse(root) {
     if (root.tag !== 'div' || !hasClass(root, 'tumblr-post')) return null;
     const frame = parseUrl(root.attrs.get('data-href') ?? '');

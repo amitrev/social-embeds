@@ -80,6 +80,8 @@ function idOf(url: ParsedUrl | null): string | undefined {
 
 export const streamable: PlatformParser = {
   platform: 'streamable',
+  name: 'Streamable',
+  shapes: ['video iframe'],
   parse(root) {
     const wrapped = unwrapRatio(root, WRAPPER);
     const iframe = wrapped?.iframe ?? root;

@@ -1,6 +1,7 @@
 import { loadScript, type PlatformScript } from './load-script';
 
 // Script URLs, globals and ready signals: docs/decisions.md D24–D26.
+// No calls at module level: a bundler keeps a platform's script only if its loader is used.
 
 type PlatformGlobals = {
   twttr?: {
@@ -26,14 +27,12 @@ export const FACEBOOK_SDK_VERSION = 'v26.0';
 const LOCALE = /^[a-z]{2,3}_[A-Z]{2}$/;
 
 /** Instagram and Threads share `instgrm.Embeds`; each registers its name when loaded. */
-function embedSdkRegistered(name: string): () => boolean {
-  return () => {
-    const embeds = globals().instgrm?.Embeds;
-    return (
-      embeds?.registeredEmbedSDKs?.[name] === true &&
-      typeof embeds.process === 'function'
-    );
-  };
+function embedSdkRegistered(name: string): boolean {
+  const embeds = globals().instgrm?.Embeds;
+  return (
+    embeds?.registeredEmbedSDKs?.[name] === true &&
+    typeof embeds.process === 'function'
+  );
 }
 
 const x: PlatformScript = {
@@ -69,12 +68,9 @@ function besideFacebookSdk(): () => void {
 
 // embed.js registers while it runs: no registration beside a loaded SDK means it ran
 // before the SDK could be marked, and did nothing (docs/decisions.md D46).
-function skippedBesideFacebookSdk(name: string): () => boolean {
-  const registered = embedSdkRegistered(name);
-  return () => {
-    const fb = globals().FB;
-    return !registered() && fb !== undefined && !fb.__buffer;
-  };
+function skippedBesideFacebookSdk(name: string): boolean {
+  const fb = globals().FB;
+  return !embedSdkRegistered(name) && fb !== undefined && !fb.__buffer;
 }
 
 const instagram: PlatformScript = {
@@ -82,9 +78,9 @@ const instagram: PlatformScript = {
   url: 'https://www.instagram.com/embed.js',
   isOwn: (src) =>
     /^https?:\/\/www\.instagram\.com\/embed\.js(?:[?#]|$)/.test(src),
-  isPresent: embedSdkRegistered('instagram'),
+  isPresent: () => embedSdkRegistered('instagram'),
   prepare: besideFacebookSdk,
-  skipped: skippedBesideFacebookSdk('instagram'),
+  skipped: () => skippedBesideFacebookSdk('instagram'),
 };
 
 const threads: PlatformScript = {
@@ -92,9 +88,9 @@ const threads: PlatformScript = {
   url: 'https://www.threads.com/embed.js',
   isOwn: (src) =>
     /^https?:\/\/www\.threads\.(?:com|net)\/embed\.js(?:[?#]|$)/.test(src),
-  isPresent: embedSdkRegistered('threads'),
+  isPresent: () => embedSdkRegistered('threads'),
   prepare: besideFacebookSdk,
-  skipped: skippedBesideFacebookSdk('threads'),
+  skipped: () => skippedBesideFacebookSdk('threads'),
 };
 
 // `xfbml=0` stops the SDK from scanning the whole page: each embed is parsed on its own.
@@ -132,27 +128,26 @@ const pinterest: PlatformScript = {
   isPresent: () => typeof globals().PinUtils?.build === 'function',
 };
 
-export type ScriptPlatform =
-  'x' | 'instagram' | 'threads' | 'facebook' | 'pinterest';
+export function loadX(): Promise<void> {
+  return loadScript(x);
+}
 
-export function loadPlatformScript(
-  platform: ScriptPlatform,
-  { locale = 'en_US' }: { locale?: string } = {},
-): Promise<void> {
-  switch (platform) {
-    case 'x':
-      return loadScript(x);
-    case 'instagram':
-      return loadScript(instagram);
-    case 'threads':
-      return loadScript(threads);
-    case 'pinterest':
-      return loadScript(pinterest);
-    case 'facebook':
-      return LOCALE.test(locale)
-        ? loadScript(facebook(locale))
-        : Promise.reject(
-            new Error(`social-embeds: invalid Facebook locale "${locale}"`),
-          );
-  }
+export function loadInstagram(): Promise<void> {
+  return loadScript(instagram);
+}
+
+export function loadThreads(): Promise<void> {
+  return loadScript(threads);
+}
+
+export function loadPinterest(): Promise<void> {
+  return loadScript(pinterest);
+}
+
+export function loadFacebook(locale: string): Promise<void> {
+  return LOCALE.test(locale)
+    ? loadScript(facebook(locale))
+    : Promise.reject(
+        new Error(`social-embeds: invalid Facebook locale "${locale}"`),
+      );
 }

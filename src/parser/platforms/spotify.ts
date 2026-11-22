@@ -43,6 +43,8 @@ function options(query: ParsedUrl['query']): Options {
 
 export const spotify: PlatformParser = {
   platform: 'spotify',
+  name: 'Spotify',
+  shapes: ['post iframe', 'video iframe'],
   parse(root) {
     if (root.tag !== 'iframe') return null;
     const src = parseUrl(root.attrs.get('src') ?? '');
