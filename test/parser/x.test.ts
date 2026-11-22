@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { matchUrl, parseEmbed } from '../../src/parser';
+import { verifyEmbed } from '../../src/parser/verify';
 import basic from '../fixtures/x/oembed-basic.html?raw';
 import hashtag from '../fixtures/x/oembed-hashtag.html?raw';
 import link from '../fixtures/x/oembed-link.html?raw';
@@ -77,6 +78,14 @@ describe('X embed code', () => {
     });
   });
 
+  it('reads only a plain status link as the embed code’s post', () => {
+    const code = basic.replace(
+      'https://x.com/jack/status/20?ref_src',
+      'https://x.com/jack/status/20/photo/1?ref_src',
+    );
+    expect(parseEmbed(code)).toBeNull();
+  });
+
   it('rejects a blockquote without a status link', () => {
     expect(
       parseEmbed('<blockquote class="twitter-tweet"><p>text</p></blockquote>'),
@@ -91,15 +100,36 @@ describe('X URLs', () => {
     'https://www.twitter.com/jack/status/20/',
     'https://mobile.twitter.com/jack/status/20?s=20',
     'https://x.com/jack/status/20#reply',
+    'https://x.com/jack/status/20/photo/1',
+    'https://x.com/jack/status/20/video/1',
+    'https://twitter.com/jack/status/20/photo/4/',
   ])('%s', (url) => {
     expect(matchUrl(url)).toEqual({ ...jack, options: {} });
   });
 
   it.each([
+    'https://twitter.com/i/web/status/20',
+    'https://x.com/i/web/status/20/',
+    'https://x.com/i/status/20',
+  ])('reads %s, which names no author', (url) => {
+    const embed = matchUrl(url);
+    expect(embed).toEqual({
+      ...jack,
+      url: 'https://x.com/i/status/20',
+      options: {},
+    });
+    expect(embed && verifyEmbed(embed)).toEqual(embed);
+  });
+
+  it.each([
     'https://x.com/jack',
     'https://x.com/jack/status/abc',
-    'https://x.com/i/web/status/20',
-    'https://x.com/jack/status/20/photo/1',
+    'https://x.com/jack/status/20/photo/5',
+    'https://x.com/jack/status/20/photo/',
+    'https://x.com/jack/status/20/photo/1/x',
+    'https://x.com/jack/status/20/analytics',
+    'https://x.com/i/web/status/abc',
+    'https://x.com/i/web/jack/status/20',
     'https://example.com/jack/status/20',
   ])('rejects %s', (url) => {
     expect(matchUrl(url)).toBeNull();

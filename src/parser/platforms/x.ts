@@ -12,6 +12,9 @@ const HOSTS = new Set([
   'mobile.twitter.com',
 ]);
 const STATUS_PATH = /^\/([A-Za-z0-9_]{1,15})\/status\/(\d{1,20})\/?$/;
+// URL input only: the media viewer's `/photo/{n}` and `/video/{n}`, and `/i/web/`, which names no author.
+const LINK_PATH =
+  /^\/(?:([A-Za-z0-9_]{1,15})|i\/web)\/status\/(\d{1,20})(?:\/(?:photo|video)\/[1-4])?\/?$/;
 const SCRIPT = /^(?:https?:)?\/\/platform\.(?:x|twitter)\.com\/widgets\.js$/;
 
 // publish.x.com emits a plain `align` attribute; `data-align` is the documented spelling.
@@ -32,10 +35,14 @@ const FALLBACK: Whitelist = new Map([
   ['br', []],
 ]);
 
-function post(url: ParsedUrl | null): Omit<ParsedEmbed, 'options'> | null {
+function post(
+  url: ParsedUrl | null,
+  path = STATUS_PATH,
+): Omit<ParsedEmbed, 'options'> | null {
   if (!url || !HOSTS.has(url.host)) return null;
-  const [, user, id] = STATUS_PATH.exec(url.path) ?? [];
-  if (user === undefined || id === undefined) return null;
+  // `/i/status/{id}` is X's own URL for a post without its author.
+  const [, user = 'i', id] = path.exec(url.path) ?? [];
+  if (id === undefined) return null;
   return {
     platform: 'x',
     kind: 'post',
@@ -69,7 +76,7 @@ export const x: PlatformParser = {
   },
   isOwnScript: (src) => SCRIPT.test(src),
   match(url) {
-    const status = post(url);
+    const status = post(url, LINK_PATH);
     return status && { ...status, options: {} };
   },
 };
