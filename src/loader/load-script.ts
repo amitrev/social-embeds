@@ -22,6 +22,7 @@ export type PlatformScript = {
 const ATTEMPTS = 3;
 const RETRY_DELAY_MS = 1000; // doubles with each attempt
 const TIMEOUT_MS = 15_000;
+const HOST_GRACE_MS = 3000; // after page load: a late host tag may still fetch one or two files
 const POLL_MS = 50;
 
 const loading = new Map<string, Promise<void>>();
@@ -46,13 +47,44 @@ export function loadScript(script: PlatformScript): Promise<void> {
 
 async function load(script: PlatformScript): Promise<void> {
   if (!script.isPresent()) {
-    const hostTag = [
+    const hostTags = [
       ...document.querySelectorAll<HTMLScriptElement>('script[src]'),
-    ].some((element) => script.isOwn(element.src));
-    // The host's own tag may still be loading: wait for its global instead of adding ours.
-    await (hostTag ? poll(script) : add(script));
+    ].filter((element) => script.isOwn(element.src));
+    if (hostTags.length === 0 || !(await hostRan(script, hostTags)))
+      await add(script);
   }
   await script.whenPresent?.();
+}
+
+// A tag written through innerHTML never runs, and one that failed earlier never says so:
+// only the global shows that the host's tag ran.
+function hostRan(
+  script: PlatformScript,
+  tags: HTMLScriptElement[],
+): Promise<boolean> {
+  return new Promise((resolve) => {
+    let deadline =
+      Date.now() +
+      (document.readyState === 'complete' ? HOST_GRACE_MS : TIMEOUT_MS);
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const pageLoaded = () => {
+      deadline = Date.now() + HOST_GRACE_MS;
+    };
+    const done = () => {
+      clearTimeout(timer);
+      window.removeEventListener('load', pageLoaded);
+      for (const tag of tags) tag.removeEventListener('error', done);
+      resolve(script.isPresent());
+    };
+    const check = () => {
+      if (script.isPresent() || Date.now() >= deadline) done();
+      else timer = setTimeout(check, POLL_MS);
+    };
+    // The window's load event waits for the parser-inserted async scripts.
+    window.addEventListener('load', pageLoaded);
+    for (const tag of tags) tag.addEventListener('error', done);
+    check();
+  });
 }
 
 /** The browser reported the script as failed; its tag has been removed. */

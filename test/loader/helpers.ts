@@ -17,10 +17,11 @@ export function captureScripts(): HTMLScriptElement[] {
   return added;
 }
 
-export function addHostScript(src: string): void {
+export function addHostScript(src: string): HTMLScriptElement {
   const element = document.createElement('script');
   element.src = src;
   document.body.append(element);
+  return element;
 }
 
 export function fire(
