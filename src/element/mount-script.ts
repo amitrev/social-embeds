@@ -1,3 +1,5 @@
+import { FinalError } from '../core/drivers';
+import type { FrameLayout } from '../core/layout';
 import type { ScriptPlan } from '../core/plan';
 import { postLinkText, postUrl } from '../core/post-link';
 import {
@@ -5,7 +7,13 @@ import {
   RENDER_TIMEOUT_MS,
   RETRY_DELAY_MS,
 } from '../core/timing';
-import { applyStyle, type Mounted, type MountOptions, skeleton } from './dom';
+import {
+  applyStyle,
+  type Mounted,
+  type MountOptions,
+  restyle,
+  skeleton,
+} from './dom';
 import { whenNear } from './near';
 
 function toError(error: unknown): Error {
@@ -21,10 +29,13 @@ export function mountScript(
   const { driver, label } = plan;
   const { eager, placeholder, onLoad, onError } = options;
   const wrapper = document.createElement('div');
-  applyStyle(wrapper, {
-    width: options.width ?? '100%',
-    maxWidth: options.maxWidth ?? plan.maxWidth,
-  });
+  const style = (layout: FrameLayout) => {
+    restyle(wrapper, {
+      width: layout.width ?? '100%',
+      maxWidth: layout.maxWidth ?? plan.maxWidth,
+    });
+  };
+  style(options);
   // docs/decisions.md D90
   const box = document.createElement('div');
   applyStyle(box, { width: '100%' });
@@ -75,7 +86,7 @@ export function mountScript(
     if (cancelled || done) return;
     stop();
     stop = () => {};
-    if (number >= RENDER_ATTEMPTS) {
+    if (number >= RENDER_ATTEMPTS || error instanceof FinalError) {
       fail(error);
       return;
     }
@@ -103,7 +114,10 @@ export function mountScript(
     }, RENDER_TIMEOUT_MS);
   };
 
-  const cancelNear = whenNear(container, eager, () => {
+  let started = false;
+  const start = () => {
+    if (started) return;
+    started = true;
     driver.load().then(
       () => {
         attempt(1);
@@ -112,7 +126,8 @@ export function mountScript(
         if (!cancelled) fail(toError(error));
       },
     );
-  });
+  };
+  const cancelNear = whenNear(container, eager, start);
 
   // Platforms offer no API to tear an embed down; removing the wrapper is the cleanup.
   const cleanup = () => {
@@ -122,5 +137,12 @@ export function mountScript(
     stop();
     wrapper.remove();
   };
-  return { wrapper, cleanup };
+  return {
+    wrapper,
+    cleanup,
+    update(layout, eager) {
+      style(layout);
+      if (eager) start();
+    },
+  };
 }

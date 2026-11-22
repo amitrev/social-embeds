@@ -34,6 +34,9 @@ type Globals = {
 
 const globals = () => window as unknown as Globals;
 
+/** Thrown by `render` when another attempt cannot succeed. */
+export class FinalError extends Error {}
+
 function watch(
   container: HTMLElement,
   rendered: (container: HTMLElement) => boolean,
@@ -93,6 +96,14 @@ export const xDriver: Driver = {
   },
 };
 
+// process() takes no container: it scans the document, which cannot see into a shadow root.
+function inDocument(container: HTMLElement, label: string): void {
+  if (container.getRootNode() !== document)
+    throw new FinalError(
+      `social-embeds: the ${label} embed cannot render inside a shadow root`,
+    );
+}
+
 /** Instagram and Threads share `instgrm.Embeds.process()`, which renders both. */
 function processEmbeds() {
   const process = globals().instgrm?.Embeds?.process;
@@ -104,6 +115,7 @@ function processEmbeds() {
 export const instagramDriver: Driver = {
   load: () => loadPlatformScript('instagram'),
   render(container, done) {
+    inDocument(container, 'Instagram');
     // embed.js marks the iframe "instagram-media-rendered" when the post has mounted.
     const stop = watch(
       container,
@@ -120,6 +132,7 @@ export const instagramDriver: Driver = {
 export const threadsDriver: Driver = {
   load: () => loadPlatformScript('threads'),
   render(container, done) {
+    inDocument(container, 'Threads');
     // embed.js removes the blockquote when the post has mounted.
     const stop = watch(
       container,

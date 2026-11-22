@@ -4,8 +4,8 @@ import { genericPlan } from '../core/plans/generic';
 import { resolveEmbed, sourceError } from '../core/resolve';
 import { matchUrl, parseEmbed, parseIframe } from '../parser';
 import { parserFor } from '../parser/platforms';
-import type { MountOptions } from './dom';
-import { type Input, readInput, type Source } from './input';
+import type { Mounted, MountOptions } from './dom';
+import { type Input, isEager, readInput, type Source } from './input';
 import { mountIframe } from './mount-iframe';
 import { mountScript } from './mount-script';
 
@@ -18,7 +18,7 @@ const Base =
 
 const SLOT = 'embed';
 
-/** Copies of the children other than `<template>` and blank text. */
+/** Copies of the children other than `<template>` and blank text, without ids. */
 function placeholder(host: Element): Node[] {
   const copies: Node[] = [];
   for (const node of host.childNodes)
@@ -26,9 +26,22 @@ function placeholder(host: Element): Node[] {
       (node.nodeType === Node.ELEMENT_NODE &&
         !(node instanceof HTMLTemplateElement)) ||
       (node.nodeType === Node.TEXT_NODE && node.textContent?.trim())
-    )
-      copies.push(node.cloneNode(true));
+    ) {
+      const copy = node.cloneNode(true);
+      if (copy instanceof Element)
+        for (const element of [copy, ...copy.querySelectorAll('[id]')])
+          element.removeAttribute('id');
+      copies.push(copy);
+    }
   return copies;
+}
+
+/** The children's HTML when it is embed code, as when a sanitizer removed the `<template>`. */
+function childCode(host: Element): string | undefined {
+  let html = '';
+  for (const child of host.children)
+    if (child.slot !== SLOT) html += child.outerHTML;
+  return html && (parseEmbed(html) ?? parseIframe(html)) ? html : undefined;
 }
 
 /** Named platforms first, then a generic iframe for `html`; a URL never goes generic. */
@@ -73,9 +86,9 @@ export class SocialEmbedElement extends Base {
 
   #html: string | null = null;
   #observer: MutationObserver | undefined;
-  #output: HTMLElement | undefined;
+  #mounted: Mounted | undefined;
   #key: string | undefined;
-  #cleanup = () => {};
+  #code: string | undefined;
   #token = 0;
   #waiting = false;
 
@@ -143,12 +156,15 @@ export class SocialEmbedElement extends Base {
   }
 
   get eager(): boolean {
-    return this.hasAttribute('eager');
+    return isEager(this);
   }
 
-  set eager(value: boolean | null | undefined) {
-    // An undefined force would toggle the attribute instead of removing it.
-    this.toggleAttribute('eager', Boolean(value));
+  set eager(value: boolean | string | null | undefined) {
+    // As for a boolean attribute: React 19 sets `''` for `eager=""`.
+    this.#reflect(
+      'eager',
+      value === '' || (value && value !== 'false') ? '' : null,
+    );
   }
 
   connectedCallback(): void {
@@ -182,6 +198,7 @@ export class SocialEmbedElement extends Base {
       this.#observer?.disconnect();
       this.#reset();
       this.#key = undefined;
+      this.#code = undefined;
     });
   }
 
@@ -211,17 +228,23 @@ export class SocialEmbedElement extends Base {
 
   #update(): void {
     if (!this.isConnected || !this.#observer) return;
+    const output = this.#mounted?.wrapper;
     // A copy of a rendered element (cloneNode, saved HTML) carries an output that is not this one's.
     for (const child of [...this.children])
-      if (child !== this.#output && child.slot === SLOT) child.remove();
-    const input = readInput(this, this.#html);
-    const key = JSON.stringify(input);
+      if (child !== output && child.slot === SLOT) child.remove();
     // Outside code may remove the output: React setting a text child, a DOM morph.
-    if (
-      key === this.#key &&
-      (!this.#output || this.#output.parentNode === this)
-    )
+    const attached = !output || output.parentNode === this;
+    const input = readInput(this, this.#html);
+    // Kept until the output is removed: a platform script may render the children's own copy.
+    this.#code = input.source
+      ? undefined
+      : (attached && this.#code) || childCode(this);
+    input.source ??= this.#code === undefined ? null : { html: this.#code };
+    const key = JSON.stringify(input.source);
+    if (key === this.#key && attached) {
+      this.#mounted?.update(input.layout, input.eager);
       return;
+    }
     this.#reset();
     this.#key = key;
     this.#render(input);
@@ -229,10 +252,9 @@ export class SocialEmbedElement extends Base {
 
   #reset(): void {
     this.#token += 1;
-    this.#output = undefined;
-    const cleanup = this.#cleanup;
-    this.#cleanup = () => {};
-    cleanup();
+    const mounted = this.#mounted;
+    this.#mounted = undefined;
+    mounted?.cleanup();
   }
 
   #render(input: Input): void {
@@ -258,18 +280,16 @@ export class SocialEmbedElement extends Base {
     const options: MountOptions = {
       ...layout,
       eager,
-      placeholder: placeholder(this),
+      placeholder: this.#code === undefined ? placeholder(this) : [],
       onLoad: () => {
         dispatch(new Event('load'));
       },
       onError,
     };
-    const { wrapper, cleanup } =
+    this.#mounted =
       plan.kind === 'iframe'
         ? mountIframe(this, plan, options)
         : mountScript(this, plan, options);
-    wrapper.slot = SLOT;
-    this.#output = wrapper;
-    this.#cleanup = cleanup;
+    this.#mounted.wrapper.slot = SLOT;
   }
 }

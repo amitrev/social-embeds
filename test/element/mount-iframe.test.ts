@@ -43,7 +43,7 @@ let onLoad: ReturnType<typeof vi.fn>;
 let onError: ReturnType<typeof vi.fn>;
 
 function mount(plan: IframePlan, eager = false, placeholder: Node[] = []) {
-  const { wrapper, cleanup } = mountIframe(host, plan, {
+  const { wrapper, cleanup, update } = mountIframe(host, plan, {
     eager,
     placeholder,
     onLoad: onLoad as () => void,
@@ -52,6 +52,7 @@ function mount(plan: IframePlan, eager = false, placeholder: Node[] = []) {
   expect(host.lastElementChild).toBe(wrapper);
   return {
     cleanup,
+    update,
     wrapper,
     iframe: () => host.querySelector('iframe'),
   };
@@ -145,6 +146,42 @@ describe('mountIframe', () => {
     host.replaceChildren();
     mount({ ...base, fallbackHtml: '<p>hi</p>' }, true);
     expect(host.querySelector('blockquote p')?.textContent).toBe('hi');
+  });
+
+  it('restyles the wrapper in place and keeps the iframe', () => {
+    const { wrapper, iframe, update } = mount(base, true);
+    const frame = iframe();
+    update({ width: 300, maxWidth: 500, height: 200 }, false);
+    expect(host.children).toHaveLength(1);
+    expect(host.firstElementChild).toBe(wrapper);
+    expect(iframe()).toBe(frame);
+    expect(wrapper.style.width).toBe('300px');
+    expect(wrapper.style.maxWidth).toBe('500px');
+    expect(wrapper.style.height).toBe('200px');
+    expect(wrapper.style.aspectRatio).toBe('');
+    update({}, false);
+    expect(wrapper.style.width).toBe('100%');
+    expect(wrapper.style.maxWidth).toBe('');
+    expect(wrapper.style.height).toBe('');
+    expect(wrapper.style.aspectRatio.replace(/\s/g, '')).toBe('16/9');
+  });
+
+  it('starts at once when eager turns on before near, and only once', () => {
+    vi.useFakeTimers();
+    const { iframe, update } = mount(base);
+    update({}, false);
+    expect(iframe()).toBeNull();
+    update({}, true);
+    const frame = iframe();
+    expect(frame).not.toBeNull();
+    update({}, true);
+    update({}, false);
+    vi.advanceTimersByTime(FRAME_TIMEOUT_MS);
+    expect(onError).not.toHaveBeenCalled();
+    lastObserver().enter();
+    expect(iframe()).toBe(frame);
+    vi.advanceTimersByTime(FRAME_TIMEOUT_MS);
+    expect(onError).toHaveBeenCalledTimes(1);
   });
 
   it('appends the host param', () => {
@@ -273,6 +310,15 @@ describe('mountIframe', () => {
       post(resize(400), iframe()?.contentWindow);
       vi.advanceTimersByTime(FRAME_TIMEOUT_MS);
       expect(onError).not.toHaveBeenCalled();
+    });
+
+    it('keeps the reported height through a layout change', () => {
+      const { wrapper, iframe, update } = mount(sized, true);
+      post(resize(400), iframe()?.contentWindow);
+      update({ maxWidth: 500, height: 100 }, true);
+      expect(wrapper.style.height).toBe('400px');
+      expect(wrapper.style.maxWidth).toBe('500px');
+      expect(onLoad).toHaveBeenCalledTimes(1);
     });
 
     it('cleanup stops listening and clears the timer', () => {
