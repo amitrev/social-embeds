@@ -5,7 +5,7 @@ import { VIMEO_PLAYER_HOST as PLAYER_HOST, vimeoFrame } from '../frames';
 
 // Vimeo's responsive snippet keeps the ratio only in its wrapper (docs/decisions.md D61).
 
-export const HOSTS = new Set(['vimeo.com', 'www.vimeo.com']);
+export const HOSTS = /* @__PURE__ */ new Set(['vimeo.com', 'www.vimeo.com']);
 const VIDEO = '(\\d{1,12})';
 const HASH = '([0-9a-f]{6,20})';
 const PAGE_PATHS = [
@@ -14,9 +14,9 @@ const PAGE_PATHS = [
   new RegExp(`^/groups/[A-Za-z0-9_-]{1,64}/videos/${VIDEO}/?$`),
   new RegExp(`^/showcase/\\d{1,12}/video/${VIDEO}/?$`),
 ];
-const PLAYER_PATH = new RegExp(`^/video/${VIDEO}/?$`);
+const PLAYER_PATH = /* @__PURE__ */ new RegExp(`^/video/${VIDEO}/?$`);
 // Vimeo adds these to its own code; they choose nothing about the video.
-const DROPPED = new Set(['h', 'app_id', 'player_id']);
+const DROPPED = /* @__PURE__ */ new Set(['h', 'app_id', 'player_id']);
 const START = /^t=(\d+(?:\.\d+)?|(?:\d+h)?(?:\d+m)?(?:\d+s)?)$/;
 
 function video(

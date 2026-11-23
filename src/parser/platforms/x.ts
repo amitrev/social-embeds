@@ -1,5 +1,5 @@
 import { hasClass, rebuild } from '../html';
-import { attributeOptions, type PlatformParser } from '../platform';
+import { attributeOptions, type PlatformParser, parserOf } from '../platform';
 import { coerce } from '../url';
 import { lastStatus, FALLBACK, xMatcher } from '../matchers/x';
 
@@ -17,8 +17,7 @@ const OPTION_ATTRIBUTES = [
   ['data-width', 'width'],
 ] as const;
 
-export const x: PlatformParser = {
-  ...xMatcher,
+export const x: PlatformParser = /* @__PURE__ */ parserOf(xMatcher, {
   parse(root) {
     // `twitter-video` is older code for a post with a video.
     if (
@@ -35,4 +34,4 @@ export const x: PlatformParser = {
     };
   },
   isOwnScript: (src) => SCRIPT.test(src),
-};
+});

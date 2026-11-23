@@ -1,10 +1,10 @@
 import { rebuild, type HtmlElement, hasClass } from '../html';
-import { sizeOf, withSize, type PlatformParser } from '../platform';
+import { sizeOf, withSize, type PlatformParser, parserOf } from '../platform';
 import type { ParsedEmbed } from '../types';
 import { parseUrl } from '../url';
 import { gif, ID, FALLBACK, tenorMatcher } from '../matchers/tenor';
 
-const FRAME_PATH = new RegExp(`^/embed/${ID}$`);
+const FRAME_PATH = /* @__PURE__ */ new RegExp(`^/embed/${ID}$`);
 const SCRIPT = /^(?:https?:)?\/\/tenor\.com\/embed\.js$/;
 // Tenor writes some ratios unrounded: `2.3380281690140845`.
 const RATIO = /^\d{1,3}(?:\.\d{1,20})?$/;
@@ -49,11 +49,10 @@ function fromIframe(root: HtmlElement): ParsedEmbed | null {
     : withSize({ ...gif(id), options: {} }, sizeOf(root));
 }
 
-export const tenor: PlatformParser = {
-  ...tenorMatcher,
+export const tenor: PlatformParser = /* @__PURE__ */ parserOf(tenorMatcher, {
   parse(root) {
     if (root.tag === 'div') return fromDiv(root);
     return root.tag === 'iframe' ? fromIframe(root) : null;
   },
   isOwnScript: (src) => SCRIPT.test(src),
-};
+});

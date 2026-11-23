@@ -3,15 +3,15 @@ import {
   sizeOf,
   withSize,
   type PlatformParser,
+  parserOf,
 } from '../platform';
 import { coerce, parseUrl } from '../url';
 import { KICK_PLAYER_HOSTS as PLAYER } from '../frames';
 import { channel, kickMatcher } from '../matchers/kick';
 
-const KEPT = new Set(['autoplay', 'muted']);
+const KEPT = /* @__PURE__ */ new Set(['autoplay', 'muted']);
 
-export const kick: PlatformParser = {
-  ...kickMatcher,
+export const kick: PlatformParser = /* @__PURE__ */ parserOf(kickMatcher, {
   parse(root) {
     if (root.tag !== 'iframe') return null;
     const src = parseUrl(root.attrs.get('src') ?? '');
@@ -25,4 +25,4 @@ export const kick: PlatformParser = {
     return withSize({ ...found, options }, sizeOf(root));
   },
   isOwnScript: () => false,
-};
+});

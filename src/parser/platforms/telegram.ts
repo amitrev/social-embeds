@@ -1,8 +1,8 @@
-import { attributeOptions, type PlatformParser } from '../platform';
+import { attributeOptions, type PlatformParser, parserOf } from '../platform';
 import { coerce } from '../url';
 import { post, CHANNEL, telegramMatcher } from '../matchers/telegram';
 
-const POST = new RegExp(`^(${CHANNEL})/(\\d{1,10})$`);
+const POST = /* @__PURE__ */ new RegExp(`^(${CHANNEL})/(\\d{1,10})$`);
 const SCRIPT =
   /^(?:https?:)?\/\/telegram\.org\/js\/telegram-widget\.js(?:\?\d{1,3})?$/;
 // The other widgets of the same script (login, discussion, share) are not posts.
@@ -23,19 +23,21 @@ const OPTION_ATTRIBUTES = [
   ['data-dark-color', 'darkColor'],
 ] as const;
 
-export const telegram: PlatformParser = {
-  ...telegramMatcher,
-  parse: () => null,
-  parseScript(script) {
-    if (!SCRIPT.test(script.attrs.get('src') ?? '')) return null;
-    if (OTHER_WIDGETS.some((name) => script.attrs.has(name))) return null;
-    const [, channel, id] =
-      POST.exec(script.attrs.get('data-telegram-post') ?? '') ?? [];
-    if (channel === undefined || id === undefined) return null;
-    const options = attributeOptions(script, OPTION_ATTRIBUTES, coerce);
-    // telegram-widget.js reads `data-single` by presence.
-    if (script.attrs.has('data-single')) options.single = true;
-    return post(channel, id, options);
+export const telegram: PlatformParser = /* @__PURE__ */ parserOf(
+  telegramMatcher,
+  {
+    parse: () => null,
+    parseScript(script) {
+      if (!SCRIPT.test(script.attrs.get('src') ?? '')) return null;
+      if (OTHER_WIDGETS.some((name) => script.attrs.has(name))) return null;
+      const [, channel, id] =
+        POST.exec(script.attrs.get('data-telegram-post') ?? '') ?? [];
+      if (channel === undefined || id === undefined) return null;
+      const options = attributeOptions(script, OPTION_ATTRIBUTES, coerce);
+      // telegram-widget.js reads `data-single` by presence.
+      if (script.attrs.has('data-single')) options.single = true;
+      return post(channel, id, options);
+    },
+    isOwnScript: (src) => SCRIPT.test(src),
   },
-  isOwnScript: (src) => SCRIPT.test(src),
-};
+);

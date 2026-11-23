@@ -5,7 +5,7 @@ import type { PlatformMatcher } from '../platform';
 
 // Embed code names the sound by API id, a URL by permalink; both are canonical (docs/decisions.md D71).
 
-export const PAGE_HOSTS = new Set([
+export const PAGE_HOSTS = /* @__PURE__ */ new Set([
   'soundcloud.com',
   'www.soundcloud.com',
   'm.soundcloud.com',
@@ -15,12 +15,12 @@ const API_PATH =
   /^\/(tracks|playlists|users)\/(?:soundcloud%3A(?:tracks|playlists|users)%3A)?(\d{1,15})\/?$/i;
 const NAME = '[a-z0-9_-]{1,64}';
 const SECRET = 's-[A-Za-z0-9]{1,32}';
-const PERMALINK = new RegExp(
+const PERMALINK = /* @__PURE__ */ new RegExp(
   `^/(${NAME})(?:/(sets/${NAME}|${NAME})(?:/(${SECRET}))?)?/?$`,
   'i',
 );
 // soundcloud.com pages that are not a user, and a user's list pages.
-const NOT_USERS = new Set([
+const NOT_USERS = /* @__PURE__ */ new Set([
   'discover',
   'search',
   'stream',
@@ -38,7 +38,7 @@ const NOT_USERS = new Set([
   'terms-of-use',
   'signin',
 ]);
-const NOT_SOUNDS = new Set([
+const NOT_SOUNDS = /* @__PURE__ */ new Set([
   'likes',
   'tracks',
   'sets',
@@ -51,7 +51,7 @@ const NOT_SOUNDS = new Set([
   'spotlight',
   'toptracks',
 ]);
-export const SECRET_TOKEN = new RegExp(`^${SECRET}$`);
+export const SECRET_TOKEN = /* @__PURE__ */ new RegExp(`^${SECRET}$`);
 
 export function sound(url: string, id: string): Omit<ParsedEmbed, 'options'> {
   return { platform: 'soundcloud', kind: 'post', url, id, variant: 'iframe' };

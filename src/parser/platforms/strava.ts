@@ -1,18 +1,18 @@
+import { parserOf } from '../platform';
 import { hasClass } from '../html';
 import type { Options, PlatformParser } from '../platform';
 import { item, type Type, stravaMatcher } from '../matchers/strava';
 
 const NUMBER = /^\d{1,20}$/;
 const SCRIPT = /^(?:https?:)?\/\/strava-embeds\.com\/embed\.js$/;
-const STYLES = new Set(['standard', 'minimal']);
+const STYLES = /* @__PURE__ */ new Set(['standard', 'minimal']);
 const MAP_HASH = /^[A-Za-z0-9_-]{1,100}$/;
 
 function isType(value: string | undefined): value is Type {
   return value === 'activity' || value === 'route';
 }
 
-export const strava: PlatformParser = {
-  ...stravaMatcher,
+export const strava: PlatformParser = /* @__PURE__ */ parserOf(stravaMatcher, {
   parse(root) {
     if (root.tag !== 'div' || !hasClass(root, 'strava-embed-placeholder'))
       return null;
@@ -37,4 +37,4 @@ export const strava: PlatformParser = {
     return { ...item(type, number), options };
   },
   isOwnScript: (src) => SCRIPT.test(src),
-};
+});

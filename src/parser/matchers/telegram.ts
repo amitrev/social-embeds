@@ -4,9 +4,15 @@ import type { ParsedEmbed } from '../types';
 // The embed code is the widget script itself; the package renders its iframe
 // (docs/decisions.md D49).
 
-const HOSTS = new Set(['t.me', 'telegram.me', 'www.telegram.me']);
+const HOSTS = /* @__PURE__ */ new Set([
+  't.me',
+  'telegram.me',
+  'www.telegram.me',
+]);
 export const CHANNEL = '[A-Za-z][A-Za-z0-9_]{2,31}';
-const POST_PATH = new RegExp(`^/(?:s/)?(${CHANNEL})/(\\d{1,10})/?$`);
+const POST_PATH = /* @__PURE__ */ new RegExp(
+  `^/(?:s/)?(${CHANNEL})/(\\d{1,10})/?$`,
+);
 
 export function post(
   channel: string,

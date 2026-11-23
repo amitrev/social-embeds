@@ -5,10 +5,10 @@ import type { PlatformMatcher } from '../platform';
 
 // Channels only: Kick has no embed dialog, and its player takes a channel name (docs/decisions.md D75).
 
-const PAGE_HOSTS = new Set(['kick.com', 'www.kick.com']);
+const PAGE_HOSTS = /* @__PURE__ */ new Set(['kick.com', 'www.kick.com']);
 const CHANNEL = /^\/([A-Za-z0-9_-]{1,32})\/?$/;
 // kick.com pages that are not a channel.
-const NOT_CHANNELS = new Set([
+const NOT_CHANNELS = /* @__PURE__ */ new Set([
   'browse',
   'categories',
   'category',

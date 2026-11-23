@@ -151,7 +151,7 @@ export const threadsDriver: Driver = {
   },
 };
 
-const facebookDrivers = new Map<string, Driver>();
+const facebookDrivers = /* @__PURE__ */ new Map<string, Driver>();
 
 export function facebookDriver(locale: string): Driver {
   let driver = facebookDrivers.get(locale);

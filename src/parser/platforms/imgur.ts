@@ -1,8 +1,9 @@
+import { parserOf } from '../platform';
 import { type HtmlElement, type HtmlNode, hasClass, rebuild } from '../html';
 import type { Options, PlatformParser } from '../platform';
 import { post, HASH, image, FALLBACK, imgurMatcher } from '../matchers/imgur';
 
-const DATA_ID = new RegExp(`^(a/)?${HASH}$`);
+const DATA_ID = /* @__PURE__ */ new RegExp(`^(a/)?${HASH}$`);
 const SCRIPT = /^(?:https?:)?\/\/s\.imgur\.com\/min\/embed\.js$/;
 
 // The dialog writes `//imgur.com/…`; `rebuild` keeps only http(s) links.
@@ -21,8 +22,7 @@ function falseOption(root: HtmlElement, attribute: string): boolean {
   return root.attrs.get(attribute) === 'false';
 }
 
-export const imgur: PlatformParser = {
-  ...imgurMatcher,
+export const imgur: PlatformParser = /* @__PURE__ */ parserOf(imgurMatcher, {
   parse(root) {
     if (root.tag !== 'blockquote' || !hasClass(root, 'imgur-embed-pub'))
       return null;
@@ -40,4 +40,4 @@ export const imgur: PlatformParser = {
     };
   },
   isOwnScript: (src) => SCRIPT.test(src),
-};
+});

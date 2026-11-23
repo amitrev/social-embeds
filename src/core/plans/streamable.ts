@@ -11,7 +11,13 @@ export type StreamableOptions = {
   nocontrols?: boolean;
 };
 
-const KEPT = new Set(['autoplay', 'hd', 'loop', 'muted', 'nocontrols']);
+const KEPT = /* @__PURE__ */ new Set([
+  'autoplay',
+  'hd',
+  'loop',
+  'muted',
+  'nocontrols',
+]);
 
 const PARAMS = {
   autoplay: 'autoplay',

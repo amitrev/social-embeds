@@ -4,6 +4,7 @@ import {
   sizeOf,
   withSize,
   type PlatformParser,
+  parserOf,
 } from '../platform';
 import { coerce, parseUrl } from '../url';
 import { TIKTOK_HOSTS as HOSTS } from '../frames';
@@ -13,8 +14,7 @@ const PLAYER_PATH = /^\/player\/v1\/(\d{1,25})\/?$/;
 const VIDEO_ID = /^\d{1,25}$/;
 const SCRIPT = /^(?:https?:)?\/\/www\.tiktok\.com\/embed\.js$/;
 
-export const tiktok: PlatformParser = {
-  ...tiktokMatcher,
+export const tiktok: PlatformParser = /* @__PURE__ */ parserOf(tiktokMatcher, {
   parse(root) {
     if (root.tag === 'blockquote' && hasClass(root, 'tiktok-embed')) {
       const cite = parseUrl(root.attrs.get('cite') ?? '');
@@ -39,4 +39,4 @@ export const tiktok: PlatformParser = {
     return withSize(video(id, '', options), sizeOf(root));
   },
   isOwnScript: (src) => SCRIPT.test(src),
-};
+});

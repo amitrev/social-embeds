@@ -3,12 +3,12 @@ import {
   sizeOf,
   withSize,
   type PlatformParser,
+  parserOf,
 } from '../platform';
 import { coerce, parseUrl } from '../url';
 import { video, idOf, rumbleMatcher } from '../matchers/rumble';
 
-export const rumble: PlatformParser = {
-  ...rumbleMatcher,
+export const rumble: PlatformParser = /* @__PURE__ */ parserOf(rumbleMatcher, {
   parse(root) {
     if (root.tag !== 'iframe') return null;
     const src = parseUrl(root.attrs.get('src') ?? '');
@@ -20,4 +20,4 @@ export const rumble: PlatformParser = {
     return withSize({ ...video(id), options }, sizeOf(root));
   },
   isOwnScript: () => false,
-};
+});

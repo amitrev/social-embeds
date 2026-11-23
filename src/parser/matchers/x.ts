@@ -9,7 +9,7 @@ import type { ParsedEmbed } from '../types';
 import { parseUrl, type ParsedUrl } from '../url';
 import type { PlatformMatcher } from '../platform';
 
-const HOSTS = new Set([
+const HOSTS = /* @__PURE__ */ new Set([
   'x.com',
   'www.x.com',
   'mobile.x.com',
@@ -22,7 +22,7 @@ const STATUS_PATH = /^\/([A-Za-z0-9_]{1,15})\/status\/(\d{1,20})\/?$/;
 const LINK_PATH =
   /^\/(?:([A-Za-z0-9_]{1,15})|i\/web)\/status\/(\d{1,20})(?:\/(?:photo|video)\/[1-4])?\/?$/;
 
-export const FALLBACK: Whitelist = new Map([
+export const FALLBACK: Whitelist = /* @__PURE__ */ new Map([
   ['p', ['lang', 'dir']],
   ['a', ['href']],
   ['br', []],

@@ -6,12 +6,12 @@ import type { PlatformMatcher } from '../platform';
 
 // The default ratio, 1.33, is embed.js's own (docs/decisions.md D95); a URL carries no size here.
 
-const HOSTS = new Set(['tenor.com', 'www.tenor.com']);
+const HOSTS = /* @__PURE__ */ new Set(['tenor.com', 'www.tenor.com']);
 export const ID = '(\\d{1,20})';
-const PAGE_PATH = new RegExp(
+const PAGE_PATH = /* @__PURE__ */ new RegExp(
   `^/(?:[a-z]{2}(?:-[A-Za-z]{2,4})?/)?view/(?:[A-Za-z0-9%_.~-]{1,300}-gif-)?${ID}/?$`,
 );
-export const FALLBACK: Whitelist = new Map([['a', ['href']]]);
+export const FALLBACK: Whitelist = /* @__PURE__ */ new Map([['a', ['href']]]);
 
 export function gif(id: string): Omit<ParsedEmbed, 'options'> {
   return {

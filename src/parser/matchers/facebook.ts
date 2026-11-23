@@ -6,7 +6,7 @@ import { facebookFrame } from '../frames';
 
 // Which input renders through the SDK and which as an iframe: docs/decisions.md D10, D22, D44.
 
-const HOSTS = new Set([
+const HOSTS = /* @__PURE__ */ new Set([
   'facebook.com',
   'www.facebook.com',
   'web.facebook.com',
@@ -17,21 +17,27 @@ const BASE = 'https://www.facebook.com';
 // URL shapes: docs/decisions.md D21.
 const NAME = '[A-Za-z0-9.\\-]{1,80}';
 const POST_ID = '(?:\\d{1,25}|pfbid[A-Za-z0-9]{10,120})';
-const POSTS_PATH = new RegExp(`^/(${NAME})/posts/(${POST_ID})/?$`);
-const PHOTOS_PATH = new RegExp(
+const POSTS_PATH = /* @__PURE__ */ new RegExp(
+  `^/(${NAME})/posts/(${POST_ID})/?$`,
+);
+const PHOTOS_PATH = /* @__PURE__ */ new RegExp(
   `^/(${NAME})/photos/([A-Za-z0-9.\\-]{1,80})/(\\d{1,25})/?$`,
 );
-const VIDEOS_PATH = new RegExp(
+const VIDEOS_PATH = /* @__PURE__ */ new RegExp(
   `^/(${NAME})/videos/(?:[^/]{1,200}/)?(\\d{1,25})/?$`,
 );
 const REEL_PATH = /^\/reel\/(\d{1,25})\/?$/;
-const STORY_PATHS = new Set(['/permalink.php', '/story.php']);
-const PHOTO_PATHS = new Set(['/photo.php', '/photo/', '/photo']);
-const STORY_ID = new RegExp(`^${POST_ID}$`);
+const STORY_PATHS = /* @__PURE__ */ new Set(['/permalink.php', '/story.php']);
+const PHOTO_PATHS = /* @__PURE__ */ new Set([
+  '/photo.php',
+  '/photo/',
+  '/photo',
+]);
+const STORY_ID = /* @__PURE__ */ new RegExp(`^${POST_ID}$`);
 const NUMERIC_ID = /^\d{1,25}$/;
 
 const PARSE_IGNORE = { name: 'class', value: /^fb-xfbml-parse-ignore$/ };
-export const FALLBACK: Whitelist = new Map([
+export const FALLBACK: Whitelist = /* @__PURE__ */ new Map([
   ['div', [PARSE_IGNORE]],
   ['blockquote', ['cite', PARSE_IGNORE]],
   ['a', ['href']],

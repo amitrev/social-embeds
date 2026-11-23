@@ -23,7 +23,8 @@ export type PlatformMatcher = {
   ownsFrame?: (src: ParsedUrl) => boolean;
 };
 
-export type PlatformParser = PlatformMatcher & {
+/** A parser's embed-code half: what it adds to its `PlatformMatcher`. */
+export type EmbedCode = {
   /** The embed element (blockquote, div or iframe) of the platform's own embed code. */
   parse: (root: HtmlElement) => ParsedEmbed | null;
   /** Embed code that is a single `<script>` tag, as Telegram's is. */
@@ -39,6 +40,19 @@ export type PlatformParser = PlatformMatcher & {
   /** A sibling element after the embed that is the platform's own markup, such as a credit; it is dropped. */
   isOwnExtra?: (element: HtmlElement, embed: ParsedEmbed) => boolean;
 };
+
+export type PlatformParser = PlatformMatcher & EmbedCode;
+
+/**
+ * Call it as `/* @__PURE__ *\/ parserOf(…)`. A minifier keeps an unused object literal that
+ * spreads another object, and with it every parser a scope-hoisted bundle holds (docs/decisions.md D118).
+ */
+export function parserOf(
+  matcher: PlatformMatcher,
+  code: EmbedCode,
+): PlatformParser {
+  return { ...matcher, ...code };
+}
 
 /** `/embed` holds `/embed` and `/embed/…`, never `/embedded`. */
 export function underPath(path: string, folder: string): boolean {

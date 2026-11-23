@@ -11,7 +11,7 @@ export type SpotifyOptions = {
 const ALLOW =
   'autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture';
 // Spotify's oEmbed heights: the compact player for single items (docs/decisions.md D60).
-const COMPACT = new Set(['track', 'episode']);
+const COMPACT = /* @__PURE__ */ new Set(['track', 'episode']);
 const COMPACT_HEIGHT = 152;
 const FULL_HEIGHT = 352;
 

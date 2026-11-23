@@ -6,17 +6,19 @@ import type { PlatformMatcher } from '../platform';
 // The frame is built from `id` on the client; the embed code's linked image is only fallback
 // content, and Flickr's script is accepted and never loaded (docs/decisions.md D98, D100).
 
-const HOSTS = new Set(['flickr.com', 'www.flickr.com']);
+const HOSTS = /* @__PURE__ */ new Set(['flickr.com', 'www.flickr.com']);
 const USER = '((?!\\.{1,2}(?:/|$))[A-Za-z0-9@_.-]{1,64})';
 const ID = '(\\d{1,20})';
-const PHOTO_PATH = new RegExp(
+const PHOTO_PATH = /* @__PURE__ */ new RegExp(
   `^/photos/${USER}/${ID}(?:/in/[A-Za-z0-9_@./-]{1,200})?/?$`,
 );
-const ALBUM_PATH = new RegExp(`^/photos/${USER}/(?:albums|sets)/${ID}/?$`);
+const ALBUM_PATH = /* @__PURE__ */ new RegExp(
+  `^/photos/${USER}/(?:albums|sets)/${ID}/?$`,
+);
 const SHORT_PATH = /^\/p\/([1-9a-km-zA-HJ-NP-Z]{1,12})$/;
 const ALPHABET = '123456789abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ';
 export const IMAGE_SRC = /^https:\/\/(?:live|farm\d{1,3})\.staticflickr\.com\//;
-export const FALLBACK: Whitelist = new Map([
+export const FALLBACK: Whitelist = /* @__PURE__ */ new Map([
   ['a', [{ name: 'href', value: /^https:\/\/(?:www\.)?flickr\.com\// }]],
   [
     'img',

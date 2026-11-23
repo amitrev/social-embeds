@@ -4,14 +4,14 @@ import type { PlatformMatcher } from '../platform';
 
 // Every type renders as the iframe at `{url}/embed` (docs/decisions.md D50).
 
-const HOSTS = new Set(['snapchat.com', 'www.snapchat.com']);
+const HOSTS = /* @__PURE__ */ new Set(['snapchat.com', 'www.snapchat.com']);
 const USER = '([A-Za-z][A-Za-z0-9._-]{1,29})';
-const SPOTLIGHT = new RegExp(
+const SPOTLIGHT = /* @__PURE__ */ new RegExp(
   `^(?:/@${USER})?/spotlight/([A-Za-z0-9_-]{20,120})$`,
 );
-const PROFILE = new RegExp(`^/(?:@|add/)${USER}$`);
+const PROFILE = /* @__PURE__ */ new RegExp(`^/(?:@|add/)${USER}$`);
 const LENS = /^\/lens\/([0-9a-f]{32}|\d{1,20})$/;
-const HIGHLIGHT = new RegExp(
+const HIGHLIGHT = /* @__PURE__ */ new RegExp(
   `^/@${USER}/highlight/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$`,
 );
 

@@ -3,13 +3,13 @@ import type { ParsedEmbed } from '../types';
 import type { ParsedUrl } from '../url';
 import type { PlatformMatcher } from '../platform';
 
-const HOSTS = new Set(['instagram.com', 'www.instagram.com']);
+const HOSTS = /* @__PURE__ */ new Set(['instagram.com', 'www.instagram.com']);
 const POST_PATH =
   /^\/(?:([A-Za-z0-9._]{1,30})\/)?(p|reel|reels|tv)\/([A-Za-z0-9_-]{1,64})\/?$/;
-const TYPES = new Set(['p', 'reel', 'reels', 'tv']);
-const USER_POST_TYPES = new Set(['p', 'reel']);
+const TYPES = /* @__PURE__ */ new Set(['p', 'reel', 'reels', 'tv']);
+const USER_POST_TYPES = /* @__PURE__ */ new Set(['p', 'reel']);
 
-export const FALLBACK: Whitelist = new Map([
+export const FALLBACK: Whitelist = /* @__PURE__ */ new Map([
   ['div', []],
   ['a', ['href']],
   ['p', []],

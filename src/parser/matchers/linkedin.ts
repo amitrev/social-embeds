@@ -6,8 +6,10 @@ import { linkedinFrame } from '../frames';
 
 const HOST = /^(?:www\.|[a-z]{2}\.)?linkedin\.com$/;
 export const URN = '(activity|share|ugcPost):(\\d{19})';
-const UPDATE_PATH = new RegExp(`^(?:/embed)?/feed/update/urn:li:${URN}/?$`);
-const POSTS_PATH = new RegExp(
+const UPDATE_PATH = /* @__PURE__ */ new RegExp(
+  `^(?:/embed)?/feed/update/urn:li:${URN}/?$`,
+);
+const POSTS_PATH = /* @__PURE__ */ new RegExp(
   `^/posts/[^/]{1,300}-(activity|share|ugcPost)-(\\d{19})-[A-Za-z0-9_-]{1,8}/?$`,
 );
 

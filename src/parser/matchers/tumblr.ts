@@ -6,12 +6,16 @@ import type { PlatformMatcher } from '../platform';
 
 export const BLOG = '([a-z0-9-]{1,32})';
 export const POST = '(\\d{1,20})';
-const WWW_HOSTS = new Set(['www.tumblr.com', 'tumblr.com']);
-const WWW_PATH = new RegExp(`^/${BLOG}/${POST}(?:/[^/]{1,200})?/?$`);
-const BLOG_HOST = new RegExp(`^${BLOG}\\.tumblr\\.com$`);
-const BLOG_PATH = new RegExp(`^/post/${POST}(?:/[^/]{1,200})?/?$`);
+const WWW_HOSTS = /* @__PURE__ */ new Set(['www.tumblr.com', 'tumblr.com']);
+const WWW_PATH = /* @__PURE__ */ new RegExp(
+  `^/${BLOG}/${POST}(?:/[^/]{1,200})?/?$`,
+);
+const BLOG_HOST = /* @__PURE__ */ new RegExp(`^${BLOG}\\.tumblr\\.com$`);
+const BLOG_PATH = /* @__PURE__ */ new RegExp(
+  `^/post/${POST}(?:/[^/]{1,200})?/?$`,
+);
 // tumblr.com pages and blog subdomains that are not a blog.
-const NOT_BLOGS = new Set([
+const NOT_BLOGS = /* @__PURE__ */ new Set([
   'dashboard',
   'explore',
   'tagged',

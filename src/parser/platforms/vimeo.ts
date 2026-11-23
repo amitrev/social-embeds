@@ -4,6 +4,7 @@ import {
   unwrapRatio,
   withSize,
   type PlatformParser,
+  parserOf,
 } from '../platform';
 import type { ParsedEmbed } from '../types';
 import { parseUrl, type ParsedUrl } from '../url';
@@ -47,8 +48,7 @@ function isCredit(element: HtmlElement, embed: ParsedEmbed): boolean {
   );
 }
 
-export const vimeo: PlatformParser = {
-  ...vimeoMatcher,
+export const vimeo: PlatformParser = /* @__PURE__ */ parserOf(vimeoMatcher, {
   parse(root) {
     const wrapped = unwrapRatio(root, WRAPPER);
     const iframe = wrapped?.iframe ?? root;
@@ -58,4 +58,4 @@ export const vimeo: PlatformParser = {
   },
   isOwnScript: (src) => SCRIPT.test(src),
   isOwnExtra: isCredit,
-};
+});

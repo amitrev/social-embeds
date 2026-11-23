@@ -17,7 +17,7 @@ export type HtmlComment = { type: 'comment' };
 
 export type HtmlNode = HtmlElement | HtmlText | HtmlComment;
 
-const VOID_TAGS = new Set([
+const VOID_TAGS = /* @__PURE__ */ new Set([
   'area',
   'base',
   'br',
@@ -33,7 +33,7 @@ const VOID_TAGS = new Set([
   'wbr',
 ]);
 
-const RAW_TEXT_END: ReadonlyMap<string, RegExp> = new Map([
+const RAW_TEXT_END: ReadonlyMap<string, RegExp> = /* @__PURE__ */ new Map([
   ['script', /<\/script\s*>/giu],
   ['style', /<\/style\s*>/giu],
 ]);
@@ -48,7 +48,7 @@ const ATTRIBUTE =
 const START_TAG_END = /\s*(\/?)>/y;
 const END_TAG = /<\/([a-zA-Z][a-zA-Z0-9-]*)\s*>/y;
 
-const NAMED_ENTITIES: ReadonlyMap<string, string> = new Map([
+const NAMED_ENTITIES: ReadonlyMap<string, string> = /* @__PURE__ */ new Map([
   ['amp', '&'],
   ['lt', '<'],
   ['gt', '>'],
@@ -206,7 +206,7 @@ export type AttributeRule = string | { name: string; value: RegExp };
 
 export type Whitelist = ReadonlyMap<string, readonly AttributeRule[]>;
 
-const URL_ATTRIBUTES = new Set(['href', 'cite']);
+const URL_ATTRIBUTES = /* @__PURE__ */ new Set(['href', 'cite']);
 const HTTP_URL = /^https?:\/\//i;
 
 /**

@@ -7,7 +7,7 @@ import type { PlatformMatcher } from '../platform';
 // Iframe code only: the embedJS player has no iframe, and a page URL holds another id (docs/decisions.md D99).
 
 const PATH = /^\/embed\/(v[a-z0-9]{1,12})\/?$/;
-const HOSTS = new Set(['rumble.com', 'www.rumble.com']);
+const HOSTS = /* @__PURE__ */ new Set(['rumble.com', 'www.rumble.com']);
 
 export function video(id: string): Omit<ParsedEmbed, 'options'> {
   return {

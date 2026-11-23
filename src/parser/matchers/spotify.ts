@@ -6,11 +6,11 @@ import { SPOTIFY_HOST as HOST, spotifyFrame } from '../frames';
 // A fixed-height player; a video show or episode is a 16:9 player (docs/decisions.md D60).
 
 const TYPES = 'track|album|playlist|artist|episode|show|audiobook|chapter';
-const CONTENT_PATH = new RegExp(
+const CONTENT_PATH = /* @__PURE__ */ new RegExp(
   `^(?:/intl-[a-z]{2}(?:-[A-Za-z]{2})?)?(?:/embed)?/(${TYPES})/([A-Za-z0-9]{22})(/video)?/?$`,
 );
 // utm_source is Spotify's tracking, and si a share id.
-const DROPPED = new Set(['utm_source', 'si']);
+const DROPPED = /* @__PURE__ */ new Set(['utm_source', 'si']);
 
 export function content(
   url: ParsedUrl | null,
