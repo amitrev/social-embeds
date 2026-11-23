@@ -4,7 +4,7 @@ import type { PlatformMatcher } from '../platform';
 
 // The package builds the embed.reddit.com iframe itself (docs/decisions.md D52).
 
-const HOSTS = new Set([
+const HOSTS = /* @__PURE__ */ new Set([
   'reddit.com',
   'www.reddit.com',
   'old.reddit.com',

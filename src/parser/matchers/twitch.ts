@@ -5,14 +5,18 @@ import { TWITCH_CLIPS_HOST as CLIPS_HOST, twitchFrame } from '../frames';
 
 // `parent` names the embedding page, so it is never read from the input (docs/decisions.md D62).
 
-const HOSTS = new Set(['twitch.tv', 'www.twitch.tv', 'm.twitch.tv']);
+const HOSTS = /* @__PURE__ */ new Set([
+  'twitch.tv',
+  'www.twitch.tv',
+  'm.twitch.tv',
+]);
 export const CHANNEL = /^[A-Za-z0-9_]{3,25}$/;
 export const VIDEO = /^v?(\d{1,12})$/;
 export const COLLECTION = /^[A-Za-z0-9_-]{6,30}$/;
 export const CLIP = /^[A-Za-z0-9_-]{6,100}$/;
 const TIME = /^(?:\d+h)?(?:\d+m)?(?:\d+s)?$/;
 // Top-level twitch.tv pages that are not channels.
-const RESERVED = new Set([
+const RESERVED = /* @__PURE__ */ new Set([
   'directory',
   'videos',
   'collections',

@@ -25,7 +25,7 @@ const TIMEOUT_MS = 15_000;
 const HOST_GRACE_MS = 3000; // after page load: a late host tag may still fetch one or two files
 const POLL_MS = 50;
 
-const loading = new Map<string, Promise<void>>();
+const loading = /* @__PURE__ */ new Map<string, Promise<void>>();
 
 export function loadScript(script: PlatformScript): Promise<void> {
   if (typeof document === 'undefined') {

@@ -4,6 +4,7 @@ import {
   sizeOf,
   withSize,
   type PlatformParser,
+  parserOf,
 } from '../platform';
 import { coerce, parseUrl } from '../url';
 import { SOUNDCLOUD_WIDGET_HOST as WIDGET_HOST } from '../frames';
@@ -14,7 +15,12 @@ import {
   soundcloudMatcher,
 } from '../matchers/soundcloud';
 
-const LINK_ATTRIBUTES = new Set(['href', 'title', 'target', 'style']);
+const LINK_ATTRIBUTES = /* @__PURE__ */ new Set([
+  'href',
+  'title',
+  'target',
+  'style',
+]);
 
 function isCreditLink(node: HtmlNode | undefined): boolean {
   if (node?.type !== 'element' || node.tag !== 'a') return false;
@@ -46,32 +52,34 @@ function isCredit(element: HtmlElement): boolean {
   );
 }
 
-export const soundcloud: PlatformParser = {
-  ...soundcloudMatcher,
-  parse(root) {
-    if (root.tag !== 'iframe') return null;
-    const src = parseUrl(root.attrs.get('src') ?? '');
-    if (src?.host !== WIDGET_HOST || !/^\/player\/?$/.test(src.path))
-      return null;
-    let found = fromApi(parseUrl(src.query.get('url') ?? ''));
-    if (!found) return null;
-    const outer = src.query.get('secret_token');
-    if (outer !== undefined) {
-      if (!SECRET_TOKEN.test(outer)) return null;
-      if (!found.url.includes('?'))
-        found = { ...found, url: `${found.url}?secret_token=${outer}` };
-    }
-    const options: Options = Object.fromEntries(
-      [...src.query]
-        .filter(([key]) => key !== 'url' && key !== 'secret_token')
-        .map(([key, value]) => [key, coerce(value)]),
-    );
-    const { height } = sizeOf(root) ?? {};
-    return withSize(
-      { ...found, options },
-      height === undefined ? undefined : { height },
-    );
+export const soundcloud: PlatformParser = /* @__PURE__ */ parserOf(
+  soundcloudMatcher,
+  {
+    parse(root) {
+      if (root.tag !== 'iframe') return null;
+      const src = parseUrl(root.attrs.get('src') ?? '');
+      if (src?.host !== WIDGET_HOST || !/^\/player\/?$/.test(src.path))
+        return null;
+      let found = fromApi(parseUrl(src.query.get('url') ?? ''));
+      if (!found) return null;
+      const outer = src.query.get('secret_token');
+      if (outer !== undefined) {
+        if (!SECRET_TOKEN.test(outer)) return null;
+        if (!found.url.includes('?'))
+          found = { ...found, url: `${found.url}?secret_token=${outer}` };
+      }
+      const options: Options = Object.fromEntries(
+        [...src.query]
+          .filter(([key]) => key !== 'url' && key !== 'secret_token')
+          .map(([key, value]) => [key, coerce(value)]),
+      );
+      const { height } = sizeOf(root) ?? {};
+      return withSize(
+        { ...found, options },
+        height === undefined ? undefined : { height },
+      );
+    },
+    isOwnScript: () => false,
+    isOwnExtra: isCredit,
   },
-  isOwnScript: () => false,
-  isOwnExtra: isCredit,
-};
+);

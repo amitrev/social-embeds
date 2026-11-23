@@ -5,16 +5,22 @@ import type { PlatformMatcher } from '../platform';
 
 // `id` keeps the `a/` of albums and gallery posts, and every template uses it whole (docs/decisions.md D94).
 
-const HOSTS = new Set(['imgur.com', 'www.imgur.com', 'm.imgur.com']);
+const HOSTS = /* @__PURE__ */ new Set([
+  'imgur.com',
+  'www.imgur.com',
+  'm.imgur.com',
+]);
 export const HASH = '([A-Za-z0-9]{5,7})';
-const ALBUM_PATH = new RegExp(`^/a/${HASH}/?$`);
-const GALLERY_PATH = new RegExp(
+const ALBUM_PATH = /* @__PURE__ */ new RegExp(`^/a/${HASH}/?$`);
+const GALLERY_PATH = /* @__PURE__ */ new RegExp(
   `^/gallery/(?:[A-Za-z0-9-]{1,200}-)?${HASH}/?$`,
 );
-const IMAGE_PATH = new RegExp(`^/${HASH}/?$`);
-const FILE_PATH = new RegExp(`^/${HASH}\\.(?:jpe?g|png|gif|gifv|mp4|webp)$`);
+const IMAGE_PATH = /* @__PURE__ */ new RegExp(`^/${HASH}/?$`);
+const FILE_PATH = /* @__PURE__ */ new RegExp(
+  `^/${HASH}\\.(?:jpe?g|png|gif|gifv|mp4|webp)$`,
+);
 // Page names that look like a hash.
-const NOT_IMAGES = new Set([
+const NOT_IMAGES = /* @__PURE__ */ new Set([
   'about',
   'apps',
   'blog',
@@ -40,7 +46,7 @@ const NOT_IMAGES = new Set([
   'rules',
   'user',
 ]);
-export const FALLBACK: Whitelist = new Map([
+export const FALLBACK: Whitelist = /* @__PURE__ */ new Map([
   ['a', [{ name: 'href', value: /^https:\/\/(?:www\.)?imgur\.com\// }]],
 ]);
 

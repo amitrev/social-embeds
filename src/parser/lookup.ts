@@ -1,14 +1,14 @@
 import type { Platform } from './types';
 import { type ParsedUrl, parseUrl } from './url';
 
-const BLUESKY_HOSTS = new Set(['bsky.app', 'www.bsky.app']);
+const BLUESKY_HOSTS = /* @__PURE__ */ new Set(['bsky.app', 'www.bsky.app']);
 const HANDLE_POST =
   /^\/profile\/([^/]{1,253})\/post\/[A-Za-z0-9._~:-]{1,512}\/?$/;
 // A handle is a domain name; anything else is neither a handle nor a DID.
 const HANDLE =
   /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z](?:[a-z0-9-]{0,61}[a-z0-9])?$/i;
 
-const RUMBLE_HOSTS = new Set(['rumble.com', 'www.rumble.com']);
+const RUMBLE_HOSTS = /* @__PURE__ */ new Set(['rumble.com', 'www.rumble.com']);
 // A page id is not the embed id (docs/decisions.md D99).
 const RUMBLE_PAGE = /^\/v[a-z0-9]{1,12}-[^/]{1,300}\.html$/;
 

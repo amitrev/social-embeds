@@ -6,17 +6,17 @@ import type { PlatformMatcher } from '../platform';
 // Giphy's code ends with a "via GIPHY" credit, accepted and dropped (docs/decisions.md D76).
 
 const ID = '([A-Za-z0-9]{6,40})';
-export const PAGE_PATH = new RegExp(
+export const PAGE_PATH = /* @__PURE__ */ new RegExp(
   `^/(?:gifs|stickers)/(?:[A-Za-z0-9-]{0,200}-)?${ID}/?$`,
 );
-export const EMBED_PATH = new RegExp(`^/embed/${ID}/?$`);
+export const EMBED_PATH = /* @__PURE__ */ new RegExp(`^/embed/${ID}/?$`);
 const MEDIA_HOST = /^(?:media\d?|i)\.giphy\.com$/;
 const FILE_TYPE = '\\.(?:gif|webp|mp4)';
 // "Copy GIF link" puts a `v1.{base64}` segment before the id; the file is any rendition.
-const MEDIA_PATH = new RegExp(
+const MEDIA_PATH = /* @__PURE__ */ new RegExp(
   `^/media/(?:v1\\.[A-Za-z0-9_-]{1,500}/)?${ID}/[A-Za-z0-9_-]{1,40}${FILE_TYPE}$`,
 );
-const SHORT_MEDIA_PATH = new RegExp(`^/${ID}${FILE_TYPE}$`);
+const SHORT_MEDIA_PATH = /* @__PURE__ */ new RegExp(`^/${ID}${FILE_TYPE}$`);
 
 export function gif(id: string): Omit<ParsedEmbed, 'options'> {
   return {

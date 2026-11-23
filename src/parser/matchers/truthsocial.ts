@@ -5,10 +5,13 @@ import type { PlatformMatcher } from '../platform';
 
 // Video code (`truthsocial-video` class) is recorded as the option `video: true`, which only sets the height rule (docs/decisions.md D93).
 
-const HOSTS = new Set(['truthsocial.com', 'www.truthsocial.com']);
+const HOSTS = /* @__PURE__ */ new Set([
+  'truthsocial.com',
+  'www.truthsocial.com',
+]);
 export const USER = '(@[A-Za-z0-9_.-]{1,64})';
 export const ID = '(\\d{1,25})';
-const POST_PATH = new RegExp(`^/${USER}/(?:posts/)?${ID}/?$`);
+const POST_PATH = /* @__PURE__ */ new RegExp(`^/${USER}/(?:posts/)?${ID}/?$`);
 
 export function post(user: string, id: string): Omit<ParsedEmbed, 'options'> {
   return {

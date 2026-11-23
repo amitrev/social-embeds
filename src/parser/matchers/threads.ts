@@ -3,7 +3,7 @@ import type { ParsedEmbed } from '../types';
 import type { ParsedUrl } from '../url';
 import type { PlatformMatcher } from '../platform';
 
-const HOSTS = new Set([
+const HOSTS = /* @__PURE__ */ new Set([
   'threads.com',
   'www.threads.com',
   'threads.net',
@@ -12,7 +12,7 @@ const HOSTS = new Set([
 const POST_PATH =
   /^\/(?:@[A-Za-z0-9._]{1,30}\/post|t)\/([A-Za-z0-9_-]{1,64})\/?$/;
 
-export const FALLBACK: Whitelist = new Map([
+export const FALLBACK: Whitelist = /* @__PURE__ */ new Map([
   ['a', ['href']],
   ['div', []],
 ]);

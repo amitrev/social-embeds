@@ -9,10 +9,12 @@ import type { PlatformMatcher } from '../platform';
 export const DID = '(did:(?:plc:[a-z2-7]{24}|web:[a-z0-9.-]{1,253}))';
 // The AT Protocol forbids the record keys `.` and `..`, which would also move the frame's path.
 export const RKEY = '((?!\\.{1,2}(?:/|$))[A-Za-z0-9._~:-]{1,512})';
-const HOSTS = new Set(['bsky.app', 'www.bsky.app']);
-const POST_PATH = new RegExp(`^/profile/${DID}/post/${RKEY}/?$`);
+const HOSTS = /* @__PURE__ */ new Set(['bsky.app', 'www.bsky.app']);
+const POST_PATH = /* @__PURE__ */ new RegExp(
+  `^/profile/${DID}/post/${RKEY}/?$`,
+);
 
-export const FALLBACK: Whitelist = new Map([
+export const FALLBACK: Whitelist = /* @__PURE__ */ new Map([
   ['p', ['lang']],
   ['a', ['href']],
   ['br', []],

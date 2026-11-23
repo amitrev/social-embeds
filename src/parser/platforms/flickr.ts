@@ -4,6 +4,7 @@ import {
   sizeOf,
   withSize,
   type PlatformParser,
+  parserOf,
 } from '../platform';
 import { parseUrl } from '../url';
 import {
@@ -26,8 +27,7 @@ function onlyImage(root: HtmlElement): HtmlElement | null {
   return image;
 }
 
-export const flickr: PlatformParser = {
-  ...flickrMatcher,
+export const flickr: PlatformParser = /* @__PURE__ */ parserOf(flickrMatcher, {
   parse(root) {
     if (root.tag !== 'a' || root.attrs.get('data-flickr-embed') !== 'true')
       return null;
@@ -48,4 +48,4 @@ export const flickr: PlatformParser = {
     );
   },
   isOwnScript: (src) => SCRIPT.test(src),
-};
+});

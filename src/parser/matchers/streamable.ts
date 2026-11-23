@@ -6,11 +6,14 @@ import type { PlatformMatcher } from '../platform';
 // Two wrapper styles and one stray `</div>` are accepted (docs/decisions.md D96).
 
 const ID = '([a-z0-9]{4,8})';
-const PAGE_HOSTS = new Set(['streamable.com', 'www.streamable.com']);
-export const PLAYER_PATH = new RegExp(`^/[eo]/${ID}$`);
-const PAGE_PATH = new RegExp(`^/${ID}/?$`);
+const PAGE_HOSTS = /* @__PURE__ */ new Set([
+  'streamable.com',
+  'www.streamable.com',
+]);
+export const PLAYER_PATH = /* @__PURE__ */ new RegExp(`^/[eo]/${ID}$`);
+const PAGE_PATH = /* @__PURE__ */ new RegExp(`^/${ID}/?$`);
 // Short paths on streamable.com that are pages, not videos.
-const NOT_VIDEOS = new Set([
+const NOT_VIDEOS = /* @__PURE__ */ new Set([
   'about',
   'login',
   'signup',

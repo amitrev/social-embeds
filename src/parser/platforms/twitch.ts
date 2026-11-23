@@ -3,6 +3,7 @@ import {
   sizeOf,
   withSize,
   type PlatformParser,
+  parserOf,
 } from '../platform';
 import { coerce, parseUrl, type ParsedUrl } from '../url';
 import {
@@ -43,8 +44,7 @@ function fromPlayer(url: ParsedUrl): Target | null {
   return list !== undefined && COLLECTION.test(list) ? collection(list) : null;
 }
 
-export const twitch: PlatformParser = {
-  ...twitchMatcher,
+export const twitch: PlatformParser = /* @__PURE__ */ parserOf(twitchMatcher, {
   parse(root) {
     if (root.tag !== 'iframe') return null;
     const src = parseUrl(root.attrs.get('src') ?? '');
@@ -62,4 +62,4 @@ export const twitch: PlatformParser = {
     );
   },
   isOwnScript: () => false,
-};
+});

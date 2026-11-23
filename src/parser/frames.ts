@@ -3,32 +3,38 @@ import type { ParsedUrl } from './url';
 
 // Apart from the parsers, so the generic iframe check bundles none of them (docs/decisions.md D110).
 
-export const YOUTUBE_HOSTS = new Set([
+export const YOUTUBE_HOSTS = /* @__PURE__ */ new Set([
   'youtube.com',
   'www.youtube.com',
   'm.youtube.com',
 ]);
-export const YOUTUBE_NOCOOKIE_HOSTS = new Set([
+export const YOUTUBE_NOCOOKIE_HOSTS = /* @__PURE__ */ new Set([
   'youtube-nocookie.com',
   'www.youtube-nocookie.com',
 ]);
-export const DAILYMOTION_HOSTS = new Set([
+export const DAILYMOTION_HOSTS = /* @__PURE__ */ new Set([
   'dailymotion.com',
   'www.dailymotion.com',
 ]);
 export const DAILYMOTION_PLAYER_HOST = 'geo.dailymotion.com';
 export const DAILYMOTION_SHORT_HOST = 'dai.ly';
-export const TIKTOK_HOSTS = new Set(['tiktok.com', 'www.tiktok.com']);
+export const TIKTOK_HOSTS = /* @__PURE__ */ new Set([
+  'tiktok.com',
+  'www.tiktok.com',
+]);
 export const TWITCH_PLAYER_HOST = 'player.twitch.tv';
 export const TWITCH_CLIPS_HOST = 'clips.twitch.tv';
 export const VIMEO_PLAYER_HOST = 'player.vimeo.com';
-export const FACEBOOK_PLUGIN_HOSTS = new Set([
+export const FACEBOOK_PLUGIN_HOSTS = /* @__PURE__ */ new Set([
   'facebook.com',
   'www.facebook.com',
   'web.facebook.com',
 ]);
-export const GIPHY_PAGE_HOSTS = new Set(['giphy.com', 'www.giphy.com']);
-export const KICK_PLAYER_HOSTS = new Set(['player.kick.com']);
+export const GIPHY_PAGE_HOSTS = /* @__PURE__ */ new Set([
+  'giphy.com',
+  'www.giphy.com',
+]);
+export const KICK_PLAYER_HOSTS = /* @__PURE__ */ new Set(['player.kick.com']);
 export const LINKEDIN_FRAME_HOST = 'www.linkedin.com';
 export const PINTEREST_FRAME_HOST = 'assets.pinterest.com';
 export const APPLE_MUSIC_FRAME_HOST = 'embed.music.apple.com';

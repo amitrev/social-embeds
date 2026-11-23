@@ -14,7 +14,7 @@ export type Mounted = {
   update: (layout: FrameLayout, eager: boolean) => void;
 };
 
-const LENGTHS = new Set([
+const LENGTHS = /* @__PURE__ */ new Set([
   'width',
   'maxWidth',
   'height',

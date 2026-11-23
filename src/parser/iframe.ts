@@ -16,7 +16,7 @@ const REFERRER_POLICIES = [
   'strict-origin-when-cross-origin',
 ] as const;
 
-const SANDBOX_KEYWORDS = new Set([
+const SANDBOX_KEYWORDS = /* @__PURE__ */ new Set([
   'allow-downloads',
   'allow-forms',
   'allow-modals',
@@ -33,7 +33,7 @@ const SANDBOX_KEYWORDS = new Set([
 ]);
 
 // A delegated permission is granted in the host site's name: media features only.
-const FEATURES = new Set([
+const FEATURES = /* @__PURE__ */ new Set([
   'autoplay',
   'fullscreen',
   'encrypted-media',
@@ -43,8 +43,11 @@ const FEATURES = new Set([
 ]);
 
 const HOST = '[a-z0-9-]+(?:\\.[a-z0-9-]+)*(?::\\d{1,5})?';
-const SRC = new RegExp(`^(?:https:)?//${HOST}(?:[/?#]|$)`, 'i');
-const ORIGIN = new RegExp(`^(?:\\*|'self'|'src'|'none'|https://${HOST})$`, 'i');
+const SRC = /* @__PURE__ */ new RegExp(`^(?:https:)?//${HOST}(?:[/?#]|$)`, 'i');
+const ORIGIN = /* @__PURE__ */ new RegExp(
+  `^(?:\\*|'self'|'src'|'none'|https://${HOST})$`,
+  'i',
+);
 // Dot segments, `//` and escaped unreserved characters, which browsers or servers rewrite.
 const REWRITTEN_PATH =
   /\/\.{1,2}(?:\/|$)|\/\/|%(?:2[de]|3\d|[46][1-9a-f]|[57][\da]|5f|7e)/i;

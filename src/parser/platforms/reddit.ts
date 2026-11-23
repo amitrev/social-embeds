@@ -1,5 +1,10 @@
 import { descendants, hasClass } from '../html';
-import { attributeOptions, withSize, type PlatformParser } from '../platform';
+import {
+  attributeOptions,
+  withSize,
+  type PlatformParser,
+  parserOf,
+} from '../platform';
 import { coerce, parseUrl, pixels } from '../url';
 import { post, redditMatcher } from '../matchers/reddit';
 
@@ -8,7 +13,7 @@ const CARD_SCRIPT =
   /^(?:https?:)?\/\/embed\.redditmedia\.com\/widgets\/platform\.js$/;
 
 // The `data-embed-*` attributes that widgets.js copies into the iframe query.
-const OPTION_ATTRIBUTES = [
+const OPTION_ATTRIBUTES = /* @__PURE__ */ [
   'depth',
   'style',
   'theme',
@@ -21,8 +26,7 @@ const OPTION_ATTRIBUTES = [
   'snippet',
 ].map((name) => [`data-embed-${name}`, name] as const);
 
-export const reddit: PlatformParser = {
-  ...redditMatcher,
+export const reddit: PlatformParser = /* @__PURE__ */ parserOf(redditMatcher, {
   parse(root) {
     // `reddit-card` is older code; it renders as the post.
     if (
@@ -46,4 +50,4 @@ export const reddit: PlatformParser = {
     );
   },
   isOwnScript: (src) => SCRIPT.test(src) || CARD_SCRIPT.test(src),
-};
+});

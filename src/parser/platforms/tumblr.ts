@@ -1,20 +1,20 @@
+import { parserOf } from '../platform';
 import { hasClass } from '../html';
 import { parseUrl } from '../url';
 import type { PlatformParser } from '../platform';
 import { fromUrl, POST, BLOG, tumblrMatcher } from '../matchers/tumblr';
 
-const FRAME_PATH = new RegExp(
+const FRAME_PATH = /* @__PURE__ */ new RegExp(
   `^/embed/post/(?:t:[A-Za-z0-9_-]{1,64}|${BLOG})/${POST}/v2$`,
 );
 // Older code: no `/v2`, and a token without `t:`.
-const OLD_FRAME_PATH = new RegExp(
+const OLD_FRAME_PATH = /* @__PURE__ */ new RegExp(
   `^/embed/post/(?:t:)?[A-Za-z0-9_-]{1,64}/${POST}$`,
 );
 const SCRIPT =
   /^(?:https?:)?\/\/(?:secure\.)?assets\.tumblr\.com\/post\.js(?:\?[^#]*)?$/;
 
-export const tumblr: PlatformParser = {
-  ...tumblrMatcher,
+export const tumblr: PlatformParser = /* @__PURE__ */ parserOf(tumblrMatcher, {
   parse(root) {
     if (root.tag !== 'div' || !hasClass(root, 'tumblr-post')) return null;
     const frame = parseUrl(root.attrs.get('data-href') ?? '');
@@ -38,4 +38,4 @@ export const tumblr: PlatformParser = {
     return { ...found, options: {} };
   },
   isOwnScript: (src) => SCRIPT.test(src),
-};
+});

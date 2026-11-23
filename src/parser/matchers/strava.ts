@@ -4,7 +4,7 @@ import type { PlatformMatcher } from '../platform';
 
 // `data-embed-type` and `data-embed-id` are content, never options (docs/decisions.md D68, D97).
 
-const HOSTS = new Set(['strava.com', 'www.strava.com']);
+const HOSTS = /* @__PURE__ */ new Set(['strava.com', 'www.strava.com']);
 const PAGE_PATH = /^\/(activities|routes)\/(\d{1,20})\/?$/;
 const PAGES = { activity: 'activities', route: 'routes' } as const;
 export type Type = keyof typeof PAGES;

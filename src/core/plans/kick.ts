@@ -8,7 +8,7 @@ export type KickOptions = {
   muted?: boolean;
 };
 
-const KEPT = new Set(['autoplay', 'muted']);
+const KEPT = /* @__PURE__ */ new Set(['autoplay', 'muted']);
 
 /** A live channel at 16:9. */
 export function kickPlan(

@@ -4,6 +4,7 @@ import {
   unwrapRatio,
   withSize,
   type PlatformParser,
+  parserOf,
 } from '../platform';
 import type { ParsedEmbed } from '../types';
 import { parseUrl } from '../url';
@@ -42,8 +43,7 @@ function isCredit(element: HtmlElement, embed: ParsedEmbed): boolean {
   );
 }
 
-export const giphy: PlatformParser = {
-  ...giphyMatcher,
+export const giphy: PlatformParser = /* @__PURE__ */ parserOf(giphyMatcher, {
   parse(root) {
     const wrapped = unwrapRatio(root, WRAPPER);
     const iframe = wrapped?.iframe ?? root;
@@ -53,4 +53,4 @@ export const giphy: PlatformParser = {
   },
   isOwnScript: () => false,
   isOwnExtra: isCredit,
-};
+});
