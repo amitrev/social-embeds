@@ -1426,6 +1426,29 @@ Measured from `dist` as in D114, gzipped:
 
 - **What it costs:** bundles that hold every parser grow by 0.1 to 0.2 KB. Helpers that both halves use are now exported across modules, which a minifier cannot fold away, and each parser object copies its matcher's fields.
 
+### D118. Module-level values a minifier can drop
+
+In a one-page Next.js 16 production app, each platform component, rendered from a Server Component, added at least 15 KB gzipped under Turbopack, against 3 to 7 KB under webpack. `createSocialEmbed([youtube])` in a `'use client'` module added about 17 KB under both. The chunk for a page with only `YouTubeEmbed` held every platform's URL matcher and half the embed-code parsers.
+
+- **Cause:** Turbopack hoists the package's modules into one scope and leaves dead code to the minifier; webpack's module concatenation does the same for `createSocialEmbed`'s modules. A minifier drops an unused `const`, but keeps an initialiser that may have side effects: each parser was `{ ...matcher, parse… }` (D117), and a spread may run getters, so `({ ...{ platform: "soundcloud", … }, parse(t) {…} })` stayed in the chunk with everything it references. Module-level `new RegExp(…)`, `new Set(…)` and `new Map(…)` stayed for the same reason.
+- **Fix:** each parser is `/* @__PURE__ */ parserOf(matcher, { … })`, and module-level `new RegExp`, `new Set`, `new Map` and Reddit's `.map` carry `/* @__PURE__ */`. Rolldown keeps the annotations in `dist`, and Turbopack's minifier, terser, esbuild and Rollup honour them. `test/core/removable-modules.test.ts` fails on a module-level call or `new` without the annotation, and on an object literal with a spread, outside the element.
+- **Measured first:** patching `dist` in a copy showed which change mattered. Removing the parser registry from `matchWith`'s module changed nothing; the parser spreads were 10 of the 11 KB; the `new` annotations were the rest.
+
+One page per app, Next.js 16.4, page JavaScript added to a page without an embed, gzipped:
+
+| Import                                        | Turbopack before | Turbopack now | webpack before | webpack now |
+| --------------------------------------------- | ---------------- | ------------- | -------------- | ----------- |
+| `SnapchatEmbed` (smallest)                    | 15.3 KB          | 3.3 KB        | 2.8 KB         | 2.8 KB      |
+| `TikTokEmbed`                                 | 15.7 KB          | 3.8 KB        | 3.1 KB         | 3.1 KB      |
+| `YouTubeEmbed`                                | 15.8 KB          | 4.5 KB        | 3.9 KB         | 3.9 KB      |
+| `XEmbed`                                      | 16.3 KB          | 5.5 KB        | 5.0 KB         | 5.0 KB      |
+| `FacebookEmbed`                               | 17.6 KB          | 7.1 KB        | 6.7 KB         | 6.7 KB      |
+| `createSocialEmbed([youtube])`, client module | 16.6 KB          | 6.5 KB        | 17.3 KB        | 7.4 KB      |
+| `<SocialEmbed>`                               | 26.7 KB          | 26.7 KB       | 27.0 KB        | 27.0 KB     |
+
+- **What it costs:** nothing in esbuild's bundles from `dist`, which already dropped these; `social-embeds/element` grows by 0.1 KB.
+- **Not done:** lazy-loading each platform's rendering in `<SocialEmbed>` was built and measured in the same apps, then dropped: Turbopack merged the 30 dynamic imports into one 17 KB chunk that every page importing the package loaded up front, so a `<SocialEmbed>` page grew by 5 KB and a `YouTubeEmbed` page by 15 KB, while webpack saved 7 KB.
+
 ## Open VERIFY items
 
 | ID  | Item                                            | Milestone | Status                                          |
